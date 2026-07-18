@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"staff_app/internal/config"
+	"staff_app/internal/garmin"
 	"staff_app/internal/platform/logger"
 	"staff_app/internal/sqlite"
 )
@@ -188,12 +189,12 @@ Corrida;2026-07-15 06:30:00;Treino leve;5,20;360;00:31:12;142;171;164;06:00;05:1
 func TestGarminFITUploadFixture(t *testing.T) {
 	logger.Setup("development", false)
 
-	files, err := filepath.Glob(filepath.Join("..", "garmin", "testdata", "fit", "*.fit"))
+	files, err := garmin.FitFixtureFiles()
 	if err != nil {
-		t.Fatalf("failed to glob fit fixtures: %v", err)
+		t.Fatalf("failed to resolve fit fixtures: %v", err)
 	}
 	if len(files) == 0 {
-		t.Fatal("expected at least one FIT fixture")
+		t.Fatal("expected at least one FIT fixture in internal/garmin/testdata/fit")
 	}
 	fitData, err := os.ReadFile(files[0])
 	if err != nil {

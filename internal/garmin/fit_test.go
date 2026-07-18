@@ -6,12 +6,12 @@ import (
 )
 
 func TestParseFITFixtures(t *testing.T) {
-	files, err := filepath.Glob(filepath.Join("testdata", "fit", "*.fit"))
+	files, err := FitFixtureFiles()
 	if err != nil {
-		t.Fatalf("failed to glob fit fixtures: %v", err)
+		t.Fatalf("failed to resolve fit fixtures: %v", err)
 	}
 	if len(files) == 0 {
-		t.Fatal("expected at least one FIT fixture")
+		t.Fatal("expected at least one FIT fixture in testdata/fit")
 	}
 
 	for _, file := range files {

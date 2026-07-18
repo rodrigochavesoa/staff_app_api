@@ -42,6 +42,7 @@ go.work.sum
 /api/
 /frontend_lab/
 
-# Garmin FIT fixtures may contain real device/GPS activity data — keep local for tests;
-# do not publish until replaced by synthetic fixtures.
-/internal/garmin/testdata/fit/
+# Real Garmin device exports (may contain GPS/PII) — keep local only.
+# Synthetic CI fixtures (synthetic_*.fit) are tracked.
+/internal/garmin/testdata/fit/*_ACTIVITY.fit
+/internal/garmin/testdata/fit/[0-9]_*.fit

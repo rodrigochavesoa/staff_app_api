@@ -5,12 +5,31 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"staff_app/internal/domain"
 
 	fitlib "github.com/tormoder/fit"
 )
+
+// FitFixtureFiles returns absolute paths to committed synthetic FIT fixtures
+// under testdata/fit. Paths are resolved from this source file so tests work
+// regardless of the process working directory (local or CI).
+func FitFixtureFiles() ([]string, error) {
+	_, thisFile, _, ok := runtime.Caller(0)
+	if !ok {
+		return nil, fmt.Errorf("unable to resolve garmin package path")
+	}
+	dir := filepath.Join(filepath.Dir(thisFile), "testdata", "fit")
+	// Only synthetic fixtures are part of the public package; device exports stay local.
+	matches, err := filepath.Glob(filepath.Join(dir, "synthetic_*.fit"))
+	if err != nil {
+		return nil, err
+	}
+	return matches, nil
+}
 
 func ParseFITFile(path string) (*domain.GarminActivity, error) {
 	// #nosec G304 - path is validated and sanitized by the caller handler to prevent path traversal
