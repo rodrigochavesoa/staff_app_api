@@ -1,0 +1,132 @@
+[
+  {
+    "id": "easy_40",
+    "nome": "Corrida Fácil 40min",
+    "categoria": "Easy",
+    "nivel": ["iniciante", "intermediario", "avancado", "elite"],
+    "zona_principal": "E",
+    "duracao_minutos": 40,
+    "blocos": [
+      {"type": "atomic", "intensity": "E", "duration_min": 40, "description": "Corrida fácil conversacional"}
+    ]
+  },
+  {
+    "id": "easy_warmup_cooldown_45",
+    "nome": "Fácil com Aquecimento e Volta à Calma",
+    "categoria": "Easy",
+    "nivel": ["iniciante", "intermediario", "avancado", "elite"],
+    "zona_principal": "E",
+    "duracao_minutos": 45,
+    "blocos": [
+      {"type": "atomic", "intensity": "E", "duration_min": 10, "description": "Aquecimento"},
+      {"type": "atomic", "intensity": "E", "duration_min": 25, "description": "Corrida fácil"},
+      {"type": "atomic", "intensity": "E", "duration_min": 10, "description": "Volta à calma"}
+    ]
+  },
+  {
+    "id": "long_70",
+    "nome": "Longão 70min",
+    "categoria": "Long",
+    "nivel": ["iniciante", "intermediario", "avancado", "elite"],
+    "zona_principal": "E",
+    "duracao_minutos": 70,
+    "blocos": [
+      {"type": "atomic", "intensity": "E", "duration_min": 10, "description": "Aquecimento"},
+      {"type": "atomic", "intensity": "E", "duration_min": 50, "description": "Longão em ritmo fácil"},
+      {"type": "atomic", "intensity": "E", "duration_min": 10, "description": "Volta à calma"}
+    ]
+  },
+  {
+    "id": "threshold_3x8",
+    "nome": "Threshold 3x8min",
+    "categoria": "Threshold",
+    "nivel": ["intermediario", "avancado", "elite"],
+    "zona_principal": "T",
+    "duracao_minutos": 54,
+    "blocos": [
+      {"type": "atomic", "intensity": "E", "duration_min": 12, "description": "Aquecimento"},
+      {
+        "type": "repeater",
+        "repeat": 3,
+        "content": [
+          {"type": "atomic", "intensity": "T", "duration_min": 8, "description": "Ritmo limiar"},
+          {"type": "atomic", "intensity": "E", "duration_min": 2, "description": "Recuperação"}
+        ]
+      },
+      {"type": "atomic", "intensity": "E", "duration_min": 10, "description": "Volta à calma"}
+    ]
+  },
+  {
+    "id": "interval_5x3",
+    "nome": "Intervalados 5x3min",
+    "categoria": "Interval",
+    "nivel": ["intermediario", "avancado", "elite"],
+    "zona_principal": "I",
+    "duracao_minutos": 50,
+    "blocos": [
+      {"type": "atomic", "intensity": "E", "duration_min": 15, "description": "Aquecimento"},
+      {
+        "type": "repeater",
+        "repeat": 5,
+        "content": [
+          {"type": "atomic", "intensity": "I", "duration_min": 3, "description": "Intervalo"},
+          {"type": "atomic", "intensity": "E", "duration_min": 2, "description": "Recuperação"}
+        ]
+      },
+      {"type": "atomic", "intensity": "E", "duration_min": 10, "description": "Volta à calma"}
+    ]
+  },
+  {
+    "id": "repetition_8x1",
+    "nome": "Repetições 8x1min",
+    "categoria": "Repetition",
+    "nivel": ["avancado", "elite"],
+    "zona_principal": "R",
+    "duracao_minutos": 42,
+    "blocos": [
+      {"type": "atomic", "intensity": "E", "duration_min": 15, "description": "Aquecimento"},
+      {
+        "type": "repeater",
+        "repeat": 8,
+        "content": [
+          {"type": "atomic", "intensity": "R", "duration_min": 1, "description": "Tiro"},
+          {"type": "atomic", "intensity": "Rest", "duration_min": 1, "description": "Recuperação completa"}
+        ]
+      },
+      {"type": "atomic", "intensity": "E", "duration_min": 10, "description": "Volta à calma"}
+    ]
+  },
+  {
+    "id": "fartlek_40",
+    "nome": "Fartlek 40min",
+    "categoria": "Fartlek",
+    "nivel": ["iniciante", "intermediario", "avancado", "elite"],
+    "zona_principal": "T",
+    "duracao_minutos": 40,
+    "blocos": [
+      {"type": "atomic", "intensity": "E", "duration_min": 10, "description": "Aquecimento"},
+      {
+        "type": "repeater",
+        "repeat": 4,
+        "content": [
+          {"type": "atomic", "intensity": "T", "duration_min": 3, "description": "Surto controlado"},
+          {"type": "atomic", "intensity": "E", "duration_min": 2, "description": "Troca fácil"}
+        ]
+      },
+      {"type": "atomic", "intensity": "E", "duration_min": 10, "description": "Volta à calma"}
+    ]
+  },
+  {
+    "id": "marathon_pace_60",
+    "nome": "Ritmo Maratona 60min",
+    "categoria": "Marathon",
+    "nivel": ["intermediario", "avancado", "elite"],
+    "zona_principal": "M",
+    "duracao_minutos": 60,
+    "blocos": [
+      {"type": "atomic", "intensity": "E", "duration_min": 10, "description": "Aquecimento"},
+      {"type": "atomic", "intensity": "M", "duration_min": 40, "description": "Ritmo de maratona"},
+      {"type": "atomic", "intensity": "E", "duration_min": 10, "description": "Volta à calma"}
+    ]
+  }
+]

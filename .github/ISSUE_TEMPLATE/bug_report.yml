@@ -1,0 +1,82 @@
+name: Bug report
+description: Report a reproducible STAFF App API problem.
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug. Do not include secrets, .env files, real databases, real uploads, logs with credentials, or personal/health data.
+        If this may be a vulnerability, stop here and follow SECURITY.md instead of opening a public issue.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include commands, endpoint, sanitized payload and observed result.
+      placeholder: |
+        1. Start the API with ...
+        2. Call ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Auth/users/plans
+        - Students/history/frequency
+        - Anamnese/pre-registration
+        - Training sheets
+        - Running/periodization
+        - Garmin/performance
+        - Exercises/rehab
+        - SVED
+        - RAG/knowledge base
+        - Reports/configuration
+        - Docker/operation
+        - OpenAPI/documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        OS:
+        Go:
+        Docker:
+        Commit or version:
+        Run mode: local / docker
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs or response
+      description: Remove credentials, tokens, personal data and real health/training data.
+      render: shell
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I did not include secrets, real databases, real uploads or personal/health data.
+          required: true
+        - label: This is not a security vulnerability report.
+          required: true

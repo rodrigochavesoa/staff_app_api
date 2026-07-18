@@ -1,0 +1,43 @@
+# Ignore git and config templates
+.git
+.gitignore
+.dockerignore
+
+# Ignore refactor planning/review docs
+docs/
+
+# Ignore environment config files
+.env
+.env.example
+
+# Ignore local database files
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+data/*
+!data/csv/
+!data/csv/**
+!data/json/
+!data/json/**
+
+# Ignore Garmin upload and testing directories
+uploads_atividades/
+internal/garmin/testdata/fit/
+
+# Ignore build artifacts and caches
+bin/
+logs/
+/tmp
+/temp
+*.test
+*.out
+
+# Ignore legacy Python API code and documentation
+api/
+docs/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/

@@ -1,0 +1,47 @@
+# Binaries / build
+bin/
+*.test
+*.out
+coverage.out
+coverage.html
+
+# Local env (keep .env.example public)
+.env
+.env.*
+!.env.example
+
+# Database files and local runtime data (keep seed assets for Docker/runtime)
+*.db
+*.db-*
+data/*
+!data/csv/
+!data/csv/**
+!data/json/
+!data/json/**
+
+# Backups / logs / uploads
+*.db.bak
+*_backup_*.db
+backups/
+logs/
+uploads_atividades/
+
+# Secrets / keys / IDE / local tooling
+*.pem
+*.key
+.cursor/
+.idea/
+.vscode/
+go.work
+go.work.sum
+
+# Local-only material — kept on disk, never published to the public repo
+# (exclude from remote package; do NOT delete locally)
+# IMPORTANT: leading slash = repository root only (must not match cmd/api)
+/docs/
+/api/
+/frontend_lab/
+
+# Garmin FIT fixtures may contain real device/GPS activity data — keep local for tests;
+# do not publish until replaced by synthetic fixtures.
+/internal/garmin/testdata/fit/

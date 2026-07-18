@@ -1,0 +1,17 @@
+{
+  "tipo": "periodizada",
+  "frequencia": 3,
+  "objetivo": "Hipertrofia",
+  "nivel": "intermediário",
+  "treinos": [
+    {
+      "letra": "A",
+      "nome": "A - Peito",
+      "exercicios": [
+        {
+          "nome": "Supino Máquina"
+        }
+      ]
+    }
+  ]
+}

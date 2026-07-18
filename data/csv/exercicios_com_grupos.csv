@@ -1,0 +1,800 @@
+Código,Nome do Exercício,grupo_muscular,musculo_foco,url
+100,Abdominal Amplitude Máxima,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/100
+101,Abdominal Canivete,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/101
+102,Abdominal Infra,Abdome,Infra-abdome,https://rcstorestaff.com.br/exercicios_html/102
+103,Abdominal Oblíquo Amplitude Máxima,Abdome,Oblíquos,https://rcstorestaff.com.br/exercicios_html/103
+104,Abdominal Oblíquo no Aparelho,Abdome,Oblíquos,https://rcstorestaff.com.br/exercicios_html/104
+105,Abdominal Oblíquo Unilateral,Abdome,Oblíquos,https://rcstorestaff.com.br/exercicios_html/105
+106,Abdominal Oblíquo,Abdome,Oblíquos,https://rcstorestaff.com.br/exercicios_html/106
+107,Abdominal Pés Fixos,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/107
+108,Abdominal Supra no Aparelho [1],Abdome,Reto Abdominal (parte superior),https://rcstorestaff.com.br/exercicios_html/108
+110,Abdominal Supra,Abdome,Reto Abdominal (parte superior),https://rcstorestaff.com.br/exercicios_html/110
+111,Abdominal no Aparelho,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/111
+112,Flexão de Punho,Antebraço,Antebraço,https://rcstorestaff.com.br/exercicios_html/112
+113,Rosca Alternada,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/113
+114,Rosca Concentrada,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/114
+115,Rosca Direta com Halter,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/115
+116,Rosca Direta com Corda no Cross Over,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/116
+117,Rosca Direta,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/117
+118,Rosca Scott,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/118
+119,Rosca Unilateral no Cross Over,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/119
+120,Rosca Martelo com Barra,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/120
+121,Rosca Martelo com Halter,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/121
+122,Puxada na Barra Fixa,Costas,Latíssimo do Dorso,https://rcstorestaff.com.br/exercicios_html/122
+123,Crucifixo Inverso,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/123
+124,Puxada no Gravitron,Costas,Latíssimo do Dorso,https://rcstorestaff.com.br/exercicios_html/124
+125,Lombar Sentado,Costas,Lombar,https://rcstorestaff.com.br/exercicios_html/125
+127,Pulley Fechado,Costas,Latíssimo do Dorso,https://rcstorestaff.com.br/exercicios_html/127
+128,Pulley Frente,Costas,Latíssimo do Dorso,https://rcstorestaff.com.br/exercicios_html/128
+129,Pull Over com Barra,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/129
+130,Pull Over com Halteres,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/130
+131,Remada na Polia,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/131
+132,Remada Curvada com Barra,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/132
+133,Remada Curvada com Halter,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/133
+134,Remada no Aparelho,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/134
+135,Remada Unilateral Cross Over,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/135
+136,Remada Unilateral,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/136
+137,Remada Curvada no Cross Over,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/137
+138,Remada Curvada na Barra Guiada,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/138
+139,Glúteo 4 Apoios Joelho Estendido,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/139
+140,Glúteo 4 Apoios Joelho Fletido,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/140
+141,Glúteo no Aparelho,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/141
+142,Glúteo no Cross Over,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/142
+143,Glúteo com Caneleira,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/143
+144,Glúteo no Apolete,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/144
+145,Desenvolvimento Alternado,Ombro,Deltoide (Anterior e Lateral),https://rcstorestaff.com.br/exercicios_html/145
+146,Desenvolvimento Articulado,Ombro,Deltoide (Anterior e Lateral),https://rcstorestaff.com.br/exercicios_html/146
+147,Desenvolvimento com Barra,Ombro,Deltoide (Anterior e Lateral),https://rcstorestaff.com.br/exercicios_html/147
+148,Desenvolvimento com Halter,Ombro,Deltoide (Anterior e Lateral),https://rcstorestaff.com.br/exercicios_html/148
+149,Desenvolvimento em Pé na Barra Guiada,Ombro,Deltoide (Anterior e Lateral),https://rcstorestaff.com.br/exercicios_html/149
+150,Desenvolvimento no Aparelho,Ombro,Deltoide (Anterior e Lateral),https://rcstorestaff.com.br/exercicios_html/150
+151,Desenvolvimento Sentado na Barra Guiada,Ombro,Deltoide (Anterior e Lateral),https://rcstorestaff.com.br/exercicios_html/151
+152,Elevação Frontal Alternada,Ombro,Deltoide Anterior,https://rcstorestaff.com.br/exercicios_html/152
+153,Elevação Frontal com Halteres,Ombro,Deltoide Anterior,https://rcstorestaff.com.br/exercicios_html/153
+154,Elevação Frontal no Cross Over,Ombro,Deltoide Anterior,https://rcstorestaff.com.br/exercicios_html/154
+155,Elevação Frontal com Barra,Ombro,Deltoide Anterior,https://rcstorestaff.com.br/exercicios_html/155
+156,Elevação Lateral no Cross Over,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/156
+157,Elevação Lateral no Aparelho,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/157
+158,Elevação Lateral,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/158
+159,Remada Alta com Barra,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/159
+160,Remada Alta com Halter,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/160
+161,Remada Alta Cross Over,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/161
+162,Remada Alta na Barra Guiada,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/162
+163,Crucifixo 30º,Peito,Peitoral (Abertura),https://rcstorestaff.com.br/exercicios_html/163
+164,Crucifixo 45º,Peito,Peitoral (Abertura),https://rcstorestaff.com.br/exercicios_html/164
+165,Crucifixo Cross Over,Peito,Peitoral (Abertura),https://rcstorestaff.com.br/exercicios_html/165
+166,Crucifixo Inverso no Cross Over,Ombro,Deltoide Posterior,https://rcstorestaff.com.br/exercicios_html/166
+167,Crucifixo no Voador,Peito,Peitoral (Abertura),https://rcstorestaff.com.br/exercicios_html/167
+168,Crucifixo,Peito,Peitoral (Abertura),https://rcstorestaff.com.br/exercicios_html/168
+169,Flexão de Braços Fechado,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/169
+170,Flexão de Braços,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/170
+171,Supino Reto com Halteres,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/171
+172,Supino Inclinado com Halteres,Peito,Peitoral Superior,https://rcstorestaff.com.br/exercicios_html/172
+173,Supino Reto com Barra,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/173
+174,Supino Inclinado com Barra,Peito,Peitoral Superior,https://rcstorestaff.com.br/exercicios_html/174
+175,Supino Articulado,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/175
+176,Supino Reto no Aparelho,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/176
+177,Supino Declinado,Peito,Peitoral Inferior,https://rcstorestaff.com.br/exercicios_html/177
+178,Extensão de Joelhos Unilateral,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/178
+179,Flexão de Joelhos em Pé no Aparelho,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/179
+180,Flexão de Joelhos em Pé,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/180
+181,Flexão de Joelhos em 4 Apoios,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/181
+182,Flexão de Quadril no Apolete,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/182
+183,Flexão de Quadril Joelho Estendido,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/183
+184,Flexão de Quadril Joelho Fletido,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/184
+185,Flexão Plantar Unilateral,Perna,Panturrilha,https://rcstorestaff.com.br/exercicios_html/185
+186,Flexão Plantar,Perna,Panturrilha,https://rcstorestaff.com.br/exercicios_html/186
+187,Flexor Sentado,Perna,Posterior de Coxa,https://rcstorestaff.com.br/exercicios_html/187
+188,Foot Press,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/188
+189,Hack,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/189
+190,Leg Press Inclinado,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/190
+191,Leg Press Deitado,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/191
+192,Leg Press Vertical,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/192
+193,Leg Press,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/193
+194,Mesa Flexora,Perna,Posterior de Coxa,https://rcstorestaff.com.br/exercicios_html/194
+195,Panturrilha Sentado,Perna,Panturrilha,https://rcstorestaff.com.br/exercicios_html/195
+196,Panturrilha Vertical,Perna,Panturrilha,https://rcstorestaff.com.br/exercicios_html/196
+197,Stiff,Perna,Posterior de Coxa,https://rcstorestaff.com.br/exercicios_html/197
+198,Abdução no Cross Over,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/198
+199,Abdução Deitado com Caneleira,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/199
+200,Abdução Em Pé,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/200
+201,Abdução no Apolete,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/201
+202,Adução no Cross Over,Perna,Adutores,https://rcstorestaff.com.br/exercicios_html/202
+203,Adução Deitado com Caneleira,Perna,Adutores,https://rcstorestaff.com.br/exercicios_html/203
+204,Adução no Apolete,Perna,Adutores,https://rcstorestaff.com.br/exercicios_html/204
+205,Afundo na Barra Guiada,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/205
+206,Afundo,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/206
+207,Agachamento Inclinado,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/207
+208,Agachamento na Barra Guiada,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/208
+209,Agachamento em Pé,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/209
+210,Banco Abdutor,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/210
+211,Banco Adutor,Perna,Adutores,https://rcstorestaff.com.br/exercicios_html/211
+212,Banco Extensor,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/212
+213,Banco Flexor,Perna,Posterior de Coxa,https://rcstorestaff.com.br/exercicios_html/213
+214,Flexão de Braços na Barra Paralela Olímpica,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/214
+215,Flexão de Braços na Barra Paralela,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/215
+216,Tríceps Banco,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/216
+217,Tríceps no Cross Over,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/217
+218,Tríceps Unilateral no Cross Over,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/218
+219,Tríceps Francês,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/219
+220,Tríceps Francês no Cross Over,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/220
+221,Tríceps Francês Unilateral,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/221
+222,Tríceps Kickback,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/222
+223,Tríceps Paralelo no Aparelho,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/223
+224,Tríceps Peito com Barra,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/224
+225,Tríceps Peito na Barra Guiada,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/225
+226,Tríceps Pulley,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/226
+227,Tríceps Testa,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/227
+228,Tríceps Testa Cross Over,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/228
+229,Abdominal Supra no Aparelho [2],Abdome,Reto Abdominal (parte superior),https://rcstorestaff.com.br/exercicios_html/229
+230,Tríceps Corda no Cross Over,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/230
+231,Voador / Peck Deck,Peito,Peitoral (Abertura),https://rcstorestaff.com.br/exercicios_html/231
+232,Supino Vertical na Máquina,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/232
+233,Stiff Unilateral com Halter,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/233
+234,Stiff Unilateral com Barra,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/234
+235,Pull Down,Costas,Latíssimo do Dorso,https://rcstorestaff.com.br/exercicios_html/235
+236,Abdominal Prancha,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/236
+237,Abdominal Elevação Perna no Solo,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/237
+238,Manguito Rotador no Cross Over,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/238
+239,Elevação de Panturrilha com Barra,Perna,Panturrilha,https://rcstorestaff.com.br/exercicios_html/239
+240,Flexão de Joelho na Bola Suíça,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/240
+241,Agachamento com Halter,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/241
+242,Elevação Pélvica,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/242
+243,Desenvolvimento Arnold,Ombro,Deltoide (Anterior e Lateral),https://rcstorestaff.com.br/exercicios_html/243
+244,Elevação de Panturrilha em Pé,Perna,Panturrilha,https://rcstorestaff.com.br/exercicios_html/244
+245,Extensão dos Pés com Barra,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/245
+246,Agachamento Sumô com Kettlebell,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/246
+247,Extensão dos Pés com Halter,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/247
+248,"Abdominal com ""Rolinho""",Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/248
+249,Rosca Concentrada com Barra,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/249
+250,Rosca Corda no Cross Over,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/250
+251,Abdominal Infra com Elevação de Pernas,Abdome,Infra-abdome,https://rcstorestaff.com.br/exercicios_html/251
+252,Agachamento Livre,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/252
+253,Coice Simultâneo,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/253
+254,Cruzamento Oblíquo V,Abdome,Oblíquos,https://rcstorestaff.com.br/exercicios_html/254
+255,Escalador,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/255
+256,Wood Chop,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/256
+257,Burpee,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/257
+258,Lunge Punch com Halter,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/258
+259,Polichinelo,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/259
+260,Prancha de Braços Jacks,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/260
+261,Supino com Halteres na Bola Suíça,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/261
+262,Toe Touch Unilateral no Solo,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/262
+263,Esteira,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/263
+264,Elíptico,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/264
+265,Bicicleta Ergométrica,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/265
+266,Jump,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/266
+267,Pular Corda,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/267
+268,Abdominal Bicicleta,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/268
+269,Super Homem,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/269
+270,Rosca Simultânea no Cross,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/270
+271,Banco Extensor Unilateral,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/271
+272,Rosca Direta Inversa,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/272
+273,Corrida no Mesmo Lugar,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/273
+274,Mãos Entrelaçadas Para Trás,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/274
+275,Mãos nos Pés,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/275
+276,Alongamento de Quadríceps,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/276
+277,Tração Vertebral,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/277
+278,Ombro Lateral Esticado,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/278
+279,Lateral Aberta,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/279
+280,Alongamento para Lombar,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/280
+281,Bíceps Femoral,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/281
+282,Rosca Scott Unilateral,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/282
+283,Tríceps Francês Barra Livre,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/283
+284,Afundo com Halteres,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/284
+285,V-Sit,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/285
+286,Squats,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/286
+287,Encolhimento de Ombros por Trás com Barra,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/287
+288,Flexão Solo com Apoio,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/288
+289,Split Jerk,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/289
+290,Pistol Squat,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/290
+291,Box Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/291
+292,Avanço,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/292
+293,Agachamento Sumô Halteres e Step,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/293
+294,Abdominal Butterfly,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/294
+295,Box Jump Over,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/295
+296,Alongamento Dorsal no Espaldar,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/296
+297,Pose do Camelo,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/297
+298,Lateral Alongada,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/298
+299,Abdominal Supra no Cabo,Abdome,Reto Abdominal (parte superior),https://rcstorestaff.com.br/exercicios_html/299
+300,Rosca no Cabo (Deitado),Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/300
+302,Levantamento Terra,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/302
+303,Agachamento Frontal,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/303
+304,Rosca de Punho com Rolo,Antebraço,Antebraço,https://rcstorestaff.com.br/exercicios_html/304
+305,Rotação de Punho com Halter,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/305
+306,Rosca Direta com Barra W,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/306
+307,Rosca Direta Bilateral na Polia Baixa,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/307
+308,Rosca Alternada com Isometria,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/308
+309,Rosca 21 Inversa,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/309
+310,Rosca Bíceps no Banco Inclinado,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/310
+311,Crucifixo Declinado com Halteres,Peito,Peitoral Inferior,https://rcstorestaff.com.br/exercicios_html/311
+313,Agachamento com Salto,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/313
+314,Lunge com Salto,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/314
+315,Ondulação Vertical Alternada com Corda Naval,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/315
+316,Remada em Prancha com Kettlebell,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/316
+317,American Swing,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/317
+318,Rosca Scott no Aparelho,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/318
+319,Tombamento com Pneu,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/319
+320,Corrida Estacionária na Parede,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/320
+321,Bike Spinning,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/321
+322,Agachamento Sissy,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/322
+323,Air Bike,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/323
+324,Air Climber,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/324
+325,Caminhada com Pesos,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/325
+326,Extensão de Punho,Antebraço,Antebraço,https://rcstorestaff.com.br/exercicios_html/326
+327,Rosca Inversa no Cross,Antebraço,Antebraço,https://rcstorestaff.com.br/exercicios_html/327
+328,Puxador com Triângulo,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/328
+329,Remada Articulada Unilateral Neutra,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/329
+330,Remada Articulada Neutra,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/330
+331,Remada Articulada Supinada,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/331
+332,Remada Articulada Pronada,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/332
+333,Remada Baixa Supinada,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/333
+334,Remada Baixa Pronada,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/334
+335,Remada Baixa Neutra,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/335
+336,Subida no Banco,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/336
+337,Subida no Banco com Caneleira,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/337
+338,Elevação Lateral e Frontal,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/338
+339,Manguito Rotador no Cross Over Interno,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/339
+340,Agachamento Búlgaro,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/340
+341,Banco Isométrico,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/341
+342,Banco Flexor Unilateral,Perna,Posterior de Coxa,https://rcstorestaff.com.br/exercicios_html/342
+343,Panturrilha no Leg Press,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/343
+344,Remada Alta com Corda,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/344
+345,Tríceps Inverso na Polia,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/345
+346,Agachamento com Bola,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/346
+347,Agachamento no Cross Over,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/347
+348,Glúteo na Barra Guiada,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/348
+349,Agachamento Sumô na Barra Guiada,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/349
+350,Remada Cavalinho no Cross Over,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/350
+351,Desenvolvimento Nuca com Barra,Ombro,Deltoide (Anterior e Lateral),https://rcstorestaff.com.br/exercicios_html/351
+352,Prancha Abdominal no Banco Declinado,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/352
+353,Abdominal Oblíquo no Cross Over com Polia Baixa,Abdome,Oblíquos,https://rcstorestaff.com.br/exercicios_html/353
+354,Elevação de Joelhos na Barra Fixa,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/354
+355,Elevação de Perna na Barra Fixa,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/355
+356,Abdominal Infra nas Paralelas,Abdome,Infra-abdome,https://rcstorestaff.com.br/exercicios_html/356
+357,Abdominal Infra Nas Paralelas com Pernas Estendidas,Abdome,Infra-abdome,https://rcstorestaff.com.br/exercicios_html/357
+358,Abdominal Flutter Kick,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/358
+359,Air Squat,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/359
+360,Bola Crunch,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/360
+361,Crucifixo Inverso no Peck Deck com Pegada Neutra,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/361
+362,Encolhimento com Barra,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/362
+363,Encolhimento com Halter,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/363
+364,Levantamento Terra Sumô,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/364
+365,Alongamento dos Braços para Cima,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/365
+366,Alongamento dos Braços para Frente,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/366
+367,Alongamento do Tríceps,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/367
+368,Alongamento do Pescoço,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/368
+369,Alongamento da Posterior da Coxa,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/369
+370,Alongamento do Peitoral de Frente,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/370
+371,Alongamento do Peitoral,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/371
+372,Alongamento da Coluna,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/372
+373,Flexão do Tronco,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/373
+374,Flexão do Tronco com Rotação,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/374
+375,Rotação dos Antebraços,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/375
+376,Rotação dos Braços,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/376
+377,Rotação dos Ombros,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/377
+378,Rotação dos Pulsos,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/378
+379,Rotação das Pernas ao Nível dos Joelhos,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/379
+380,Rotação do Pé,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/380
+381,Rotação da Cabeça,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/381
+382,Step com Elevação de Joelho,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/382
+383,Step com Chute Lateral,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/383
+384,Step com Elevação do Calcanhar,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/384
+385,Step Alternado,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/385
+386,Deslocamento Lateral no Step,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/386
+387,Step Lateral,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/387
+388,Step com Salto,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/388
+389,Step,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/389
+390,Ring Dip,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/390
+391,Strict Muscle-Up,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/391
+392,Wall Ball,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/392
+393,Medicine Ball Clean,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/393
+394,Overhead Squat,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/394
+395,Sumô Deadlift High Pull,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/395
+396,Thruster,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/396
+397,Walking Lunges,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/397
+398,Toes To Bar,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/398
+399,Push Press,Ombro,Deltoide (Anterior e Lateral),https://rcstorestaff.com.br/exercicios_html/399
+400,Step Box,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/400
+401,Handstand Push Up,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/401
+402,Wall Walk,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/402
+403,Handstand,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/403
+404,Split Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/404
+405,Jumping Double Taps,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/405
+406,Ring Row,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/406
+407,Russian Kettlebell,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/407
+408,Kettlebell Snatch,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/408
+409,Rope Climb,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/409
+410,Dumbbell Walking Lunges,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/410
+411,Strict Bar Muscle-Up,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/411
+412,Kipping Pull Up,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/412
+413,Kipping Bar Muscle-Up,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/413
+414,Hips to Rings,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/414
+415,Legless Rope Climb,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/415
+416,L-Sit Rope Climb,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/416
+417,Kipping Muscle-Up,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/417
+418,Dumbbell Overhead Walking Lunge,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/418
+419,Dumbbell Overhead Squat,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/419
+420,Modified Rope Climb,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/420
+421,Dumbbell Thruster,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/421
+422,Strict Toes to Rings,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/422
+423,Prancha Alternada com 2 Apoios,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/423
+424,Tríceps Testa com Halteres,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/424
+425,Remada Cavalinho no Aparelho,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/425
+426,Remada Aberta no TRX,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/426
+427,Crucifixo Inverso no TRX,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/427
+428,Prancha Frontal com Bola Suíça,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/428
+429,Prancha Lateral,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/429
+430,Elevação de Perna com Giro de Tronco,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/430
+431,Abdominal Lenhador,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/431
+432,Supino Fechado,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/432
+433,Flexão Declinada,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/433
+437,Flexão Inclinada,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/437
+438,Supino Declinado com Halteres,Peito,Peitoral Inferior,https://rcstorestaff.com.br/exercicios_html/438
+439,Flexão com um Braço,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/439
+440,Flexão Batendo Palma,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/440
+441,Pull Over Inclinado,Peito,Peitoral Superior,https://rcstorestaff.com.br/exercicios_html/441
+442,Rosca Zottman,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/442
+443,Barra Fixa Supinada,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/443
+444,Rosca Martelo Inclinado,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/444
+445,Rosca Inversa com Barra W,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/445
+446,Crucifixo Invertido no Banco Inclinado,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/446
+447,Crucifixo Inverso Unilateral,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/447
+448,Elevação Lateral com Pegada Neutra,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/448
+449,Elevação Frontal com Pegada Neutra,Ombro,Deltoide Anterior,https://rcstorestaff.com.br/exercicios_html/449
+450,Rotação de Ombro Deitado,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/450
+451,Face Pull,Ombro,Deltoide Posterior,https://rcstorestaff.com.br/exercicios_html/451
+452,Encolhimento na Polia,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/452
+454,Levantamento Terra Unilateral,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/454
+455,Mesa Flexora Unilateral,Perna,Posterior de Coxa,https://rcstorestaff.com.br/exercicios_html/455
+456,Flexão de Perna com Halteres,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/456
+457,Stiff com Halteres,Perna,Posterior de Coxa,https://rcstorestaff.com.br/exercicios_html/457
+458,Agachamento Hack com Barra,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/458
+459,Agachamento Goblet,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/459
+460,Good Morning,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/460
+461,Extensão Lombar,Costas,Lombar,https://rcstorestaff.com.br/exercicios_html/461
+462,Abdominal Canoa,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/462
+463,Flexão Lateral de Tronco no Solo,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/463
+464,Abdominal no Bosu,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/464
+465,Abdominal Remador,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/465
+466,Abdominal Supra com Halter,Abdome,Reto Abdominal (parte superior),https://rcstorestaff.com.br/exercicios_html/466
+467,Abdominal Supra Curto,Abdome,Reto Abdominal (parte superior),https://rcstorestaff.com.br/exercicios_html/467
+468,Agachamento com Passada Lateral,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/468
+469,Glúteo no Graviton,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/469
+470,Glúteo no Graviton Cruzado,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/470
+471,Clean,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/471
+472,Rosca Inversa com Halter,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/472
+473,Ponte com Extensão de Perna,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/473
+474,Prancha com Elevação de Perna,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/474
+475,Elevação Lateral de Pernas Sobre 4 Apoios,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/475
+476,Elevação de Quadril com Bola Suíça,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/476
+477,Elevação Pélvica no Bosu,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/477
+478,Afundo Reverso no Step,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/478
+479,Simulador de Escada,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/479
+480,Prancha com os Pés na Bola Suíça,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/480
+481,Abdominal Infra na Bola Suíça,Abdome,Infra-abdome,https://rcstorestaff.com.br/exercicios_html/481
+482,Abdominal Supra com Anilha,Abdome,Reto Abdominal (parte superior),https://rcstorestaff.com.br/exercicios_html/482
+483,Abdominal Giro Russo,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/483
+484,Rosca Alternada Inclinado,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/484
+485,Remada Unilateral Na Polia Alta,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/485
+486,Remada Curvada com Pegada Invertida,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/486
+487,Remada no Banco Inclinado,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/487
+488,Flexão Hindu,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/488
+489,Tate Press,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/489
+490,Tríceps Coice na Polia,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/490
+491,Rosca Scott com Halter,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/491
+492,Extensão de Tríceps em Banco Declinado,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/492
+493,Extensão de Tríceps em Banco Inclinado,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/493
+494,Remada Cavalinho,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/494
+495,Elevação Lateral no Banco Inclinado,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/495
+496,Elevação Lateral Unilateral com Halteres,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/496
+497,Crucifixo Inverso em Pé,Ombro,Deltoide Posterior,https://rcstorestaff.com.br/exercicios_html/497
+498,Panturrilha Burrinho no Smith,Perna,Panturrilha,https://rcstorestaff.com.br/exercicios_html/498
+499,Elevação de Panturrilha Unilateral,Perna,Panturrilha,https://rcstorestaff.com.br/exercicios_html/499
+500,Abdominal no TRX,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/500
+501,Fallout no TRX,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/501
+502,Rosca no TRX,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/502
+503,Remada Unilateral no TRX,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/503
+504,Agachamento Unilateral no TRX,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/504
+505,Supino no TRX,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/505
+506,Remada Fechada no TRX,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/506
+507,Crucifixo Inverso no Peck Deck com Pegada Pronada,Ombro,Deltoide Posterior,https://rcstorestaff.com.br/exercicios_html/507
+508,Elevação de Joelho no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/508
+509,Salto Lateral no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/509
+510,Chinelo no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/510
+511,Calcanhar Atrás no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/511
+512,Cowboy no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/512
+513,Chinelo com Braço Aberto no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/513
+514,Elevação de Joelho e Braço no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/514
+515,Elevação de Joelho e Braço Duplo no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/515
+516,Calcanhar Atrás e Braço Duplo no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/516
+517,Calcanhar Atrás e Braço no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/517
+518,Giro 90° no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/518
+519,Giro 90° com Braço Aberto no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/519
+520,Giro 90° com Braço para Cima no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/520
+521,Calcanhar Atrás Duplo no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/521
+522,Tesoura no Jump,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/522
+523,Stretches Front,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/523
+524,Sit Up no Ladder Barrel,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/524
+525,Leg Extension,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/525
+526,Bridge,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/526
+527,Roll Over Barrel,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/527
+528,One Leg Up and Down,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/528
+529,Leg Pull Back Barrel,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/529
+530,Single Straight Stretch Barrel,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/530
+531,Hamstring Stretch,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/531
+532,Cat,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/532
+533,Swan Front,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/533
+534,Teaser no Step Chair,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/534
+535,Hundred Pumping,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/535
+536,Squat,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/536
+537,Roll Over Step,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/537
+538,Jackknife Step,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/538
+539,Pulling The Car,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/539
+540,French Press Tríceps,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/540
+541,Pushing One Side Arm,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/541
+542,Knee Extension,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/542
+543,Arms Pulling Stand Up,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/543
+544,Jump Jackknife,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/544
+545,Jump Cross Country,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/545
+546,Unilateral Shoulder Press with Inclination,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/546
+547,Front Splits,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/547
+548,Teaser no Reformer,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/548
+549,Spine Stretch no Reformer,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/549
+550,Long Spine Massage,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/550
+551,Knee Stretches Round,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/551
+552,Rolling Back Down and Up,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/552
+553,Spine Stretch no Cadillac,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/553
+554,Mermaid,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/554
+555,Rolling Back Variation 1 no Cadillac,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/555
+556,Hanging Pull Ups,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/556
+557,Rolling Back Variation 2 no Cadillac,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/557
+558,Swan,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/558
+559,Squating,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/559
+560,Tower,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/560
+561,Monkey,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/561
+562,Leg Supine Bycicle,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/562
+563,Flying,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/563
+564,Pendulum,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/564
+565,Passada Lateral com Faixa Elástica,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/565
+566,Agachamento com Faixa Elástica,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/566
+567,Agachamento Pistola com Faixa Elástica,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/567
+568,Glúteo com Faixa Elástica,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/568
+569,Concha com Faixa Elástica,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/569
+570,Leg Press Unilateral com Faixa Elástica,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/570
+571,Elevação de Perna Lateral com Faixa Elástica,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/571
+572,Agachamento e Salto com Faixa Elástica,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/572
+573,Monster Walk,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/573
+574,Elevação de Quadril com Faixa Elástica,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/574
+575,Elevação Quadril Unilateral com Faixa Elástica,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/575
+576,Flexão do Quadril Unilateral com Faixa Elástica,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/576
+577,Extensão do Quadril Unilateral com Faixa Elástica,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/577
+578,Abdutor Unilateral com Faixa Elástica,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/578
+579,Adutor Unilateral com Faixa Elástica,Perna,Adutores,https://rcstorestaff.com.br/exercicios_html/579
+580,Flexão Plantar Unilateral com Faixa Elástica,Perna,Panturrilha,https://rcstorestaff.com.br/exercicios_html/580
+581,Supino Reto em Pé com Faixa Elástica,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/581
+582,Remada Fechada com Faixa Elástica,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/582
+583,Elevação Lateral com Faixa Elástica,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/583
+584,Crucifixo Inverso com Faixa Elástica,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/584
+585,Rosca Direta com Faixa Elástica,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/585
+586,Tríceps Extensão com Faixa Elástica,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/586
+587,Flexão com Faixa Elástica,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/587
+588,Pallof Press com Faixa Elástica,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/588
+589,Agachamento Resistência com Faixa Elástica,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/589
+590,Face Pull com Faixa Elástica,Ombro,Deltoide Posterior,https://rcstorestaff.com.br/exercicios_html/590
+591,Good Morning com Faixa Elástica,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/591
+592,Pull-Through com Faixa Elástica,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/592
+593,Afundo com Faixa Elástica,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/593
+594,Abdução de Perna com Faixa Elástica,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/594
+595,Ondulação Vertical Simultânea da Corda Naval,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/595
+596,Polichinelo com Corda Naval,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/596
+597,Manguito com Corda Naval,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/597
+598,Giro Russo com Corda Naval,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/598
+599,Rotação dos Ombros com Corda Naval,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/599
+600,Crucifixo no Voador Alternado,Peito,Peitoral (Abertura),https://rcstorestaff.com.br/exercicios_html/600
+601,Crucifixo no Voador Unilateral,Peito,Peitoral (Abertura),https://rcstorestaff.com.br/exercicios_html/601
+602,Tríceps Testa na Polia Baixa,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/602
+603,Cross Over Polia Baixa,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/603
+604,Cross Over Unilateral Polia Baixa,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/604
+605,Crucifixo Inverso no Cross Over Polia Alta,Ombro,Deltoide Posterior,https://rcstorestaff.com.br/exercicios_html/605
+606,Rosca 21 com Halteres,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/606
+607,Rosca 21 com Barra,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/607
+608,Rosca 21 no Cross Over,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/608
+609,Afundo no Hack,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/609
+610,Lombar na Mesa Flexora,Costas,Lombar,https://rcstorestaff.com.br/exercicios_html/610
+611,Rosca Direta com Barra Reta no Cross Over,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/611
+612,Alongamento em Pé da Panturrilha,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/612
+613,Alongamento Sentado da Posterior de Coxa,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/613
+614,Alongamento de Adutores da Coxa,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/614
+615,Alongamento Borboleta,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/615
+616,Alongamento Deitado de Glúteo,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/616
+617,Alongamento Sentado de Glúteo,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/617
+618,Alongamento em Pé da Lombar,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/618
+619,Alongamento de Abdômen,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/619
+620,Torção Deitada,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/620
+621,Postura do Gato,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/621
+622,Alongamento Deitado de Dorsal,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/622
+623,Alongamento de Bíceps,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/623
+624,Alongamento dos Extensores do Punho,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/624
+625,Alongamento Sentado de Dorsal,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/625
+626,Alongamento Deitado da Lombar,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/626
+627,Abdominal com Flexão de Quadril no Jump,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/627
+628,Abdominal Tesoura Aberta no Jump,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/628
+629,Abdominal Tesoura no Jump,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/629
+630,Abdominal Supra Curto no Jump,Abdome,Reto Abdominal (parte superior),https://rcstorestaff.com.br/exercicios_html/630
+631,Abdominal no Jump,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/631
+632,Abdominal Prancha no Jump,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/632
+633,Prancha com Flexão de Joelho no Jump,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/633
+634,Prancha com Flexão Interna de Joelho no Jump,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/634
+635,Prancha com Flexão Externa de Joelho no Jump,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/635
+636,Abdominal em Pé,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/636
+637,Extensão de Joelho Deitado,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/637
+638,Flexão Lateral de Tronco em Pé,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/638
+639,Prancha com Flexão Plantar,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/639
+640,Abdominal Supra com Pernas 90º,Abdome,Reto Abdominal (parte superior),https://rcstorestaff.com.br/exercicios_html/640
+641,Adução de Quadril em Decúbito Ventral,Perna,Adutores,https://rcstorestaff.com.br/exercicios_html/641
+642,Flexão Alternada de Quadril e Joelhos em Pé,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/642
+643,Flexão Alternada de Quadril nas Paralelas,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/643
+644,Abdução de Quadril com Joelhos Flexionados,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/644
+645,Agachamento com Passada Lateral em Isometria,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/645
+646,Adução de Quadril com Joelhos Flexionados,Perna,Adutores,https://rcstorestaff.com.br/exercicios_html/646
+647,Adutor com Arco,Perna,Adutores,https://rcstorestaff.com.br/exercicios_html/647
+648,Agachamento em Isometria com Rotação de Tornozelo,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/648
+649,Agachamento com Chute Frontal Unilateral,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/649
+650,Apoio com Superman,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/650
+651,Prancha com Chute Lateral,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/651
+652,Ajoelhar com Agachamento,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/652
+653,Polichinelo com Agachamento,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/653
+654,Polichinelo com Halteres,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/654
+655,Sprawl Step,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/655
+656,Tocar os Pés Sentado,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/656
+657,Afundo no Sissy com Halteres,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/657
+658,Agachamento e Desenvolvimento com Anilha,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/658
+659,Agachamento com Elevação Frontal,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/659
+660,Agachamento Isométrico,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/660
+661,Avanço Alternado,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/661
+662,Levantar do Step com Avanço Unilateral,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/662
+663,Rosca Bíceps com Desenvolvimento,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/663
+664,Rosca Bíceps com Rotação,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/664
+665,Rosca Direta com Tríceps Francês,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/665
+666,Rosca Martelo com Anilha,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/666
+667,Hiperextensão de Ombro Inclinado,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/667
+668,Remada Curvada Supinada com Halter,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/668
+669,Arremesso de Bola ao Chão,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/669
+670,Hang Snatch,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/670
+671,Minhoca,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/671
+672,Minhoca com Flexão de Braços,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/672
+673,Agachamento com Apoio,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/673
+674,Hang Power Snatch,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/674
+675,Snatch,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/675
+676,Rotação de Ombros Inclinado com Halter,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/676
+677,Rotação de Ombros Frente/Atrás com Halter,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/677
+678,Flexão e Perna Elevada com Tração Elástica,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/678
+679,Flexão Explosiva com Tração Elástica,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/679
+680,Rastejar com Tração Elástica,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/680
+681,Prancha Suspensa com Tração Elástica,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/681
+682,V-Sit com Tração Elástica,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/682
+683,Agachamento e Salto com Tração Elástica,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/683
+684,Avião com Tração Elástica,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/684
+685,Postura Mesa com Tração Elástica,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/685
+686,Corrida Estacionária com Tração Elástica,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/686
+687,Agachamento com Tração Elástica,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/687
+688,Afundo com Tração Elástica,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/688
+689,Abdominal Rolinho com Tração Elástica,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/689
+690,Flexão de Braços com Tração Elástica,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/690
+691,Burpee com Tração Elástica,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/691
+692,Sit Up com Tração Elástica,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/692
+693,Elevação Pélvica no Aparelho,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/693
+694,Puxada Alta Bi-Articulada,Costas,Latíssimo do Dorso,https://rcstorestaff.com.br/exercicios_html/694
+695,Hundred,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/695
+696,Roll Up,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/696
+697,Roll Over,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/697
+698,One Leg Circle,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/698
+699,One Leg Stretch,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/699
+700,Double Leg Stretch,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/700
+701,Spine Stretch,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/701
+702,Saw,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/702
+703,Double Kick,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/703
+704,Neck Pull,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/704
+705,Polichinelo com Salto no Step,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/705
+706,Torção de Tronco,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/706
+707,Avanço com Apoio e Anteriorização do Quadril,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/707
+708,Avanço com Anteriorização do Quadril,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/708
+709,Agachamento com Elevação do Calcanhar,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/709
+710,Elevação Pélvica na Bola Suíça,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/710
+711,Agachamento com Kettlebell,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/711
+712,Afundo Alternado com Salto,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/712
+713,Supino Vertical Articulado Alternado Pegada Pronada,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/713
+714,Mobilidade Torácica e Ombro,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/714
+715,Rotação de Tronco Deitado de Lado,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/715
+716,Remada Paralela com Faixa Elástico,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/716
+717,Frog Bridge,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/717
+718,Superman Alternado,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/718
+719,Perdigueiro Estático,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/719
+720,Rotação de Tronco com 3 Apoios,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/720
+721,Elevação Pélvica com Barra,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/721
+722,Glúteo em Pé no Aparelho,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/722
+723,Glúteo no Cross Over com Banco,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/723
+724,Abdução de Ombro com Faixa Elástica,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/724
+725,Encolhimento com Faixa Elástica,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/725
+726,Mobilidade de Ombro,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/726
+727,Ativação de Serrátil Anterior,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/727
+728,Glúteo Cruzado no Cross Over,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/728
+729,Pull Down com Corda,Costas,Latíssimo do Dorso,https://rcstorestaff.com.br/exercicios_html/729
+730,Puxada Alta Articulada,Costas,Latíssimo do Dorso,https://rcstorestaff.com.br/exercicios_html/730
+731,Rosca Unilateral na Polia Alta,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/731
+732,Agachamento Sumô com Barra Livre,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/732
+733,Prancha Alta com Toque nos Ombros,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/733
+734,Devil Press,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/734
+735,Agachamento 21,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/735
+736,Tríceps Testa Unilateral com Halter,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/736
+737,Afundo com Desenvolvimento Unilateral,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/737
+738,Rosca Alternado e Direto,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/738
+739,Peck Deck e Desenvolvimento com Halter,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/739
+740,Crucifixo e Pull Over,Peito,Peitoral (Abertura),https://rcstorestaff.com.br/exercicios_html/740
+741,Elevação Pélvica com Pull Over,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/741
+742,Elevação Lateral e Frontal Conjugada,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/742
+743,Agachamento Sissy Livre,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/743
+744,Panturrilha no Leg Press 180°,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/744
+745,Abdominal Oblíquo no Cross Over com Polia Alta,Abdome,Oblíquos,https://rcstorestaff.com.br/exercicios_html/745
+746,Desenvolvimento Sentado com Barra,Ombro,Deltoide (Anterior e Lateral),https://rcstorestaff.com.br/exercicios_html/746
+747,Flexão Unilateral de Tronco em Pé,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/747
+748,Puxada Alta Articulada Alternada,Costas,Latíssimo do Dorso,https://rcstorestaff.com.br/exercicios_html/748
+749,Supino Vertical Articulado Pegada Pronada,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/749
+750,Supino Vertical Articulado Pegada Neutra,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/750
+751,Supino Vertical Articulado Alternado Pegada Neutra,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/751
+752,Bicicleta Ergométrica Horizontal,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/752
+753,Leg Press Articulado,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/753
+754,Remada Hammer,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/754
+755,Remada Alta Hammer,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/755
+756,Supino Reto Alternado com Halter,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/756
+757,Supino Reto com Halter Pegada Neutra,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/757
+760,Abdominal com Foam Roller,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/760
+761,Agachamento e Passada Lateral com Faixa Elástica,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/761
+762,Flexão de Quadril com Caneleira,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/762
+763,Elevação Pélvica Unilateral,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/763
+764,Abdução Total de Ombros,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/764
+765,Peck Deck com Halteres,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/765
+766,Leg Press Vertical no Smith,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/766
+767,Flexão Total de Quadril com Caneleira,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/767
+768,Tríceps Testa com um Halter,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/768
+769,Tibial Unilateral no Leg Press,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/769
+770,Tibial no Leg Press,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/770
+771,Tibial no Leg Press Inclinado,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/771
+772,Tibial Unilateral no Leg Press Inclinado,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/772
+773,Avanço com Halter,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/773
+774,Prancha com Flexão de Joelho na Bola Suíça,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/774
+775,Flexão Lateral de Quadril na Bola Suíça,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/775
+776,Flexão Alternada de Ombro e Cotovelo com Bola Suíça,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/776
+777,Sentar e Deitar na Bola Suíça com Elevação Pélvica,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/777
+778,Extensão e Flexão do Tronco na Bola Suíça,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/778
+779,Flexão Lateral de Tronco na Bola Suíça,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/779
+780,Flexão de Quadril com Bola Suíça,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/780
+781,Flexão de Quadril e Joelho com Bola Suíça,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/781
+782,Stiff com Kettlebell,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/782
+783,Banco Isométrico com Faixa Elástica,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/783
+784,Stiff Unilateral com Kettlebell,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/784
+785,Agachamento Curto Unilateral Isométrico,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/785
+786,Ondulação de Corda Naval com Afundo Alternado,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/786
+787,Corda Naval Serpente,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/787
+788,Agachamento e Salto com Corda Naval,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/788
+789,Afundo e Rotação de Tronco com Faixa Elástico,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/789
+790,Extensão de Quadril Alternada/Duas Pernas na Caixa,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/790
+791,Liberação Miofascial do Piriforme com Foam Roller,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/791
+792,Flexão de Joelho com Alongamento de Lombar,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/792
+793,Flexão de Pernas,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/793
+794,Alongamento Deitado do Glúteo com Torção,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/794
+795,Alongamento da Perna Sentado,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/795
+796,Mobilidade Torácica no Medicine Ball,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/796
+797,Abdominal com Wall Ball,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/797
+798,Abdominal Curto no Medicine Ball,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/798
+799,Air Ball,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/799
+800,Agachamento no Hack Invertido,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/800
+801,Agachamento Unilateral no Hack Invertido,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/801
+802,Crucifixo Articulado Reto,Peito,Peitoral (Abertura),https://rcstorestaff.com.br/exercicios_html/802
+803,Crucifixo Articulado Inclinado,Peito,Peitoral Superior,https://rcstorestaff.com.br/exercicios_html/803
+804,Mobilidade de Tornozelo,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/804
+805,Flexão de Tornozelo,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/805
+806,Rotação de Tornozelo,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/806
+807,Flexão de Quadril Deitado,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/807
+808,Alongamento de Cadeia Posterior em Afundo,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/808
+809,Alongamento Cadeia Posterior e Quadríceps,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/809
+810,Alongamento de Cadeia Posterior em 4 Apoios,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/810
+811,Alongamento Z,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/811
+812,Alongamento Z com Extensão de Quadril,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/812
+813,Alongamento Z com Rotação da Perna,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/813
+814,Alongamento Borboleta com Rotação de Tronco,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/814
+815,Alongamento Frog,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/815
+816,Alongamento Spider-Man,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/816
+817,Mobilidade Torácica com Torção,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/817
+818,Alongamento Dinâmico Invertido do Punho,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/818
+819,Alongamento Dinâmico Rotação do Punho,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/819
+820,Estabilidade de Arco Plantar com Agachamento,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/820
+821,Estabilidade de Arco Plantar com Agachamento Unilateral,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/821
+822,Pallof Press com uma Perna,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/822
+823,Mobilidade de Tornozelo com Barra,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/823
+824,Dorsiflexão com Halter,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/824
+825,Passada Lateral com Faixa Elástica no Tornozelo,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/825
+826,Agachamento Unilateral com Equilíbrio Posterior,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/826
+827,Agachamento Unilateral com Equilíbrio Anterior,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/827
+828,Prancha com Apoio do Joelho,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/828
+829,Prancha no Banco,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/829
+830,Prancha Lateral no Banco,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/830
+831,Prancha Lateral com Apoio do Joelho,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/831
+832,Prancha Lateral na Bola Suíça,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/832
+833,Prancha Lateral com os Pés na Bola Suíça,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/833
+834,Caminhada com Peso Unilateral,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/834
+835,Prancha Alta com Joelho e Toque nos Ombros,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/835
+836,Pallof Press Ajoelhado,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/836
+837,Pallof Press Semi-Ajoelhado,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/837
+838,Alongamento Torácico,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/838
+839,Alongamento Torácico com Foam Roller,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/839
+840,Alongamento Torácico com Bola Suíça,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/840
+841,Mobilidade Torácica no Banco,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/841
+842,Rotação de Tronco Semi-Ajoelhado,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/842
+843,Mobilidade Escapular na Parede,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/843
+844,Rotação Externa com Abdução de Ombro na Parede,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/844
+845,Rotação Externa do Ombro com Faixa Elástica,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/845
+846,Mobilidade e Estabilidade de Ombro,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/846
+847,Alongamento Dinâmico do Punho,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/847
+848,Saltito Alternado,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/848
+849,Corrida Estacionária com Calcanhar Atrás,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/849
+850,Polichinelo Cruzado,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/850
+851,Fly Inclinado,Peito,Peitoral Superior,https://rcstorestaff.com.br/exercicios_html/851
+852,Fly Reto,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/852
+853,Flexão Nórdica,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/853
+854,Flexão Nórdica Reversa,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/854
+855,Tríceps no Aparelho,Tríceps,Tríceps,https://rcstorestaff.com.br/exercicios_html/855
+856,Abdução e Extensão do Quadril em Pé,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/856
+857,Good Morning com Faixa Elástica na Cintura,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/857
+858,Deadbug com Resistência no Braço,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/858
+859,Alongamento Deitado de Dorsal com Rotação,Alongamento,Alongamento Geral,https://rcstorestaff.com.br/exercicios_html/859
+860,Rotação de Tronco Deitado de Lado com Rolo,Mobilidade,Mobilidade Articular,https://rcstorestaff.com.br/exercicios_html/860
+861,Afundo Alternado,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/861
+862,Banco Extensor em Isometria,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/862
+863,Banco Flexor em Isometria,Perna,Posterior de Coxa,https://rcstorestaff.com.br/exercicios_html/863
+864,Mesa Flexora em Isometria,Perna,Posterior de Coxa,https://rcstorestaff.com.br/exercicios_html/864
+865,Elevação Lateral em Isometria,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/865
+866,Elevação Frontal em Isometria,Ombro,Deltoide Anterior,https://rcstorestaff.com.br/exercicios_html/866
+867,Agachamento Frontal com Halter,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/867
+868,Elevação Lateral com Isometria Alternada,Ombro,Deltoide Lateral,https://rcstorestaff.com.br/exercicios_html/868
+869,Elevação Frontal com Isometria Alternada,Ombro,Deltoide Anterior,https://rcstorestaff.com.br/exercicios_html/869
+870,Elevação de Joelhos com Braços Alternados,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/870
+871,Extensão de Quadril,Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/871
+872,Flexão de Quadril,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/872
+873,Passada Diagonal,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/873
+874,Salto Lateral,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/874
+875,Giro Russo com Bola,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/875
+876,Salto no Step,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/876
+877,Agachamento com Barra Hexagonal,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/877
+878,Flexão Extensão Lombar,Costas,Lombar,https://rcstorestaff.com.br/exercicios_html/878
+879,Face Pull 2,Costas,Dorsais,https://rcstorestaff.com.br/exercicios_html/879
+880,Pulley Articulado,Costas,Latíssimo do Dorso,https://rcstorestaff.com.br/exercicios_html/880
+881,Agachamento com Remada na Polia,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/881
+882,Abdominal Remador Unilateral,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/882
+883,Agachamento Sumô com Barra à Frente,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/883
+884,Agachamento com Desenvolvimento Arnold,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/884
+885,Remada Baixa Romana,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/885
+886,Salto com Sandbag,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/886
+887,Supino Inclinado no Aparelho,Peito,Peitoral Superior,https://rcstorestaff.com.br/exercicios_html/887
+888,Supino Inclinado Articulado,Peito,Peitoral Superior,https://rcstorestaff.com.br/exercicios_html/888
+889,Lunges Sandbag,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/889
+890,Sandbag Clean,Corpo,Corpo Inteiro,https://rcstorestaff.com.br/exercicios_html/890
+891,Plate Chest Press,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/891
+892,Agachamento Sumô,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/892
+893,Elevação Pélvica no Aparelho (2),Glúteo,Glúteo Máximo,https://rcstorestaff.com.br/exercicios_html/893
+894,Abdominal no Sissy,Abdome,Reto Abdominal,https://rcstorestaff.com.br/exercicios_html/894
+895,Agachamento Sissy 2,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/895
+896,Supino Inclinado Articulado 2,Peito,Peitoral Superior,https://rcstorestaff.com.br/exercicios_html/896
+897,Supino Inclinado na Barra Guiada Smith,Peito,Peitoral Superior,https://rcstorestaff.com.br/exercicios_html/897
+898,Supino Declinado na Barra Guiada Smith,Peito,Peitoral Inferior,https://rcstorestaff.com.br/exercicios_html/898
+899,Retração Escapular na Remada Baixa,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/899
+900,Encolhimento de Ombro com Halteres,Ombro,Deltoide,https://rcstorestaff.com.br/exercicios_html/900
+901,Agachamento na Máquina Squat,Perna,Quadríceps,https://rcstorestaff.com.br/exercicios_html/901
+902,Rosca Bíceps Unilateral Polia Alta Crossover,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/902
+903,Rosca Direta Alta com Halter,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/903
+904,Rosca Bíceps Polia Alta Crossover,Bíceps,Bíceps,https://rcstorestaff.com.br/exercicios_html/904
+905,Power Squat,Perna,Membros Inferiores,https://rcstorestaff.com.br/exercicios_html/905
+906,Supino em Pé,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/906
+907,Supino 45º no Smith,Peito,Peitoral Médio,https://rcstorestaff.com.br/exercicios_html/907
+908,Remada Curvada Invertida,Costas,Dorsais e Trapézio,https://rcstorestaff.com.br/exercicios_html/908

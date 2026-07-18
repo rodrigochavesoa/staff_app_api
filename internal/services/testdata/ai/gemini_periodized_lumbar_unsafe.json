@@ -1,0 +1,26 @@
+{
+  "tipo": "periodizada",
+  "frequencia": 3,
+  "objetivo": "Hipertrofia",
+  "nivel": "intermediario",
+  "observacoes": "Fixture anonimizada com prescricao perigosa para restricao lombar.",
+  "treinos": [
+    {
+      "letra": "C",
+      "nome": "C - Pernas",
+      "exercicios": [
+        {
+          "ordem": 1,
+          "nome": "Agachamento Livre",
+          "grupo_muscular": "Pernas",
+          "series": 5,
+          "repeticoes": "5-6",
+          "cadencia": "3010",
+          "descanso": 120,
+          "observacoes": "Carga alta.",
+          "video_url": ""
+        }
+      ]
+    }
+  ]
+}

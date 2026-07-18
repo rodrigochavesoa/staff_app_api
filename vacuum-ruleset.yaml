@@ -1,0 +1,4 @@
+extends: [[spectral:oas, recommended]]
+rules:
+  camel-case-properties: false
+  no-http-verbs-in-path: false

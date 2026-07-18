@@ -1,0 +1,65 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: staff_api
+    ports:
+      # HOST_PORT controls the port exposed on the host machine.
+      # The internal container port is fixed at 5000.
+      - "${HOST_PORT:-5000}:5000"
+    environment:
+      # Fixed internal container configurations to ensure they align
+      # with Docker volumes and the internal healthcheck.
+      - PORT=5000
+      # Keep the SQLite file under a dedicated volume mount so image assets in
+      # /app/data/csv and /app/data/json are not hidden by the volume.
+      - DB_PATH=/app/data/db/fichas_treino.db
+      - GARMIN_UPLOAD_DIR=/app/uploads_atividades
+      
+      # Interpolated environment variables that can be customized for staging/production
+      # via a local .env file or system environment variables.
+      # Defaults target local staging/development. For production, set ENV=production
+      # and provide real SECRET_KEY + ADMIN_DEFAULT_PASSWORD in the host environment or .env.
+      - ENV=${ENV:-development}
+      - FICHA_EXPIRATION_DAYS=${FICHA_EXPIRATION_DAYS:-30}
+      - HASH_LENGTH=${HASH_LENGTH:-12}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://rcstorestaff.com.br,https://www.rcstorestaff.com.br,http://localhost:*,http://127.0.0.1:*}
+      - GARMIN_MAX_UPLOAD_MB=${GARMIN_MAX_UPLOAD_MB:-50}
+      # WARNING: Always set unique, secure values in production!
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-me-in-production}
+      - ADMIN_DEFAULT_USERNAME=${ADMIN_DEFAULT_USERNAME:-admin}
+      - ADMIN_DEFAULT_EMAIL=${ADMIN_DEFAULT_EMAIL:-admin@example.com}
+      - ADMIN_DEFAULT_PASSWORD=${ADMIN_DEFAULT_PASSWORD:-admin-change-me-immediately}
+      # Optional Knowledge Base / RAG providers. Leave empty to use local fallback only.
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - CHROMA_URL=${CHROMA_URL:-}
+      - CHROMA_COLLECTION=${CHROMA_COLLECTION:-knowledge_base}
+      # Optional AI training generation/enrichment providers.
+      # The default assistive mode falls back to deterministic local generation.
+      - AI_TRAINING_MODE=${AI_TRAINING_MODE:-assistive}
+      - AI_TRAINING_PROVIDERS=${AI_TRAINING_PROVIDERS:-gemini,openai,claude,local}
+      - AI_TRAINING_PROVIDER_TIMEOUT_SECONDS=${AI_TRAINING_PROVIDER_TIMEOUT_SECONDS:-20}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash-lite}
+      - OPENAI_TRAINING_MODEL=${OPENAI_TRAINING_MODEL:-gpt-4o-mini}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - CLAUDE_TRAINING_MODEL=${CLAUDE_TRAINING_MODEL:-claude-3-5-haiku-latest}
+    volumes:
+      - sqlite_data:/app/data/db
+      - garmin_uploads:/app/uploads_atividades
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
+    driver: local
+  garmin_uploads:
+    driver: local

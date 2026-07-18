@@ -1,0 +1,10 @@
+# vacuum.conf.yaml — used automatically when running `vacuum lint` from this directory.
+# Official contract lint command (recommended):
+#   /tmp/go-tools/vacuum lint -r vacuum-ruleset.yaml openapi.yaml
+#
+# Ruleset notes: snake_case JSON and Garmin .../delete path are intentional.
+
+lint:
+  ruleset: vacuum-ruleset.yaml
+  fail-severity: error
+  min-score: 10

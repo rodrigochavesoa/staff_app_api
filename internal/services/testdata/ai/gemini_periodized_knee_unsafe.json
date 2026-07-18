@@ -1,0 +1,23 @@
+{
+  "tipo": "periodizada",
+  "frequencia": 3,
+  "objetivo": "Hipertrofia",
+  "nivel": "intermediário",
+  "observacoes": "Fixture anonimizada com prescricao perigosa para restricao de joelho.",
+  "treinos": [
+    {
+      "letra": "A",
+      "nome": "A - Pernas",
+      "exercicios": [
+        {
+          "nome": "Leg Press 45 Pesado",
+          "grupo_muscular": "Quadriceps",
+          "series": 4,
+          "repeticoes": "8-10",
+          "descanso": 90,
+          "cadencia": "3010"
+        }
+      ]
+    }
+  ]
+}

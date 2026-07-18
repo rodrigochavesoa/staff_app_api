@@ -1,0 +1,3107 @@
+openapi: 3.0.0
+info:
+    title: Sistema RC Staff API
+    description: API REST frontend-agnostic e desacoplada em Go para o sistema RC Staff (musculação, corrida, RAG, SVED e relatórios administrativos).
+    version: 0.1.0-rc
+servers:
+    - url: http://localhost:5000
+      description: Servidor de desenvolvimento local
+tags:
+    - name: Health
+      description: Health checks, readiness and liveness endpoints.
+    - name: Auth
+      description: Authentication, current user and password operations.
+    - name: Planos
+      description: Public subscription plan listing.
+    - name: Pré-Cadastro
+      description: Public student pre-registration flows.
+    - name: Anamnese
+      description: Public anamnese token metadata and submission flows.
+    - name: Fichas Web
+      description: Public workout links, snapshots, feedback and access metadata.
+    - name: Feedback
+      description: Ficha feedback and notification operations.
+    - name: Treinos Musculação
+      description: Strength-training completion tracking endpoints.
+    - name: Periodização Corrida
+      description: Running periodization plans, public links and calendars.
+    - name: Alunos
+      description: Student management and student-level summaries.
+    - name: VDOT Tests
+      description: VDOT and 3 km test operations.
+    - name: Fichas Musculação
+      description: Strength workout creation, editing and deletion.
+    - name: SVED
+      description: SVED calculations, history, suggestions and dashboard endpoints.
+    - name: Histórico
+      description: Ficha history and detailed training history endpoints.
+    - name: Admin Pré-Cadastro
+      description: Administrative pre-registration approval and rejection flows.
+    - name: Admin Anamnese
+      description: Administrative anamnese review, approval, rejection and email flows.
+    - name: Exercícios
+      description: Exercise library, custom exercise and rehabilitation endpoints.
+    - name: Sugestões Rehab IA
+      description: AI/RAG rehabilitation exercise suggestion moderation.
+    - name: Admin Gestão Usuários
+      description: Administrative user approval, rejection and access control.
+    - name: Admin Planos
+      description: Administrative subscription plan management.
+    - name: Admin Configurações
+      description: Administrative system configuration and SMTP testing.
+    - name: Admin Dashboard
+      description: Administrative metrics and dashboard summaries.
+    - name: Admin Relatórios
+      description: Administrative specialized reports.
+    - name: Admin RAG
+      description: Administrative knowledge-base and RAG query endpoints.
+    - name: Garmin
+      description: Garmin upload, activity metadata and athlete statistics.
+    - name: Garmin Gráficos
+      description: Garmin chart and Plotly-compatible analytics endpoints.
+paths:
+    /:
+        get:
+            operationId: getRoot
+            summary: Index endpoint com informação básica do servidor
+            tags: [Health]
+            responses:
+                '200':
+                    description: Servidor online
+                    content:
+                        text/html:
+                            schema:
+                                type: string
+                                example: "<h1>RC Staff API</h1>"
+            description: Index endpoint com informação básica do servidor (`GET /`).
+    /health:
+        get:
+            operationId: getHealth
+            summary: Health check completo com status do banco de dados
+            tags: [Health]
+            responses:
+                '200':
+                    description: Status de saúde consolidado
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ok
+                                    database:
+                                        type: string
+                                        example: connected
+                                example: {}
+                            example:
+                                status: exemplo
+                                database: exemplo
+            description: Health check completo com status do banco de dados (`GET /health`).
+    /ping:
+        get:
+            operationId: getPing
+            summary: Resposta simples pong para verificação rápida de liveness
+            tags: [Health]
+            responses:
+                '200':
+                    description: Pong response
+                    content:
+                        text/plain:
+                            schema:
+                                type: string
+                                example: pong
+            description: Resposta simples pong para verificação rápida de liveness (`GET /ping`).
+    /api/v1/ping:
+        get:
+            operationId: getPing2
+            summary: Health check sob namespace api/v1
+            tags: [Health]
+            responses:
+                '200':
+                    description: API e banco de dados operacionais
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ok
+                                    database:
+                                        type: string
+                                        example: connected
+                                example: {}
+                            example:
+                                status: exemplo
+                                database: exemplo
+            description: Health check sob namespace api/v1 (`GET /api/v1/ping`).
+    /api/v1/auth/register:
+        post:
+            operationId: postAuthRegister
+            summary: Registro de novo treinador
+            tags: [Auth]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [username, password, name, email]
+                            properties:
+                                username:
+                                    type: string
+                                    example: treinador
+                                password:
+                                    type: string
+                                    example: senha-segura
+                                name:
+                                    type: string
+                                    example: exemplo
+                                email:
+                                    type: string
+                                    example: aluno@example.com
+                        example:
+                            username: treinador
+                            password: senha-segura
+                            name: exemplo
+                            email: aluno@example.com
+                description: Corpo da requisição para `POST /api/v1/auth/register`.
+            responses:
+                '201':
+                    description: Registro efetuado com sucesso (aguardando moderação do admin)
+                '400':
+                    description: Payload inválido ou usuário existente
+            description: Registro de novo treinador (`POST /api/v1/auth/register`).
+    /api/v1/auth/login:
+        post:
+            operationId: postAuthLogin
+            summary: Login de treinador / admin
+            tags: [Auth]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [username, password]
+                            properties:
+                                username:
+                                    type: string
+                                    example: treinador
+                                password:
+                                    type: string
+                                    example: senha-segura
+                        example:
+                            username: treinador
+                            password: senha-segura
+                description: Corpo da requisição para `POST /api/v1/auth/login`.
+            responses:
+                '200':
+                    description: Login bem-sucedido
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    token:
+                                        type: string
+                                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example
+                                example: {}
+                            example:
+                                token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example
+                '401':
+                    description: Credenciais inválidas ou conta inativa
+            description: Login de treinador / admin (`POST /api/v1/auth/login`).
+    /api/v1/auth/me:
+        get:
+            operationId: getAuthMe
+            summary: Dados do usuário autenticado
+            tags: [Auth]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Retorna dados do usuário atual
+            description: Dados do usuário autenticado (`GET /api/v1/auth/me`).
+    /api/v1/auth/alterar-senha:
+        post:
+            operationId: postAuthAlterarSenha
+            summary: Alteração de senha do usuário logado
+            tags: [Auth]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [senha_atual, nova_senha]
+                            properties:
+                                senha_atual:
+                                    type: string
+                                    example: senha-segura
+                                nova_senha:
+                                    type: string
+                                    example: senha-segura
+                        example:
+                            senha_atual: senha-segura
+                            nova_senha: senha-segura
+                description: Corpo da requisição para `POST /api/v1/auth/alterar-senha`.
+            responses:
+                '200':
+                    description: Senha alterada com sucesso
+            description: Alteração de senha do usuário logado (`POST /api/v1/auth/alterar-senha`).
+    /api/v1/planos:
+        get:
+            operationId: getPlanos
+            summary: Listagem de planos ativos (público)
+            tags: [Planos]
+            responses:
+                '200':
+                    description: Lista de planos ativos
+            description: Listagem de planos ativos (público) (`GET /api/v1/planos`).
+    /api/v1/pre-cadastro:
+        post:
+            operationId: postPreCadastro
+            summary: Submissão de pré-cadastro (público)
+            tags: [Pré-Cadastro]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [nome, email, telefone, data_nascimento, genero, plano_id]
+                            properties:
+                                nome:
+                                    type: string
+                                    example: Maria Silva
+                                email:
+                                    type: string
+                                    example: aluno@example.com
+                                telefone:
+                                    type: string
+                                    example: exemplo
+                                data_nascimento:
+                                    type: string
+                                    format: date
+                                    example: exemplo
+                                genero:
+                                    type: string
+                                    example: exemplo
+                                plano_id:
+                                    type: integer
+                                    example: 1
+                        example:
+                            nome: Maria Silva
+                            email: aluno@example.com
+                            telefone: exemplo
+                            data_nascimento: exemplo
+                            genero: exemplo
+                            plano_id: 1
+                description: Corpo da requisição para `POST /api/v1/pre-cadastro`.
+            responses:
+                '201':
+                    description: Pré-cadastro criado com sucesso
+            description: Submissão de pré-cadastro (público) (`POST /api/v1/pre-cadastro`).
+    /api/v1/anamnese/submit/{token}:
+        get:
+            operationId: getAnamneseSubmitByToken
+            summary: Retorna os metadados públicos do formulário de anamnese via token
+            tags: [Anamnese]
+            parameters:
+                - name: token
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example
+                  description: Token público de acesso ao formulário de anamnese. Usado em `/api/v1/anamnese/submit/{token}`.
+            responses:
+                '200':
+                    description: Detalhes da anamnese associada
+            description: Retorna os metadados públicos do formulário de anamnese via token (`GET /api/v1/anamnese/submit/{token}`).
+        post:
+            operationId: postAnamneseSubmitByToken
+            summary: Submissão pública das respostas do formulário de anamnese
+            tags: [Anamnese]
+            parameters:
+                - name: token
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example
+                  description: Token público de acesso ao formulário de anamnese. Usado em `/api/v1/anamnese/submit/{token}`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [respostas]
+                            properties:
+                                respostas:
+                                    type: object
+                                    example: {}
+                        example:
+                            respostas:
+                                objetivo: hipertrofia
+                description: Corpo da requisição para `POST /api/v1/anamnese/submit/{token}`.
+            responses:
+                '200':
+                    description: Anamnese submetida com sucesso
+            description: Submissão pública das respostas do formulário de anamnese (`POST /api/v1/anamnese/submit/{token}`).
+    /api/v1/ficha/{hash}/json:
+        get:
+            operationId: getFichaByHashJson
+            summary: Retorna o snapshot JSON completo de uma Ficha Web ativa (público)
+            tags: [Fichas Web]
+            parameters:
+                - name: hash
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: a1b2c3d4e5f6
+                  description: Hash público do link da ficha ou plano de corrida. Usado em `/api/v1/ficha/{hash}/json`.
+            responses:
+                '200':
+                    description: Snapshot JSON da ficha
+            description: Retorna o snapshot JSON completo de uma Ficha Web ativa (público) (`GET /api/v1/ficha/{hash}/json`).
+    /api/v1/ficha/{hash}/treino/{letra}:
+        get:
+            operationId: getFichaByHashTreinoByLetra
+            summary: Retorna um bloco específico de treino de musculação por letra (A, B, C, D) (público)
+            tags: [Fichas Web]
+            parameters:
+                - name: hash
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: a1b2c3d4e5f6
+                  description: Hash público do link da ficha ou plano de corrida. Usado em `/api/v1/ficha/{hash}/treino/{letra}`.
+                - name: letra
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: A
+                  description: Letra do bloco de treino (A, B, C ou D). Usado em `/api/v1/ficha/{hash}/treino/{letra}`.
+            responses:
+                '200':
+                    description: Bloco de treino retornado com sucesso
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    letra:
+                                        type: string
+                                        example: A
+                                    treino:
+                                        type: object
+                                        example: {}
+                                example: {}
+                            example:
+                                letra: A
+            description: Retorna um bloco específico de treino de musculação por letra (A, B, C, D) (público) (`GET /api/v1/ficha/{hash}/treino/{letra}`).
+    /api/v1/feedback/{hash}:
+        get:
+            operationId: getFeedbackByHash
+            summary: Verifica se há feedback preenchido para o link ativo (público)
+            tags: [Feedback]
+            parameters:
+                - name: hash
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: a1b2c3d4e5f6
+                  description: Hash público do link da ficha ou plano de corrida. Usado em `/api/v1/feedback/{hash}`.
+            responses:
+                '200':
+                    description: Status do feedback
+            description: Verifica se há feedback preenchido para o link ativo (público) (`GET /api/v1/feedback/{hash}`).
+        post:
+            operationId: postFeedbackByHash
+            summary: Envia feedback qualitativo de treino (público)
+            tags: [Feedback]
+            parameters:
+                - name: hash
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: a1b2c3d4e5f6
+                  description: Hash público do link da ficha ou plano de corrida. Usado em `/api/v1/feedback/{hash}`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [feedback]
+                            properties:
+                                feedback:
+                                    type: string
+                                    example: Treino concluído sem dor.
+                        example:
+                            feedback: Treino concluído sem dor.
+                description: Corpo da requisição para `POST /api/v1/feedback/{hash}`.
+            responses:
+                '200':
+                    description: Feedback registrado
+            description: Envia feedback qualitativo de treino (público) (`POST /api/v1/feedback/{hash}`).
+    /api/v1/treinos/mes:
+        get:
+            operationId: getTreinosMes
+            summary: Retorna o calendário mensal de treinos concluídos via link público da Ficha (público)
+            tags: [Fichas Web]
+            parameters:
+                - name: hash_ficha
+                  in: query
+                  required: true
+                  schema:
+                    type: string
+                    example: a1b2c3d4e5f6
+                  description: Hash público da ficha web de musculação. Usado em `/api/v1/treinos/mes`.
+                - name: mes
+                  in: query
+                  schema:
+                    type: integer
+                    example: 7
+                  description: Mês calendário (1–12). Usado em `/api/v1/treinos/mes`.
+                - name: ano
+                  in: query
+                  schema:
+                    type: integer
+                    example: 2026
+                  description: Ano calendário (YYYY). Usado em `/api/v1/treinos/mes`.
+            responses:
+                '200':
+                    description: Frequência mensal do aluno retornada com sucesso
+            description: Retorna o calendário mensal de treinos concluídos via link público da Ficha (público) (`GET /api/v1/treinos/mes`).
+    /api/v1/treinos/marcar:
+        post:
+            operationId: postTreinosMarcar
+            summary: Marca a conclusão de um treino do dia (musculação)
+            description: |
+                Marca a conclusão de um treino do dia (musculação) (`POST /api/v1/treinos/marcar`).
+                Autenticação é opcional no router (`OptionalAuthMiddleware`): Bearer enriquece o contexto quando presente; o fluxo público do aluno continua válido sem token.
+            tags: [Treinos Musculação]
+            security:
+                - BearerAuth: []
+                - {}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [aluno_id, data_treino, treino_letra]
+                            properties:
+                                aluno_id:
+                                    type: integer
+                                    example: 1
+                                data_treino:
+                                    type: string
+                                    format: date
+                                    example: "2026-07-17"
+                                treino_letra:
+                                    type: string
+                                    example: A
+                                hash_ficha:
+                                    type: string
+                                    example: a1b2c3d4e5f6
+                        example:
+                            aluno_id: 1
+                            data_treino: "2026-07-17"
+                            treino_letra: A
+                            hash_ficha: a1b2c3d4e5f6
+                description: Corpo da requisição para `POST /api/v1/treinos/marcar`.
+            responses:
+                '200':
+                    description: Treino marcado com sucesso
+    /api/v1/treinos/desmarcar:
+        post:
+            operationId: postTreinosDesmarcar
+            summary: Desmarca a conclusão de um treino (musculação)
+            description: |
+                Desmarca a conclusão de um treino (musculação) (`POST /api/v1/treinos/desmarcar`).
+                Autenticação é opcional no router (`OptionalAuthMiddleware`): Bearer enriquece o contexto quando presente; o fluxo público do aluno continua válido sem token.
+            tags: [Treinos Musculação]
+            security:
+                - BearerAuth: []
+                - {}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [aluno_id, data_treino]
+                            properties:
+                                aluno_id:
+                                    type: integer
+                                    example: 1
+                                data_treino:
+                                    type: string
+                                    format: date
+                                    example: "2026-07-17"
+                                hash_ficha:
+                                    type: string
+                                    example: a1b2c3d4e5f6
+                        example:
+                            aluno_id: 1
+                            data_treino: "2026-07-17"
+                            hash_ficha: a1b2c3d4e5f6
+                description: Corpo da requisição para `POST /api/v1/treinos/desmarcar`.
+            responses:
+                '200':
+                    description: Treino desmarcado
+    /api/v1/corrida/publica/{hash}:
+        get:
+            operationId: getCorridaPublicaByHash
+            summary: Retorna o plano de periodização de corrida ativo público (público)
+            tags: [Periodização Corrida]
+            parameters:
+                - name: hash
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: a1b2c3d4e5f6
+                  description: Hash público do link da ficha ou plano de corrida. Usado em `/api/v1/corrida/publica/{hash}`.
+            responses:
+                '200':
+                    description: Plano de corrida público
+            description: Retorna o plano de periodização de corrida ativo público (público) (`GET /api/v1/corrida/publica/{hash}`).
+    /api/v1/corrida/publica/{hash}/concluir:
+        post:
+            operationId: postCorridaPublicaByHashConcluir
+            summary: Marca treino de corrida específico como concluído (público)
+            tags: [Periodização Corrida]
+            parameters:
+                - name: hash
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: a1b2c3d4e5f6
+                  description: Hash público do link da ficha ou plano de corrida. Usado em `/api/v1/corrida/publica/{hash}/concluir`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [semana_idx, dia_idx]
+                            properties:
+                                semana_idx:
+                                    type: integer
+                                    example: 1
+                                dia_idx:
+                                    type: integer
+                                    example: 1
+                        example:
+                            semana_idx: 1
+                            dia_idx: 1
+                description: Corpo da requisição para `POST /api/v1/corrida/publica/{hash}/concluir`.
+            responses:
+                '200':
+                    description: Conclusão registrada
+            description: Marca treino de corrida específico como concluído (público) (`POST /api/v1/corrida/publica/{hash}/concluir`).
+    /api/v1/alunos/search:
+        get:
+            operationId: getAlunosSearch
+            summary: Busca rápida de alunos por nome ou e-mail (autocomplete)
+            tags: [Alunos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: q
+                  in: query
+                  required: true
+                  schema:
+                    type: string
+                    example: lombalgia
+                  description: Termo de busca textual. Usado em `/api/v1/alunos/search`.
+            responses:
+                '200':
+                    description: Alunos encontrados
+            description: Busca rápida de alunos por nome ou e-mail (autocomplete) (`GET /api/v1/alunos/search`).
+    /api/v1/alunos:
+        get:
+            operationId: getAlunos
+            summary: Listagem de alunos gerenciados
+            tags: [Alunos]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Lista de alunos
+            description: Listagem de alunos gerenciados (`GET /api/v1/alunos`).
+        post:
+            operationId: postAlunos
+            summary: Cadastro manual de aluno
+            tags: [Alunos]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [nome, idade, sexo, email, telefone]
+                            properties:
+                                nome:
+                                    type: string
+                                    example: Maria Silva
+                                idade:
+                                    type: integer
+                                    example: 1
+                                sexo:
+                                    type: string
+                                    example: exemplo
+                                email:
+                                    type: string
+                                    example: aluno@example.com
+                                telefone:
+                                    type: string
+                                    example: exemplo
+                                objetivo:
+                                    type: string
+                                    example: exemplo
+                        example:
+                            nome: Maria Silva
+                            idade: 1
+                            sexo: exemplo
+                            email: aluno@example.com
+                            telefone: exemplo
+                            objetivo: exemplo
+                description: Corpo da requisição para `POST /api/v1/alunos`.
+            responses:
+                '201':
+                    description: Aluno cadastrado com sucesso
+            description: Cadastro manual de aluno (`POST /api/v1/alunos`).
+    /api/v1/alunos/{id}:
+        get:
+            operationId: getAlunosById
+            summary: Retorna dados do aluno por ID
+            tags: [Alunos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/alunos/{id}`.
+            responses:
+                '200':
+                    description: Dados do aluno
+            description: Retorna dados do aluno por ID (`GET /api/v1/alunos/{id}`).
+        put:
+            operationId: putAlunosById
+            summary: Atualiza dados do aluno por ID
+            tags: [Alunos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/alunos/{id}`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            example: {}
+                description: Corpo da requisição para `PUT /api/v1/alunos/{id}`.
+            responses:
+                '200':
+                    description: Aluno atualizado
+            description: Atualiza dados do aluno por ID (`PUT /api/v1/alunos/{id}`).
+        delete:
+            operationId: deleteAlunosById
+            summary: Remoção lógica (desativação) do aluno
+            tags: [Alunos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/alunos/{id}`.
+            responses:
+                '204':
+                    description: Aluno desativado com sucesso
+            description: Remoção lógica (desativação) do aluno (`DELETE /api/v1/alunos/{id}`).
+    /api/v1/alunos/{id}/reativar:
+        post:
+            operationId: postAlunosByIdReativar
+            summary: Reativação de aluno desativado
+            tags: [Alunos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/alunos/{id}/reativar`.
+            responses:
+                '204':
+                    description: Aluno reativado com sucesso
+            description: Reativação de aluno desativado (`POST /api/v1/alunos/{id}/reativar`).
+    /api/v1/alunos/{id}/frequencia:
+        get:
+            operationId: getAlunosByIdFrequencia
+            summary: Calendário mensal de frequência consolidada
+            tags: [Alunos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/alunos/{id}/frequencia`.
+                - name: mes
+                  in: query
+                  schema:
+                    type: integer
+                    example: 7
+                  description: Mês calendário (1–12). Usado em `/api/v1/alunos/{id}/frequencia`.
+                - name: ano
+                  in: query
+                  schema:
+                    type: integer
+                    example: 2026
+                  description: Ano calendário (YYYY). Usado em `/api/v1/alunos/{id}/frequencia`.
+            responses:
+                '200':
+                    description: Calendário consolidado
+            description: Calendário mensal de frequência consolidada (`GET /api/v1/alunos/{id}/frequencia`).
+    /api/v1/alunos/{id}/treinos:
+        get:
+            operationId: getAlunosByIdTreinos
+            summary: Listagem de treinos realizados por um aluno
+            tags: [Alunos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/alunos/{id}/treinos`.
+            responses:
+                '200':
+                    description: Lista de treinos
+            description: Listagem de treinos realizados por um aluno (`GET /api/v1/alunos/{id}/treinos`).
+    /api/v1/alunos/{id}/vdot:
+        get:
+            operationId: getAlunosByIdVdot
+            summary: Lista testes VDOT de um aluno
+            tags: [VDOT Tests]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/alunos/{id}/vdot`.
+            responses:
+                '200':
+                    description: Testes VDOT cadastrados
+            description: Lista testes VDOT de um aluno (`GET /api/v1/alunos/{id}/vdot`).
+        post:
+            operationId: postAlunosByIdVdot
+            summary: Cadastra um novo teste de 3km para cálculo VDOT
+            tags: [VDOT Tests]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/alunos/{id}/vdot`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [distancia_metros, tempo_segundos, data_teste]
+                            properties:
+                                distancia_metros:
+                                    type: number
+                                    example: !!float 3000
+                                tempo_segundos:
+                                    type: integer
+                                    example: 720
+                                data_teste:
+                                    type: string
+                                    format: date
+                                    example: exemplo
+                        example:
+                            distancia_metros: !!float 3000
+                            tempo_segundos: 720
+                            data_teste: exemplo
+                description: Corpo da requisição para `POST /api/v1/alunos/{id}/vdot`.
+            responses:
+                '201':
+                    description: Teste cadastrado e zonas geradas
+            description: Cadastra um novo teste de 3km para cálculo VDOT (`POST /api/v1/alunos/{id}/vdot`).
+    /api/v1/alunos/{id}/vdot/{teste_id}:
+        delete:
+            operationId: deleteAlunosByIdVdotByTesteid
+            summary: Exclui um teste VDOT do aluno
+            tags: [VDOT Tests]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/alunos/{id}/vdot/{teste_id}`.
+                - name: teste_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do teste VDOT. Usado em `/api/v1/alunos/{id}/vdot/{teste_id}`.
+            responses:
+                '204':
+                    description: Teste deletado
+            description: Exclui um teste VDOT do aluno (`DELETE /api/v1/alunos/{id}/vdot/{teste_id}`).
+    /api/v1/alunos/{id}/corrida:
+        get:
+            operationId: getAlunosByIdCorrida
+            summary: Lista periodizações de corrida ativas de um aluno
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/alunos/{id}/corrida`.
+            responses:
+                '200':
+                    description: Listagem de planos de corrida
+            description: Lista periodizações de corrida ativas de um aluno (`GET /api/v1/alunos/{id}/corrida`).
+    /api/v1/alunos/{id}/corrida/treinos-dia:
+        get:
+            operationId: getAlunosByIdCorridaTreinosDia
+            summary: Retorna o calendário de treinos de corrida por dia (ativo/arquivado) de um aluno (autenticado)
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: ID do aluno.
+                  schema:
+                    type: integer
+                    example: 1
+                - name: mes
+                  in: query
+                  required: false
+                  description: Mês do calendário a consultar, de 1 a 12. Quando omitido, usa o mês atual.
+                  schema:
+                    type: integer
+                    minimum: 1
+                    maximum: 12
+                    example: 7
+                - name: ano
+                  in: query
+                  required: false
+                  description: Ano do calendário a consultar. Quando omitido, usa o ano atual.
+                  schema:
+                    type: integer
+                    minimum: 1901
+                    maximum: 2099
+                    example: 2026
+            responses:
+                '200':
+                    description: Lista mensal de treinos de corrida detalhados por dia.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    mes:
+                                        type: integer
+                                        example: 7
+                                    ano:
+                                        type: integer
+                                        example: 2026
+                                    treinos_dia:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                data:
+                                                    type: string
+                                                    format: date
+                                                    example: exemplo
+                                                tipo:
+                                                    type: string
+                                                    example: corrida
+                                                distancia:
+                                                    type: number
+                                                    example: 1.0
+                                                zona:
+                                                    type: string
+                                                    example: Z2
+                                                pace_alvo:
+                                                    type: string
+                                                    example: exemplo
+                                                descricao:
+                                                    type: string
+                                                    example: exemplo
+                                                concluido:
+                                                    type: boolean
+                                                    example: true
+                                                semana_idx:
+                                                    type: integer
+                                                    example: 1
+                                                dia_idx:
+                                                    type: integer
+                                                    example: 1
+                                                plano_id:
+                                                    type: integer
+                                                    example: 1
+                                            example: {}
+                                        example:
+                                            - {}
+                                example: {}
+                            example:
+                                mes: 7
+                                ano: 2026
+            description: Retorna o calendário de treinos de corrida por dia (ativo/arquivado) de um aluno (autenticado) (`GET /api/v1/alunos/{id}/corrida/treinos-dia`).
+    /api/v1/criar-ficha:
+        post:
+            operationId: postCriarFicha
+            summary: Cria snapshot de Ficha Web ativa vinculada a um aluno
+            tags: [Fichas Web]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [aluno_id, ficha_id, conteudo]
+                        example:
+                            aluno_id: 1
+                            ficha_id: 1
+                            conteudo: {}
+                description: Corpo da requisição para `POST /api/v1/criar-ficha`.
+            responses:
+                '200':
+                    description: Snapshot e link público gerados com sucesso
+            description: Cria snapshot de Ficha Web ativa vinculada a um aluno (`POST /api/v1/criar-ficha`).
+    /api/v1/stats/{hash}:
+        get:
+            operationId: getStatsByHash
+            summary: Retorna estatísticas de acessos de uma Ficha Web ativa
+            tags: [Fichas Web]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: hash
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: a1b2c3d4e5f6
+                  description: Hash público do link da ficha ou plano de corrida. Usado em `/api/v1/stats/{hash}`.
+            responses:
+                '200':
+                    description: Dados de estatísticas de acessos
+            description: Retorna estatísticas de acessos de uma Ficha Web ativa (`GET /api/v1/stats/{hash}`).
+    /api/v1/renovar/{hash}:
+        post:
+            operationId: postRenovarByHash
+            summary: Renova o link de uma Ficha Web por mais 90 dias
+            tags: [Fichas Web]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: hash
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: a1b2c3d4e5f6
+                  description: Hash público do link da ficha ou plano de corrida. Usado em `/api/v1/renovar/{hash}`.
+            responses:
+                '200':
+                    description: Link renovado
+            description: Renova o link de uma Ficha Web por mais 90 dias (`POST /api/v1/renovar/{hash}`).
+    /api/v1/desativar/{hash}:
+        post:
+            operationId: postDesativarByHash
+            summary: Desativa manualmente um link de Ficha Web
+            tags: [Fichas Web]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: hash
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: a1b2c3d4e5f6
+                  description: Hash público do link da ficha ou plano de corrida. Usado em `/api/v1/desativar/{hash}`.
+            responses:
+                '200':
+                    description: Link de Ficha Web desativado
+            description: Desativa manualmente um link de Ficha Web (`POST /api/v1/desativar/{hash}`).
+    /api/v1/aluno/{aluno_id}/fichas:
+        get:
+            operationId: getAlunoByAlunoidFichas
+            summary: Lista todos os links de Ficha Web vinculados a um aluno
+            tags: [Fichas Web]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/v1/aluno/{aluno_id}/fichas`.
+            responses:
+                '200':
+                    description: Listagem de links
+            description: Lista todos os links de Ficha Web vinculados a um aluno (`GET /api/v1/aluno/{aluno_id}/fichas`).
+    /api/v1/fichas/manual/criar:
+        post:
+            operationId: postFichasManualCriar
+            summary: Cria uma ficha de treino de musculação manualmente (Treinador)
+            tags: [Fichas Musculação]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            example: {}
+                description: Corpo da requisição para `POST /api/v1/fichas/manual/criar`.
+            responses:
+                '201':
+                    description: Ficha de treino criada
+            description: Cria uma ficha de treino de musculação manualmente (Treinador) (`POST /api/v1/fichas/manual/criar`).
+    /api/v1/fichas/{id}:
+        get:
+            operationId: getFichasById
+            summary: Retorna a ficha de treino por ID
+            tags: [Fichas Musculação]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/fichas/{id}`.
+            responses:
+                '200':
+                    description: Detalhes da ficha
+            description: Retorna a ficha de treino por ID (`GET /api/v1/fichas/{id}`).
+        delete:
+            operationId: deleteFichasById
+            summary: Exclui fisicamente uma ficha de treino e seus links
+            tags: [Fichas Musculação]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/fichas/{id}`.
+            responses:
+                '204':
+                    description: Ficha deletada com sucesso
+            description: Exclui fisicamente uma ficha de treino e seus links (`DELETE /api/v1/fichas/{id}`).
+    /api/v1/fichas/{id}/editar-manual:
+        put:
+            operationId: putFichasByIdEditarManual
+            summary: Edição manual de ficha de musculação com OCC (If-Match / versao)
+            tags: [Fichas Musculação]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/fichas/{id}/editar-manual`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            example: {}
+                description: Corpo da requisição para `PUT /api/v1/fichas/{id}/editar-manual`.
+            responses:
+                '200':
+                    description: Ficha manual editada
+                '409':
+                    description: Conflito de concorrência (versão desatualizada)
+            description: Edição manual de ficha de musculação com OCC (If-Match / versao) (`PUT /api/v1/fichas/{id}/editar-manual`).
+    /api/v1/fichas/gerar-periodizada:
+        post:
+            operationId: postFichasGerarPeriodizada
+            summary: Geração automática de ficha periodizada baseada em frequência
+            tags: [Fichas Musculação]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [aluno_id, frequencia]
+                            properties:
+                                aluno_id:
+                                    type: integer
+                                    format: int64
+                                    example: 1
+                                frequencia:
+                                    type: integer
+                                    minimum: 2
+                                    maximum: 6
+                                    example: 3
+                                objetivo:
+                                    type: string
+                                    example: hipertrofia
+                                nivel:
+                                    type: string
+                                    example: intermediario
+                                restricoes:
+                                    type: string
+                                    example: nenhuma
+                                observacoes:
+                                    type: string
+                                    example: iniciar progressao gradual
+                        example:
+                            aluno_id: 1
+                            frequencia: 3
+                            objetivo: hipertrofia
+                            nivel: intermediario
+                            restricoes: nenhuma
+                            observacoes: iniciar progressao gradual
+                description: Corpo da requisição para `POST /api/v1/fichas/gerar-periodizada`.
+            responses:
+                '201':
+                    description: Ficha periodizada gerada, arquivamento anterior executado e link público criado
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: success
+                                    ficha_id:
+                                        type: integer
+                                        format: int64
+                                        example: 1
+                                    hash_link:
+                                        type: string
+                                        example: exemplo
+                                    expira_em:
+                                        type: string
+                                        example: exemplo
+                                    data:
+                                        type: object
+                                        properties:
+                                            tipo:
+                                                type: string
+                                                example: periodizada
+                                            frequencia:
+                                                type: integer
+                                                example: 1
+                                            objetivo:
+                                                type: string
+                                                example: exemplo
+                                            nivel:
+                                                type: string
+                                                example: intermediario
+                                            treinos:
+                                                type: array
+                                                items:
+                                                    type: object
+                                                    example: {}
+                                                example:
+                                                    - {}
+                                            ai_metadata:
+                                                $ref: '#/components/schemas/AIMetadata'
+                                        example: {}
+                                example: {}
+                            example:
+                                status: exemplo
+                                ficha_id: 1
+                                hash_link: exemplo
+                                expira_em: exemplo
+                '400':
+                    description: Payload inválido, aluno inativo ou frequência fora do intervalo permitido
+                '503':
+                    description: Geração por IA obrigatória falhou em todos os provedores configurados
+            description: Geração automática de ficha periodizada baseada em frequência (`POST /api/v1/fichas/gerar-periodizada`).
+    /api/v1/metodos/{metodo}:
+        get:
+            operationId: getMetodosByMetodo
+            summary: Detalhes científicos do método de treino informado
+            tags: [Fichas Musculação]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: metodo
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: linear
+                  description: Nome do método de periodização de musculação. Usado em `/api/v1/metodos/{metodo}`.
+            responses:
+                '200':
+                    description: Informações e referências do método
+            description: Detalhes científicos do método de treino informado (`GET /api/v1/metodos/{metodo}`).
+    /api/v1/sved/calcular:
+        post:
+            operationId: postSvedCalcular
+            summary: Calculates TUT, density, and SVED IES
+            tags: [SVED]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [cadencia, repeticoes, rir, series, intervalo]
+                        example:
+                            cadencia: exemplo
+                            repeticoes: exemplo
+                            rir: exemplo
+                            series: exemplo
+                            intervalo: exemplo
+                description: Corpo da requisição para `POST /api/v1/sved/calcular`.
+            responses:
+                '200':
+                    description: Métricas calculadas
+            description: Calculates TUT, density, and SVED IES (`POST /api/v1/sved/calcular`).
+    /api/v1/sved/historico/{aluno_id}/{exercicio_nome}:
+        get:
+            operationId: getSvedHistoricoByAlunoidByExercicionome
+            summary: Retorna o histórico de cargas e progresso SVED de um exercício
+            tags: [SVED]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/v1/sved/historico/{aluno_id}/{exercicio_nome}`.
+                - name: exercicio_nome
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: agachamento
+                  description: Nome do exercício (URL-encoded quando necessário). Usado em `/api/v1/sved/historico/{aluno_id}/{exercicio_nome}`.
+            responses:
+                '200':
+                    description: Histórico de progresso do exercício
+            description: Retorna o histórico de cargas e progresso SVED de um exercício (`GET /api/v1/sved/historico/{aluno_id}/{exercicio_nome}`).
+    /api/v1/sved/sugestao/{ficha_id}/{exercicio_nome}:
+        get:
+            operationId: getSvedSugestaoByFichaidByExercicionome
+            summary: Sugere a progressão de carga e esforço para o próximo treino
+            tags: [SVED]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: ficha_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador da ficha de musculação. Usado em `/api/v1/sved/sugestao/{ficha_id}/{exercicio_nome}`.
+                - name: exercicio_nome
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: agachamento
+                  description: Nome do exercício (URL-encoded quando necessário). Usado em `/api/v1/sved/sugestao/{ficha_id}/{exercicio_nome}`.
+            responses:
+                '200':
+                    description: Sugestão científica de progressão
+            description: Sugere a progressão de carga e esforço para o próximo treino (`GET /api/v1/sved/sugestao/{ficha_id}/{exercicio_nome}`).
+    /api/v1/sved/sugestoes/{ficha_id}:
+        get:
+            operationId: getSvedSugestoesByFichaid
+            summary: Retorna métricas e sugestões SVED para todos os exercícios de uma ficha
+            tags: [SVED]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: ficha_id
+                  in: path
+                  required: true
+                  description: ID da ficha em fichas_treino_web.
+                  schema:
+                    type: integer
+                    example: 1
+            responses:
+                '200':
+                    description: Lista batch de métricas, sugestões e warnings por exercício
+                '404':
+                    description: Ficha não encontrada
+            description: Retorna métricas e sugestões SVED para todos os exercícios de uma ficha (`GET /api/v1/sved/sugestoes/{ficha_id}`).
+    /api/v1/sved/dashboard/{aluno_id}:
+        get:
+            operationId: getSvedDashboardByAlunoid
+            summary: Painel analítico consolidado de SVED por aluno
+            tags: [SVED]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/v1/sved/dashboard/{aluno_id}`.
+            responses:
+                '200':
+                    description: Painel analítico contendo IES por treino e evolução de volume
+            description: Painel analítico consolidado de SVED por aluno (`GET /api/v1/sved/dashboard/{aluno_id}`).
+    /api/v1/historico/fichas/{id}/detalhes:
+        get:
+            operationId: getHistoricoFichasByIdDetalhes
+            summary: Retorna detalhes e snapshots históricos de uma ficha de treino
+            tags: [Histórico]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/historico/fichas/{id}/detalhes`.
+            responses:
+                '200':
+                    description: Detalhes históricos completos
+            description: Retorna detalhes e snapshots históricos de uma ficha de treino (`GET /api/v1/historico/fichas/{id}/detalhes`).
+    /api/v1/feedback/pendentes:
+        get:
+            operationId: getFeedbackPendentes
+            summary: Lista todos os feedbacks qualitativos pendentes de leitura (Treinador)
+            tags: [Feedback]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Feedbacks pendentes
+            description: Lista todos os feedbacks qualitativos pendentes de leitura (Treinador) (`GET /api/v1/feedback/pendentes`).
+    /api/v1/feedback/notificacao/{notificacao_id}/marcar-lido:
+        post:
+            operationId: postFeedbackNotificacaoByNotificacaoidMarcarLido
+            summary: Marca notificação de feedback específico como lida
+            tags: [Feedback]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: notificacao_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador da notificação de feedback. Usado em `/api/v1/feedback/notificacao/{notificacao_id}/marcar-lido`.
+            responses:
+                '200':
+                    description: Notificação marcada como lida
+            description: Marca notificação de feedback específico como lida (`POST /api/v1/feedback/notificacao/{notificacao_id}/marcar-lido`).
+    /api/v1/corrida/gerar:
+        post:
+            operationId: postCorridaGerar
+            summary: Gera plano de periodização de corrida (template flat ou blocos dinâmicos)
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [aluno_id, distancia_prova, data_prova, nivel, pace_base, volume_semanal, dias_semana]
+                            properties:
+                                aluno_id:
+                                    type: integer
+                                    example: 1
+                                distancia_prova:
+                                    type: string
+                                    enum: [5K, 10K, 21K, 42K]
+                                    example: 5K
+                                data_prova:
+                                    type: string
+                                    format: date
+                                    example: "2026-09-01"
+                                data_inicio:
+                                    type: string
+                                    format: date
+                                    example: "2026-09-01"
+                                nivel:
+                                    type: string
+                                    enum: [iniciante, intermediario, avancado, elite]
+                                    example: iniciante
+                                pace_base:
+                                    type: string
+                                    description: Pace base no formato MM:SS
+                                    example: 05:30
+                                volume_semanal:
+                                    type: number
+                                    example: 1.0
+                                dias_semana:
+                                    type: array
+                                    items:
+                                        type: integer
+                                        minimum: 1
+                                        maximum: 7
+                                    minItems: 2
+                                    maxItems: 7
+                                    example:
+                                        - 1
+                                        - 3
+                                usar_blocos:
+                                    type: boolean
+                                    description: Quando true, gera plano com treinos[].blocos
+                                    example: true
+                                modo_geracao:
+                                    type: string
+                                    description: template | blocos_completa | semana_a_semana (alias de entrada todas -> blocos_completa)
+                                    example: todas
+                        example:
+                            aluno_id: 1
+                            distancia_prova: 21K
+                            data_prova: "2026-09-01"
+                            data_inicio: "2026-07-01"
+                            nivel: intermediario
+                            pace_base: "05:30"
+                            volume_semanal: 30.0
+                            usar_blocos: true
+                            dias_semana:
+                                - 1
+                                - 3
+                                - 5
+                            modo_geracao: todas
+                description: Corpo da requisição para `POST /api/v1/corrida/gerar`.
+            responses:
+                '201':
+                    description: Periodização de corrida gerada
+            description: Gera plano de periodização de corrida (template flat ou blocos dinâmicos) (`POST /api/v1/corrida/gerar`).
+    /api/v1/corrida/gerar-blocos:
+        post:
+            operationId: postCorridaGerarBlocos
+            summary: Preview de blocos de corrida (local-only nesta fase; assistive IA é backlog)
+            description: |
+                Gera preview determinístico por templates Daniels.
+                `AI_TRAINING_MODE=off|assistive` retorna local com fallback (assistive de blocos ainda é backlog).
+                `AI_TRAINING_MODE=required` retorna 503 se não houver BlocksAIProvider aprovado (real ou fake injetado).
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [vdot, distancia_prova, nivel, dias_semana]
+                            properties:
+                                vdot:
+                                    type: number
+                                    example: 1.0
+                                distancia_prova:
+                                    type: string
+                                    enum: [5K, 10K, 21K, 42K]
+                                    example: 5K
+                                nivel:
+                                    type: string
+                                    enum: [iniciante, intermediario, avancado, elite]
+                                    example: iniciante
+                                dias_semana:
+                                    type: integer
+                                    minimum: 2
+                                    maximum: 7
+                                    example: 3
+                                objetivo:
+                                    type: string
+                                    example: melhorar limiar
+                                limitacoes:
+                                    type: string
+                                    example: nenhuma
+                                aluno_id:
+                                    type: integer
+                                    example: 1
+                        example:
+                            vdot: 45.0
+                            distancia_prova: 21K
+                            nivel: intermediario
+                            dias_semana: 3
+                            objetivo: melhorar limiar
+                            limitacoes: nenhuma
+                            aluno_id: 1
+                description: Corpo da requisição para `POST /api/v1/corrida/gerar-blocos`.
+            responses:
+                '200':
+                    description: Preview de blocos gerado (local ou com provider aprovado)
+                '503':
+                    description: AI_TRAINING_MODE=required sem provedor de blocos disponível
+    /api/v1/corrida/{id}:
+        get:
+            operationId: getCorridaById
+            summary: Retorna a periodização de corrida por ID
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/corrida/{id}`.
+            responses:
+                '200':
+                    description: Detalhes da periodização
+            description: Retorna a periodização de corrida por ID (`GET /api/v1/corrida/{id}`).
+        delete:
+            operationId: deleteCorridaById
+            summary: Exclui um plano de periodização de corrida
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/corrida/{id}`.
+            responses:
+                '204':
+                    description: Plano deletado
+            description: Exclui um plano de periodização de corrida (`DELETE /api/v1/corrida/{id}`).
+    /api/v1/corrida/{id}/editar-treino:
+        put:
+            operationId: putCorridaByIdEditarTreino
+            summary: Edita um treino específico dentro da periodização
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/corrida/{id}/editar-treino`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [semana_idx, dia_idx, tipo, descricao]
+                        example:
+                            semana_idx: exemplo
+                            dia_idx: exemplo
+                            tipo: exemplo
+                            descricao: exemplo
+                description: Corpo da requisição para `PUT /api/v1/corrida/{id}/editar-treino`.
+            responses:
+                '200':
+                    description: Treino atualizado
+            description: Edita um treino específico dentro da periodização (`PUT /api/v1/corrida/{id}/editar-treino`).
+    /api/v1/corrida/{id}/semana-atual:
+        put:
+            operationId: putCorridaByIdSemanaAtual
+            summary: Altera o índice da semana ativa atual da periodização
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/corrida/{id}/semana-atual`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [semana_atual]
+                        example:
+                            semana_atual: exemplo
+                description: Corpo da requisição para `PUT /api/v1/corrida/{id}/semana-atual`.
+            responses:
+                '200':
+                    description: Semana ativa atualizada
+            description: Altera o índice da semana ativa atual da periodização (`PUT /api/v1/corrida/{id}/semana-atual`).
+    /api/v1/corrida/{id}/gerar-link:
+        post:
+            operationId: postCorridaByIdGerarLink
+            summary: Gera link público ativo de acompanhamento para o aluno
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/corrida/{id}/gerar-link`.
+            responses:
+                '200':
+                    description: Link público gerado
+            description: Gera link público ativo de acompanhamento para o aluno (`POST /api/v1/corrida/{id}/gerar-link`).
+    /api/v1/corrida/{id}/renovar-link:
+        post:
+            operationId: postCorridaByIdRenovarLink
+            summary: Renova a expiração do link de corrida por 90 dias
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/corrida/{id}/renovar-link`.
+            responses:
+                '200':
+                    description: Link renovado
+            description: Renova a expiração do link de corrida por 90 dias (`POST /api/v1/corrida/{id}/renovar-link`).
+    /api/v1/corrida/{id}/desativar-link:
+        post:
+            operationId: postCorridaByIdDesativarLink
+            summary: Desativa e invalida o link de corrida público
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/corrida/{id}/desativar-link`.
+            responses:
+                '200':
+                    description: Link desativado
+            description: Desativa e invalida o link de corrida público (`POST /api/v1/corrida/{id}/desativar-link`).
+    /api/v1/corrida/{id}/gerar-proxima-semana:
+        post:
+            operationId: postCorridaByIdGerarProximaSemana
+            summary: Gera a próxima semana determinística para planos semana_a_semana
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: ID do plano de periodização
+                  schema:
+                    type: integer
+                    example: 1
+            responses:
+                '200':
+                    description: Semana gerada e anexada ao plano
+                '400':
+                    description: Plano não está em modo semana_a_semana ou já completou a duração
+            description: Gera a próxima semana determinística para planos semana_a_semana (`POST /api/v1/corrida/{id}/gerar-proxima-semana`).
+    /api/v1/corrida/{id}/semana/{semana}/dia/{dia}:
+        get:
+            operationId: getCorridaByIdSemanaBySemanaDiaByDia
+            summary: Retorna o treino (com blocos) de um dia específico do plano
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: ID do plano
+                  schema:
+                    type: integer
+                    example: 1
+                - name: semana
+                  in: path
+                  required: true
+                  description: Número da semana (1-based)
+                  schema:
+                    type: integer
+                    example: 1
+                - name: dia
+                  in: path
+                  required: true
+                  description: Dia da semana (1=segunda ... 7=domingo)
+                  schema:
+                    type: integer
+                    minimum: 1
+                    maximum: 7
+                    example: 2
+            responses:
+                '200':
+                    description: Treino do dia
+            description: Retorna o treino (com blocos) de um dia específico do plano (`GET /api/v1/corrida/{id}/semana/{semana}/dia/{dia}`).
+    /api/v1/corrida/{id}/semana/{semana}/dia/{dia}/blocos:
+        put:
+            operationId: putCorridaByIdSemanaBySemanaDiaByDiaBlocos
+            summary: Persiste blocos de um dia com validação e OCC por versao/If-Match
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: ID do plano
+                  schema:
+                    type: integer
+                    example: 1
+                - name: semana
+                  in: path
+                  required: true
+                  description: Número da semana (1-based)
+                  schema:
+                    type: integer
+                    example: 1
+                - name: dia
+                  in: path
+                  required: true
+                  description: Dia da semana (1=segunda ... 7=domingo)
+                  schema:
+                    type: integer
+                    minimum: 1
+                    maximum: 7
+                    example: 2
+                - name: If-Match
+                  in: header
+                  required: false
+                  description: Versão esperada do plano (alternativa a versao no body)
+                  schema:
+                    type: string
+                    example: exemplo
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [blocos]
+                            properties:
+                                versao:
+                                    type: integer
+                                    example: 1
+                                nome:
+                                    type: string
+                                    example: Maria Silva
+                                tipo:
+                                    type: string
+                                    example: corrida
+                                zona:
+                                    type: string
+                                    example: Z2
+                                blocos:
+                                    type: array
+                                    items:
+                                        type: object
+                                        example: {}
+                                    example:
+                                        - {}
+                        example:
+                            versao: 1
+                            nome: Maria Silva
+                            tipo: exemplo
+                            zona: exemplo
+                            blocos:
+                                - nome: Aquecimento
+                                  tipo: wup
+                description: Corpo da requisição para `PUT /api/v1/corrida/{id}/semana/{semana}/dia/{dia}/blocos`.
+            responses:
+                '200':
+                    description: Blocos salvos
+                '400':
+                    description: Validação de estrutura falhou
+                '409':
+                    description: Conflito de versão (OCC)
+            description: Persiste blocos de um dia com validação e OCC por versao/If-Match (`PUT /api/v1/corrida/{id}/semana/{semana}/dia/{dia}/blocos`).
+    /api/v1/alunos/{id}/corrida/historico-stats:
+        get:
+            operationId: getAlunosByIdCorridaHistoricoStats
+            summary: Estatísticas de histórico de corrida do aluno (Garmin + plano_json)
+            tags: [Periodização Corrida]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: ID do aluno
+                  schema:
+                    type: integer
+                    example: 1
+                - name: dias
+                  in: query
+                  required: false
+                  description: Janela em dias (padrão 30)
+                  schema:
+                    type: integer
+                    minimum: 1
+                    maximum: 365
+                    example: 30
+            responses:
+                '200':
+                    description: Estatísticas agregadas
+            description: Estatísticas de histórico de corrida do aluno (Garmin + plano_json) (`GET /api/v1/alunos/{id}/corrida/historico-stats`).
+    /api/v1/admin/pre-cadastros:
+        get:
+            operationId: getAdminPreCadastros
+            summary: Lista todos os pré-cadastros enviados (Admin)
+            tags: [Admin Pré-Cadastro]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Lista de pré-cadastros
+            description: Lista todos os pré-cadastros enviados (Admin) (`GET /api/v1/admin/pre-cadastros`).
+    /api/v1/admin/pre-cadastros/{id}:
+        get:
+            operationId: getAdminPreCadastrosById
+            summary: Detalhes de um pré-cadastro (Admin)
+            tags: [Admin Pré-Cadastro]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/pre-cadastros/{id}`.
+            responses:
+                '200':
+                    description: Detalhes do pré-cadastro
+            description: Detalhes de um pré-cadastro (Admin) (`GET /api/v1/admin/pre-cadastros/{id}`).
+    /api/v1/admin/pre-cadastros/{id}/aprovar:
+        post:
+            operationId: postAdminPreCadastrosByIdAprovar
+            summary: Aprovação de pré-cadastro de aluno (Admin)
+            tags: [Admin Pré-Cadastro]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/pre-cadastros/{id}/aprovar`.
+            responses:
+                '200':
+                    description: Aluno cadastrado. Retorna email_enviado (true/false) e email_erro em caso de falha de entrega SMTP do link de anamnese.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    message:
+                                        type: string
+                                        example: exemplo
+                                    aluno_id:
+                                        type: integer
+                                        example: 1
+                                    anamnese_link:
+                                        type: string
+                                        example: exemplo
+                                    email_enviado:
+                                        type: boolean
+                                        example: true
+                                    email_erro:
+                                        type: string
+                                        example: exemplo
+                                example: {}
+                            example:
+                                success: true
+                                message: exemplo
+                                aluno_id: 1
+                                anamnese_link: exemplo
+                                email_enviado: true
+                                email_erro: exemplo
+            description: Aprovação de pré-cadastro de aluno (Admin) (`POST /api/v1/admin/pre-cadastros/{id}/aprovar`).
+    /api/v1/admin/pre-cadastros/{id}/rejeitar:
+        post:
+            operationId: postAdminPreCadastrosByIdRejeitar
+            summary: Rejeita um pré-cadastro (Admin)
+            tags: [Admin Pré-Cadastro]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/pre-cadastros/{id}/rejeitar`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [motivo]
+                        example:
+                            motivo: exemplo
+                description: Corpo da requisição para `POST /api/v1/admin/pre-cadastros/{id}/rejeitar`.
+            responses:
+                '200':
+                    description: Pré-cadastro rejeitado. Retorna success flag e mensagem.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    message:
+                                        type: string
+                                        example: exemplo
+                                example: {}
+                            example:
+                                success: true
+                                message: exemplo
+            description: Rejeita um pré-cadastro (Admin) (`POST /api/v1/admin/pre-cadastros/{id}/rejeitar`).
+    /api/v1/admin/anamnese:
+        get:
+            operationId: getAdminAnamnese
+            summary: Lista de todas as anamneses registradas (Admin)
+            tags: [Admin Anamnese]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Lista de anamneses
+            description: Lista de todas as anamneses registradas (Admin) (`GET /api/v1/admin/anamnese`).
+    /api/v1/admin/anamnese/pendentes:
+        get:
+            operationId: getAdminAnamnesePendentes
+            summary: Lista de anamneses aguardando aprovação (Admin)
+            tags: [Admin Anamnese]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Lista de pendências
+            description: Lista de anamneses aguardando aprovação (Admin) (`GET /api/v1/admin/anamnese/pendentes`).
+    /api/v1/admin/anamnese/{id}:
+        get:
+            operationId: getAdminAnamneseById
+            summary: Detalhes de uma anamnese (Admin)
+            tags: [Admin Anamnese]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/anamnese/{id}`.
+            responses:
+                '200':
+                    description: Ficha de anamnese contendo respostas e score de risco
+            description: Detalhes de uma anamnese (Admin) (`GET /api/v1/admin/anamnese/{id}`).
+        delete:
+            operationId: deleteAdminAnamneseById
+            summary: Exclui definitivamente uma anamnese (Admin)
+            tags: [Admin Anamnese]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/anamnese/{id}`.
+            responses:
+                '204':
+                    description: Registro deletado
+            description: Exclui definitivamente uma anamnese (Admin) (`DELETE /api/v1/admin/anamnese/{id}`).
+    /api/v1/admin/anamnese/{id}/aprovar:
+        post:
+            operationId: postAdminAnamneseByIdAprovar
+            summary: Aprova a anamnese clínica do aluno (Admin)
+            tags: [Admin Anamnese]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/anamnese/{id}/aprovar`.
+            responses:
+                '204':
+                    description: Anamnese aprovada com sucesso.
+            description: Aprova a anamnese clínica do aluno (Admin) (`POST /api/v1/admin/anamnese/{id}/aprovar`).
+    /api/v1/admin/anamnese/{id}/rejeitar:
+        post:
+            operationId: postAdminAnamneseByIdRejeitar
+            summary: Rejeita a anamnese devolvendo para revisão (Admin)
+            tags: [Admin Anamnese]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/anamnese/{id}/rejeitar`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [motivo]
+                        example:
+                            motivo: exemplo
+                description: Corpo da requisição para `POST /api/v1/admin/anamnese/{id}/rejeitar`.
+            responses:
+                '200':
+                    description: Anamnese rejeitada com sucesso.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    message:
+                                        type: string
+                                        example: exemplo
+                                example: {}
+                            example:
+                                success: true
+                                message: exemplo
+            description: Rejeita a anamnese devolvendo para revisão (Admin) (`POST /api/v1/admin/anamnese/{id}/rejeitar`).
+    /api/v1/admin/alunos/{id}/gerar-anamnese-link:
+        post:
+            operationId: postAdminAlunosByIdGerarAnamneseLink
+            summary: Gera link público de anamnese para envio manual (Admin)
+            tags: [Admin Anamnese]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/alunos/{id}/gerar-anamnese-link`.
+            responses:
+                '200':
+                    description: Link gerado com sucesso
+            description: Gera link público de anamnese para envio manual (Admin) (`POST /api/v1/admin/alunos/{id}/gerar-anamnese-link`).
+    /api/v1/admin/alunos/{id}/anamnese/reenviar-email:
+        post:
+            operationId: postAdminAlunosByIdAnamneseReenviarEmail
+            summary: Disparo manual de e-mail de anamnese via SMTP com token renovado (Admin)
+            tags: [Admin Anamnese]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/alunos/{id}/anamnese/reenviar-email`.
+            responses:
+                '200':
+                    description: E-mail enviado com sucesso. Retorna status de sucesso.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    message:
+                                        type: string
+                                        example: exemplo
+                                example: {}
+                            example:
+                                success: true
+                                message: exemplo
+            description: Disparo manual de e-mail de anamnese via SMTP com token renovado (Admin) (`POST /api/v1/admin/alunos/{id}/anamnese/reenviar-email`).
+    /api/v1/exercicios/biblioteca:
+        get:
+            operationId: getExerciciosBiblioteca
+            summary: Retorna a biblioteca completa de exercícios via CSV
+            tags: [Exercícios]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Lista de exercícios cadastrados no CSV
+            description: Retorna a biblioteca completa de exercícios via CSV (`GET /api/v1/exercicios/biblioteca`).
+    /api/v1/exercicios/grupos:
+        get:
+            operationId: getExerciciosGrupos
+            summary: Lista todos os grupos musculares disponíveis
+            tags: [Exercícios]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Grupos musculares
+            description: Lista todos os grupos musculares disponíveis (`GET /api/v1/exercicios/grupos`).
+    /api/v1/exercicios/tipos:
+        get:
+            operationId: getExerciciosTipos
+            summary: Lista os tipos de exercícios (ex. Peso Livre, Máquina)
+            tags: [Exercícios]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Tipos de exercícios
+            description: Lista os tipos de exercícios (ex. Peso Livre, Máquina) (`GET /api/v1/exercicios/tipos`).
+    /api/v1/exercicios/personalizados:
+        get:
+            operationId: getExerciciosPersonalizados
+            summary: Lista exercícios personalizados cadastrados (Treinador)
+            tags: [Exercícios]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Exercícios personalizados
+            description: Lista exercícios personalizados cadastrados (Treinador) (`GET /api/v1/exercicios/personalizados`).
+        post:
+            operationId: postExerciciosPersonalizados
+            summary: Cria um novo exercício personalizado (Treinador)
+            tags: [Exercícios]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [nome, grupo_muscular, tipo]
+                        example:
+                            nome: exemplo
+                            grupo_muscular: exemplo
+                            tipo: exemplo
+                description: Corpo da requisição para `POST /api/v1/exercicios/personalizados`.
+            responses:
+                '201':
+                    description: Exercício criado
+            description: Cria um novo exercício personalizado (Treinador) (`POST /api/v1/exercicios/personalizados`).
+    /api/v1/exercicios/personalizados/estatisticas:
+        get:
+            operationId: getExerciciosPersonalizadosEstatisticas
+            summary: Métricas de uso de exercícios personalizados
+            tags: [Exercícios]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Estatísticas gerais de uso
+            description: Métricas de uso de exercícios personalizados (`GET /api/v1/exercicios/personalizados/estatisticas`).
+    /api/v1/exercicios/personalizados/{codigo}:
+        get:
+            operationId: getExerciciosPersonalizadosByCodigo
+            summary: Detalhes de um exercício personalizado
+            tags: [Exercícios]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: codigo
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: EXR_CUSTOM_01
+                  description: Código do exercício personalizado. Usado em `/api/v1/exercicios/personalizados/{codigo}`.
+            responses:
+                '200':
+                    description: Detalhes do exercício
+            description: Detalhes de um exercício personalizado (`GET /api/v1/exercicios/personalizados/{codigo}`).
+        put:
+            operationId: putExerciciosPersonalizadosByCodigo
+            summary: Atualiza dados de um exercício personalizado
+            tags: [Exercícios]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: codigo
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: EXR_CUSTOM_01
+                  description: Código do exercício personalizado. Usado em `/api/v1/exercicios/personalizados/{codigo}`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            example: {}
+                description: Corpo da requisição para `PUT /api/v1/exercicios/personalizados/{codigo}`.
+            responses:
+                '200':
+                    description: Exercício atualizado
+            description: Atualiza dados de um exercício personalizado (`PUT /api/v1/exercicios/personalizados/{codigo}`).
+        delete:
+            operationId: deleteExerciciosPersonalizadosByCodigo
+            summary: Exclui um exercício personalizado
+            tags: [Exercícios]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: codigo
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: EXR_CUSTOM_01
+                  description: Código do exercício personalizado. Usado em `/api/v1/exercicios/personalizados/{codigo}`.
+            responses:
+                '204':
+                    description: Exercício deletado
+            description: Exclui um exercício personalizado (`DELETE /api/v1/exercicios/personalizados/{codigo}`).
+    /api/v1/exercicios/personalizados/{codigo}/ativar:
+        post:
+            operationId: postExerciciosPersonalizadosByCodigoAtivar
+            summary: Ativa um exercício personalizado
+            tags: [Exercícios]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: codigo
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: EXR_CUSTOM_01
+                  description: Código do exercício personalizado. Usado em `/api/v1/exercicios/personalizados/{codigo}/ativar`.
+            responses:
+                '200':
+                    description: Exercício ativado
+            description: Ativa um exercício personalizado (`POST /api/v1/exercicios/personalizados/{codigo}/ativar`).
+    /api/v1/exercicios/personalizados/{codigo}/desativar:
+        post:
+            operationId: postExerciciosPersonalizadosByCodigoDesativar
+            summary: Desativa um exercício personalizado
+            tags: [Exercícios]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: codigo
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                    example: EXR_CUSTOM_01
+                  description: Código do exercício personalizado. Usado em `/api/v1/exercicios/personalizados/{codigo}/desativar`.
+            responses:
+                '200':
+                    description: Exercício desativado
+            description: Desativa um exercício personalizado (`POST /api/v1/exercicios/personalizados/{codigo}/desativar`).
+    /api/v1/exercicios/sugestoes:
+        get:
+            operationId: getExerciciosSugestoes
+            summary: Lista sugestões de moderação de IA/Reabilitação (Treinador)
+            tags: [Sugestões Rehab IA]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Sugestões cadastradas
+            description: Lista sugestões de moderação de IA/Reabilitação (Treinador) (`GET /api/v1/exercicios/sugestoes`).
+    /api/v1/exercicios/sugestoes/{id}/aprovar:
+        post:
+            operationId: postExerciciosSugestoesByIdAprovar
+            summary: Aprova uma sugestão de substituição (Treinador)
+            tags: [Sugestões Rehab IA]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/exercicios/sugestoes/{id}/aprovar`.
+            responses:
+                '200':
+                    description: Sugestão aprovada
+            description: Aprova uma sugestão de substituição (Treinador) (`POST /api/v1/exercicios/sugestoes/{id}/aprovar`).
+    /api/v1/exercicios/sugestoes/{id}/rejeitar:
+        post:
+            operationId: postExerciciosSugestoesByIdRejeitar
+            summary: Rejeita uma sugestão (Treinador)
+            tags: [Sugestões Rehab IA]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/exercicios/sugestoes/{id}/rejeitar`.
+            responses:
+                '200':
+                    description: Sugestão rejeitada
+            description: Rejeita uma sugestão (Treinador) (`POST /api/v1/exercicios/sugestoes/{id}/rejeitar`).
+    /api/v1/admin/usuarios:
+        get:
+            operationId: getAdminUsuarios
+            summary: Lista contas de treinadores registradas (AdminOnly)
+            tags: [Admin Gestão Usuários]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Lista de usuários
+            description: Lista contas de treinadores registradas (AdminOnly) (`GET /api/v1/admin/usuarios`).
+    /api/v1/admin/usuarios/{id}/aprovar:
+        post:
+            operationId: postAdminUsuariosByIdAprovar
+            summary: Aprova a conta de um treinador (AdminOnly)
+            tags: [Admin Gestão Usuários]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/usuarios/{id}/aprovar`.
+            responses:
+                '204':
+                    description: Conta aprovada
+            description: Aprova a conta de um treinador (AdminOnly) (`POST /api/v1/admin/usuarios/{id}/aprovar`).
+    /api/v1/admin/usuarios/{id}/rejeitar:
+        post:
+            operationId: postAdminUsuariosByIdRejeitar
+            summary: Rejeita a conta de um treinador (AdminOnly)
+            tags: [Admin Gestão Usuários]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/usuarios/{id}/rejeitar`.
+            responses:
+                '204':
+                    description: Conta rejeitada
+            description: Rejeita a conta de um treinador (AdminOnly) (`POST /api/v1/admin/usuarios/{id}/rejeitar`).
+    /api/v1/admin/usuarios/{id}/toggle:
+        post:
+            operationId: postAdminUsuariosByIdToggle
+            summary: Ativa/Desativa o acesso de um treinador (AdminOnly)
+            tags: [Admin Gestão Usuários]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/usuarios/{id}/toggle`.
+            responses:
+                '204':
+                    description: Status de acesso alternado
+            description: Ativa/Desativa o acesso de um treinador (AdminOnly) (`POST /api/v1/admin/usuarios/{id}/toggle`).
+    /api/v1/admin/planos:
+        post:
+            operationId: postAdminPlanos
+            summary: Cria um novo plano (AdminOnly)
+            tags: [Admin Planos]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [nome, preco_default]
+                        example:
+                            nome: exemplo
+                            preco_default: exemplo
+                description: Corpo da requisição para `POST /api/v1/admin/planos`.
+            responses:
+                '201':
+                    description: Plano criado
+            description: Cria um novo plano (AdminOnly) (`POST /api/v1/admin/planos`).
+    /api/v1/admin/planos/{id}:
+        put:
+            operationId: putAdminPlanosById
+            summary: Atualiza dados do plano (AdminOnly)
+            tags: [Admin Planos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/planos/{id}`.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            example: {}
+                description: Corpo da requisição para `PUT /api/v1/admin/planos/{id}`.
+            responses:
+                '200':
+                    description: Plano atualizado
+            description: Atualiza dados do plano (AdminOnly) (`PUT /api/v1/admin/planos/{id}`).
+        delete:
+            operationId: deleteAdminPlanosById
+            summary: Remove permanentemente um plano (AdminOnly)
+            tags: [Admin Planos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador do recurso no caminho. Usado em `/api/v1/admin/planos/{id}`.
+            responses:
+                '204':
+                    description: Plano deletado
+            description: Remove permanentemente um plano (AdminOnly) (`DELETE /api/v1/admin/planos/{id}`).
+    /api/v1/admin/configuracoes:
+        get:
+            operationId: getAdminConfiguracoes
+            summary: Lista as configurações e parâmetros do sistema (AdminOnly)
+            tags: [Admin Configurações]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Lista de chaves e valores
+            description: Lista as configurações e parâmetros do sistema (AdminOnly) (`GET /api/v1/admin/configuracoes`).
+        put:
+            operationId: putAdminConfiguracoes
+            summary: Atualiza uma ou mais configurações globais do sistema (AdminOnly)
+            tags: [Admin Configurações]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            example: {}
+                description: Corpo da requisição para `PUT /api/v1/admin/configuracoes`.
+            responses:
+                '200':
+                    description: Configurações gravadas com sucesso. Retorna flag de sucesso e mensagem.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    message:
+                                        type: string
+                                        example: exemplo
+                                example: {}
+                            example:
+                                success: true
+                                message: exemplo
+            description: Atualiza uma ou mais configurações globais do sistema (AdminOnly) (`PUT /api/v1/admin/configuracoes`).
+    /api/v1/admin/configuracoes/testar-smtp:
+        post:
+            operationId: postAdminConfiguracoesTestarSmtp
+            summary: Envia um e-mail de teste utilizando as credenciais SMTP salvas (AdminOnly)
+            tags: [Admin Configurações]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: E-mail de teste SMTP despachado
+            description: Envia um e-mail de teste utilizando as credenciais SMTP salvas (AdminOnly) (`POST /api/v1/admin/configuracoes/testar-smtp`).
+    /api/v1/admin/dashboard/stats:
+        get:
+            operationId: getAdminDashboardStats
+            summary: Retorna estatísticas de uso do sistema para o painel admin (AdminOnly)
+            tags: [Admin Dashboard]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Estatísticas gerais compiladas
+            description: Retorna estatísticas de uso do sistema para o painel admin (AdminOnly) (`GET /api/v1/admin/dashboard/stats`).
+    /api/v1/admin/relatorios/dashboard:
+        get:
+            operationId: getAdminRelatoriosDashboard
+            summary: Resumo geral e taxas de aprovação (AdminOnly)
+            tags: [Admin Relatórios]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Resumo das taxas
+            description: Resumo geral e taxas de aprovação (AdminOnly) (`GET /api/v1/admin/relatorios/dashboard`).
+    /api/v1/admin/relatorios/patologias:
+        get:
+            operationId: getAdminRelatoriosPatologias
+            summary: Relatório de patologias aprovadas e limitação médica dos alunos (AdminOnly)
+            tags: [Admin Relatórios]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Tabela de dados de patologias clínicas
+            description: Relatório de patologias aprovadas e limitação médica dos alunos (AdminOnly) (`GET /api/v1/admin/relatorios/patologias`).
+    /api/v1/admin/relatorios/subutilizados:
+        get:
+            operationId: getAdminRelatoriosSubutilizados
+            summary: Lista exercícios com recomendação abaixo do limite de uso (AdminOnly)
+            tags: [Admin Relatórios]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: min_recomendacoes
+                  in: query
+                  schema:
+                    type: integer
+                    default: 2
+                    example: 3
+                  description: Limite mínimo de recomendações para filtrar subutilizados. Usado em `/api/v1/admin/relatorios/subutilizados`.
+            responses:
+                '200':
+                    description: Tabela de exercícios menos recomendados
+            description: Lista exercícios com recomendação abaixo do limite de uso (AdminOnly) (`GET /api/v1/admin/relatorios/subutilizados`).
+    /api/v1/admin/relatorios/aprovacao:
+        get:
+            operationId: getAdminRelatoriosAprovacao
+            summary: Taxa de aprovação de sugestões de substituição no período (AdminOnly)
+            tags: [Admin Relatórios]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: dias
+                  in: query
+                  schema:
+                    type: integer
+                    default: 30
+                    example: 30
+                  description: Janela em dias para o relatório de aprovação. Usado em `/api/v1/admin/relatorios/aprovacao`.
+            responses:
+                '200':
+                    description: Métricas da taxa de aprovação
+            description: Taxa de aprovação de sugestões de substituição no período (AdminOnly) (`GET /api/v1/admin/relatorios/aprovacao`).
+    /api/v1/admin/consulta-base:
+        post:
+            operationId: postAdminConsultaBase
+            summary: Consulta vetorial / RAG baseada em documentos locais (AdminOnly)
+            tags: [Admin RAG]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [query]
+                            properties:
+                                query:
+                                    type: string
+                                    example: lombalgia
+                                k:
+                                    type: integer
+                                    default: 3
+                                    example: 5
+                        example:
+                            query: lombalgia
+                            k: 5
+                description: Corpo da requisição para `POST /api/v1/admin/consulta-base`.
+            responses:
+                '200':
+                    description: Resultados retornados do cache ou fallback local
+            description: Consulta vetorial / RAG baseada em documentos locais (AdminOnly) (`POST /api/v1/admin/consulta-base`).
+    /api/v1/admin/consulta-base/historico:
+        get:
+            operationId: getAdminConsultaBaseHistorico
+            summary: Histórico de termos consultados na base de conhecimento (AdminOnly)
+            tags: [Admin RAG]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Lista de termos e timestamps
+            description: Histórico de termos consultados na base de conhecimento (AdminOnly) (`GET /api/v1/admin/consulta-base/historico`).
+    /api/v1/admin/consulta-base/estatisticas:
+        get:
+            operationId: getAdminConsultaBaseEstatisticas
+            summary: Estatísticas de buscas na base de conhecimento (AdminOnly)
+            tags: [Admin RAG]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Métricas de acertos, erros e cache hits
+            description: Estatísticas de buscas na base de conhecimento (AdminOnly) (`GET /api/v1/admin/consulta-base/estatisticas`).
+    /api/v1/admin/consulta-base/populares:
+        get:
+            operationId: getAdminConsultaBasePopulares
+            summary: Lista de termos mais populares consultados (AdminOnly)
+            tags: [Admin RAG]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Termos ordenados por frequência
+            description: Lista de termos mais populares consultados (AdminOnly) (`GET /api/v1/admin/consulta-base/populares`).
+    /api/garmin/upload:
+        post:
+            operationId: postGarminUpload
+            summary: Importação de arquivos de atividades (Garmin)
+            tags: [Garmin]
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            required: [file, aluno_id]
+                            properties:
+                                file:
+                                    type: string
+                                    format: binary
+                                    example: atividade.fit
+                                aluno_id:
+                                    type: integer
+                                    example: 1
+                        example:
+                            file: atividade.fit
+                            aluno_id: 1
+                description: Corpo da requisição para `POST /api/garmin/upload`.
+            responses:
+                '200':
+                    description: Arquivo importado e estatísticas registradas
+            description: Importação de arquivos de atividades (Garmin) (`POST /api/garmin/upload`).
+    /api/garmin/activity/{atividade_id}:
+        get:
+            operationId: getGarminActivityByAtividadeid
+            summary: Retorna metadados de uma atividade Garmin específica
+            tags: [Garmin]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: atividade_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador da atividade Garmin. Usado em `/api/garmin/activity/{atividade_id}`.
+            responses:
+                '200':
+                    description: Metadados da atividade
+            description: Retorna metadados de uma atividade Garmin específica (`GET /api/garmin/activity/{atividade_id}`).
+    /api/garmin/activity/{atividade_id}/delete:
+        delete:
+            operationId: deleteGarminActivityByAtividadeidDelete
+            summary: Exclui uma atividade Garmin importada
+            tags: [Garmin]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: atividade_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador da atividade Garmin. Usado em `/api/garmin/activity/{atividade_id}/delete`.
+            responses:
+                '200':
+                    description: Atividade deletada com sucesso
+            description: Exclui uma atividade Garmin importada (`DELETE /api/garmin/activity/{atividade_id}/delete`).
+    /api/garmin/aluno/{aluno_id}/activities:
+        get:
+            operationId: getGarminAlunoByAlunoidActivities
+            summary: Lista atividades Garmin importadas do aluno
+            tags: [Garmin]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/garmin/aluno/{aluno_id}/activities`.
+            responses:
+                '200':
+                    description: Lista de atividades
+            description: Lista atividades Garmin importadas do aluno (`GET /api/garmin/aluno/{aluno_id}/activities`).
+    /api/garmin/aluno/{aluno_id}/stats:
+        get:
+            operationId: getGarminAlunoByAlunoidStats
+            summary: Retorna estatísticas agregadas de corrida de um aluno
+            tags: [Garmin]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/garmin/aluno/{aluno_id}/stats`.
+            responses:
+                '200':
+                    description: Estatísticas de volume e ritmo
+            description: Retorna estatísticas agregadas de corrida de um aluno (`GET /api/garmin/aluno/{aluno_id}/stats`).
+    /api/garmin/charts/distance/{aluno_id}:
+        get:
+            operationId: getGarminChartsDistanceByAlunoid
+            summary: Retorna gráfico Plotly de distância percorrida por data
+            tags: [Garmin Gráficos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/garmin/charts/distance/{aluno_id}`.
+            responses:
+                '200':
+                    description: JSON do gráfico Plotly
+            description: Retorna gráfico Plotly de distância percorrida por data (`GET /api/garmin/charts/distance/{aluno_id}`).
+    /api/garmin/charts/hr-zones/{aluno_id}:
+        get:
+            operationId: getGarminChartsHrZonesByAlunoid
+            summary: Retorna gráfico Plotly de tempo em zonas de frequência cardíaca
+            tags: [Garmin Gráficos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/garmin/charts/hr-zones/{aluno_id}`.
+            responses:
+                '200':
+                    description: JSON do gráfico Plotly
+            description: Retorna gráfico Plotly de tempo em zonas de frequência cardíaca (`GET /api/garmin/charts/hr-zones/{aluno_id}`).
+    /api/garmin/charts/activity-types/{aluno_id}:
+        get:
+            operationId: getGarminChartsActivityTypesByAlunoid
+            summary: Retorna gráfico Plotly de distribuição de tipos de atividades
+            tags: [Garmin Gráficos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/garmin/charts/activity-types/{aluno_id}`.
+            responses:
+                '200':
+                    description: JSON do gráfico Plotly
+            description: Retorna gráfico Plotly de distribuição de tipos de atividades (`GET /api/garmin/charts/activity-types/{aluno_id}`).
+    /api/garmin/charts/velocity-scatter/{aluno_id}:
+        get:
+            operationId: getGarminChartsVelocityScatterByAlunoid
+            summary: Retorna gráfico de dispersão de velocidade vs distância
+            tags: [Garmin Gráficos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/garmin/charts/velocity-scatter/{aluno_id}`.
+            responses:
+                '200':
+                    description: JSON do gráfico Plotly
+            description: Retorna gráfico de dispersão de velocidade vs distância (`GET /api/garmin/charts/velocity-scatter/{aluno_id}`).
+    /api/garmin/charts/dashboard/{aluno_id}:
+        get:
+            operationId: getGarminChartsDashboardByAlunoid
+            summary: Retorna múltiplos gráficos Plotly estruturados para o painel
+            tags: [Garmin Gráficos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/garmin/charts/dashboard/{aluno_id}`.
+            responses:
+                '200':
+                    description: JSON contendo dados Plotly para renderização no dashboard
+            description: Retorna múltiplos gráficos Plotly estruturados para o painel (`GET /api/garmin/charts/dashboard/{aluno_id}`).
+    /api/garmin/charts/hr-series/{aluno_id}:
+        get:
+            operationId: getGarminChartsHrSeriesByAlunoid
+            summary: Retorna gráfico de séries temporais de frequência cardíaca
+            tags: [Garmin Gráficos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/garmin/charts/hr-series/{aluno_id}`.
+            responses:
+                '200':
+                    description: JSON do gráfico Plotly
+            description: Retorna gráfico de séries temporais de frequência cardíaca (`GET /api/garmin/charts/hr-series/{aluno_id}`).
+    /api/garmin/charts/calories/{aluno_id}:
+        get:
+            operationId: getGarminChartsCaloriesByAlunoid
+            summary: Retorna gráfico de barras de calorias queimadas por atividade
+            tags: [Garmin Gráficos]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: aluno_id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 1
+                  description: Identificador numérico do aluno. Usado em `/api/garmin/charts/calories/{aluno_id}`.
+            responses:
+                '200':
+                    description: JSON do gráfico Plotly
+            description: Retorna gráfico de barras de calorias queimadas por atividade (`GET /api/garmin/charts/calories/{aluno_id}`).
+components:
+    securitySchemes:
+        BearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            description: 'JWT obtido em POST /api/v1/auth/login. Enviar header Authorization: Bearer <token>.'
+    schemas:
+        AIMetadata:
+            type: object
+            description: Auditoria da cadeia de geração/enriquecimento de treino por IA ou fallback local.
+            properties:
+                ai_used:
+                    type: boolean
+                    description: Indica se um provedor externo de IA foi aceito após validações.
+                    example: false
+                provider:
+                    type: string
+                    description: Provedor efetivamente usado ou local quando o fallback determinístico foi aplicado.
+                    enum: [gemini, openai, claude, local]
+                    example: local
+                model:
+                    type: string
+                    description: Modelo do provedor ou local-deterministic.
+                    example: local-deterministic
+                fallback_used:
+                    type: boolean
+                    description: Indica se houve fallback após falha/rejeição de provedor anterior.
+                    example: false
+                fallback_reason:
+                    type: string
+                    description: Motivo resumido do fallback, quando aplicável.
+                    example: ai_assistive_blocos_backlog_local_only
+                safety_validated:
+                    type: boolean
+                    description: Indica se a saída passou pelo safety gate determinístico.
+                    example: false
+                quality_validated:
+                    type: boolean
+                    description: Indica se a saída passou pelas validações de qualidade técnica.
+                    example: false
+                context_used:
+                    type: boolean
+                    description: Indica se contexto estruturado do aluno foi carregado para a pipeline.
+                    example: false
+                evidence_count:
+                    type: integer
+                    description: Quantidade de evidências técnicas enviadas ao provedor.
+                    example: 0
+                complexity:
+                    type: string
+                    description: Classificação simples da complexidade do caso.
+                    enum: [simples, moderado, complexo]
+                    example: simples
+                warnings:
+                    type: array
+                    items:
+                        type: string
+                    example:
+                        - exemplo
+            example:
+                ai_used: false
+                provider: local
+                model: local-deterministic
+                fallback_used: true
+                fallback_reason: ai_assistive_blocos_backlog_local_only
+                safety_validated: true
+                quality_validated: true
+                context_used: false
+                evidence_count: 0
+                complexity: simples

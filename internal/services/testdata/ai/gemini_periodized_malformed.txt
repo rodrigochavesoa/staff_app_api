@@ -1,0 +1,5 @@
+Aqui esta uma ficha em texto livre, mas nao e JSON valido.
+
+Treino A:
+- Supino Reto 3x10
+- Remada 3x12

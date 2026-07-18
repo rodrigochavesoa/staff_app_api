@@ -1,0 +1,23 @@
+{
+  "tipo": "periodizada",
+  "frequencia": 3,
+  "objetivo": "Força",
+  "nivel": "intermediário",
+  "observacoes": "Fixture anonimizada com prescricao perigosa para restricao de ombro.",
+  "treinos": [
+    {
+      "letra": "A",
+      "nome": "A - Ombros",
+      "exercicios": [
+        {
+          "nome": "Desenvolvimento Militar com Barra",
+          "grupo_muscular": "Ombros",
+          "series": 4,
+          "repeticoes": "6-8",
+          "descanso": 120,
+          "cadencia": "3010"
+        }
+      ]
+    }
+  ]
+}

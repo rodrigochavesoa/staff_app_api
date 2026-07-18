@@ -1,0 +1,23 @@
+{
+  "tipo": "periodizada",
+  "frequencia": 3,
+  "objetivo": "Condicionamento",
+  "nivel": "iniciante",
+  "observacoes": "Fixture anonimizada com prescricao perigosa para risco cardiorrespiratorio.",
+  "treinos": [
+    {
+      "letra": "A",
+      "nome": "A - Circuito",
+      "exercicios": [
+        {
+          "nome": "Circuito HIIT com Burpee",
+          "grupo_muscular": "Global",
+          "series": 5,
+          "repeticoes": "30 segundos",
+          "descanso": 20,
+          "cadencia": "explosiva"
+        }
+      ]
+    }
+  ]
+}

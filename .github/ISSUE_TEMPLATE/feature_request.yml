@@ -1,0 +1,68 @@
+name: Feature request
+description: Propose an improvement for STAFF App API.
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please keep proposals focused on the backend/API package. Official frontend work, legacy Python code and local design labs are outside the default scope unless maintainers explicitly approve them.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What real user, operator or integrator problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the API, database, operation or documentation change.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - API contract
+        - Database/migrations
+        - Authentication/authorization
+        - Students/history/frequency
+        - Training sheets
+        - Running/periodization
+        - Garmin/performance
+        - Anamnese/pre-registration
+        - Exercises/rehab
+        - SVED
+        - RAG/knowledge base
+        - Reports/configuration
+        - Docker/operation
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and impact
+      description: Explain whether this changes routes, payloads, status codes, migrations, auth/roles or operational behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Security, privacy, licensing or safety risks
+      description: Mention any sensitive data, health-adjacent behavior, AI behavior, dependency or license impact.
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This proposal preserves the frontend-agnostic backend/API model.
+          required: true
+        - label: This proposal does not require committing secrets, real data, proprietary content or restricted licensed material.
+          required: true

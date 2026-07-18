@@ -1,0 +1,37 @@
+{
+  "tipo": "periodizada",
+  "frequencia": 3,
+  "objetivo": "Hipertrofia",
+  "nivel": "intermediario",
+  "observacoes": "Fixture anonimizada de resposta valida de IA.",
+  "treinos": [
+    {
+      "letra": "A",
+      "nome": "A - Peito e Triceps",
+      "exercicios": [
+        {
+          "ordem": 1,
+          "nome": "Supino Reto",
+          "grupo_muscular": "Peito",
+          "series": 3,
+          "repeticoes": "8-10",
+          "cadencia": "3010",
+          "descanso": 90,
+          "observacoes": "Executar com controle tecnico.",
+          "video_url": ""
+        },
+        {
+          "ordem": 2,
+          "nome": "Triceps Corda",
+          "grupo_muscular": "Triceps",
+          "series": 3,
+          "repeticoes": "10-12",
+          "cadencia": "3010",
+          "descanso": 60,
+          "observacoes": "Manter cotovelos estaveis.",
+          "video_url": ""
+        }
+      ]
+    }
+  ]
+}
