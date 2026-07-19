@@ -1260,11 +1260,14 @@ func resolveE2ESQLitePath() (string, func(), error) {
 	}
 	container := env("E2E_DOCKER_CONTAINER", "staff_api")
 	remote := env("E2E_DOCKER_DB_PATH", "/app/data/db/fichas_treino.db")
+	if !validE2EDockerContainer(container) || !validE2EDockerDBPath(remote) {
+		return "", nil, nil
+	}
 	if _, err := exec.LookPath("docker"); err != nil {
 		return "", nil, nil
 	}
-	// Probe container
-	probe := exec.Command("docker", "inspect", "-f", "{{.State.Running}}", container)
+	// Probe container (args allowlisted above).
+	probe := exec.Command("docker", "inspect", "-f", "{{.State.Running}}", container) // #nosec G204
 	out, err := probe.Output()
 	if err != nil || !strings.Contains(string(out), "true") {
 		return "", nil, nil
@@ -1275,12 +1278,43 @@ func resolveE2ESQLitePath() (string, func(), error) {
 	}
 	local := tmp.Name()
 	_ = tmp.Close()
-	cp := exec.Command("docker", "cp", container+":"+remote, local)
+	src := container + ":" + remote
+	cp := exec.Command("docker", "cp", src, local) // #nosec G204
 	if out, err := cp.CombinedOutput(); err != nil {
 		_ = os.Remove(local)
 		return "", nil, fmt.Errorf("docker cp: %w (%s)", err, truncate(out))
 	}
 	return local, func() { _ = os.Remove(local) }, nil
+}
+
+func validE2EDockerContainer(name string) bool {
+	if name == "" || len(name) > 128 {
+		return false
+	}
+	for i, r := range name {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+			continue
+		case r == '_' || r == '-' || r == '.':
+			if i == 0 {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+func validE2EDockerDBPath(p string) bool {
+	p = filepath.Clean(strings.TrimSpace(p))
+	if !strings.HasPrefix(p, "/app/data/") {
+		return false
+	}
+	if strings.Contains(p, "..") {
+		return false
+	}
+	return strings.HasSuffix(p, ".db")
 }
 
 func mustString(body []byte, key string) string {
