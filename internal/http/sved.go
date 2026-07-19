@@ -242,6 +242,10 @@ func (h *SVEDHandler) GetHistorico(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	if err := rows.Err(); err != nil {
+		writeJSONError(w, "Failed to iterate history", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
@@ -338,6 +342,10 @@ func (h *SVEDHandler) GetSugestao(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
+	}
+	if err := rows.Err(); err != nil {
+		writeJSONError(w, "Failed to iterate history", http.StatusInternalServerError)
+		return
 	}
 
 	sugestao := services.SugerirProgressaoSVED(exercicioNome, historico)
@@ -600,6 +608,10 @@ func (h *SVEDHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
 			"ies_score": iesScore,
 			"densidade": densidade,
 		})
+	}
+	if err := rows.Err(); err != nil {
+		writeJSONError(w, "Failed to iterate sheets history", http.StatusInternalServerError)
+		return
 	}
 
 	var densidadePorExercicio []map[string]any
