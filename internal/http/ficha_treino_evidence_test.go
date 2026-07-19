@@ -115,6 +115,27 @@ func TestGerarPeriodizadaSimpleCaseEvidenceMetadata(t *testing.T) {
 	if aiMetadata["evidence_fallback_used"].(bool) != false {
 		t.Fatalf("evidence_fallback_used=%v want false", aiMetadata["evidence_fallback_used"])
 	}
+
+	var (
+		endpoint, complexity string
+		evidenceRequested    int
+		evidenceCount        int
+	)
+	err = db.QueryRowContext(ctx, `
+		SELECT endpoint, complexity, evidence_requested, evidence_count
+		FROM training_pipeline_events
+		WHERE aluno_id = 1
+		ORDER BY id DESC LIMIT 1
+	`).Scan(&endpoint, &complexity, &evidenceRequested, &evidenceCount)
+	if err != nil {
+		t.Fatalf("telemetry row: %v", err)
+	}
+	if endpoint != "gerar-periodizada" || complexity != "simples" {
+		t.Fatalf("telemetry endpoint/complexity=%s/%s", endpoint, complexity)
+	}
+	if evidenceRequested != 0 || evidenceCount != 0 {
+		t.Fatalf("telemetry evidence flags req=%d count=%d", evidenceRequested, evidenceCount)
+	}
 }
 
 func periodizedTrainingJSON(exerciseName string) string {

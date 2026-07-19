@@ -19,14 +19,15 @@ import (
 )
 
 type FichaTreinoHandler struct {
-	repo             *sqlite.FichaTreinoRepository
-	db               *sqlite.DB
-	alunoRepo        *sqlite.AlunoRepository
-	fichaWebRepo     *sqlite.FichaWebRepository
-	anamRepo         *sqlite.AnamneseRepository
-	ragRepo          *sqlite.RAGRepository
-	trainingAI       *services.TrainingProviderChain
-	evidencePipeline *services.EvidencePipeline
+	repo              *sqlite.FichaTreinoRepository
+	db                *sqlite.DB
+	alunoRepo         *sqlite.AlunoRepository
+	fichaWebRepo      *sqlite.FichaWebRepository
+	anamRepo          *sqlite.AnamneseRepository
+	ragRepo           *sqlite.RAGRepository
+	trainingAI        *services.TrainingProviderChain
+	evidencePipeline  *services.EvidencePipeline
+	evidenceTelemetry services.EvidencePipelineTelemetryRecorder
 }
 
 func NewFichaTreinoHandler(db *sqlite.DB, trainingAI ...*services.TrainingProviderChain) *FichaTreinoHandler {
@@ -37,14 +38,15 @@ func NewFichaTreinoHandler(db *sqlite.DB, trainingAI ...*services.TrainingProvid
 	anamRepo := sqlite.NewAnamneseRepository(db)
 	ragRepo := sqlite.NewRAGRepository(db)
 	return &FichaTreinoHandler{
-		repo:             sqlite.NewFichaTreinoRepository(db),
-		db:               db,
-		alunoRepo:        sqlite.NewAlunoRepository(db),
-		fichaWebRepo:     sqlite.NewFichaWebRepository(db),
-		anamRepo:         anamRepo,
-		ragRepo:          ragRepo,
-		trainingAI:       chain,
-		evidencePipeline: services.NewEvidencePipeline(db, anamRepo, ragRepo),
+		repo:              sqlite.NewFichaTreinoRepository(db),
+		db:                db,
+		alunoRepo:         sqlite.NewAlunoRepository(db),
+		fichaWebRepo:      sqlite.NewFichaWebRepository(db),
+		anamRepo:          anamRepo,
+		ragRepo:           ragRepo,
+		trainingAI:        chain,
+		evidencePipeline:  services.NewEvidencePipeline(db, anamRepo, ragRepo),
+		evidenceTelemetry: sqlite.NewEvidencePipelineTelemetryRecorder(db),
 	}
 }
 
@@ -592,6 +594,7 @@ func (h *FichaTreinoHandler) GerarPeriodizada(w http.ResponseWriter, r *http.Req
 	}
 
 	if h.trainingAI != nil {
+		pipelineStart := time.Now()
 		contexto, err := h.loadTrainingContext(r.Context(), aluno.ID, req)
 		if err != nil {
 			writeJSONError(w, "Failed to load training context: "+err.Error(), http.StatusInternalServerError)
@@ -612,6 +615,7 @@ func (h *FichaTreinoHandler) GerarPeriodizada(w http.ResponseWriter, r *http.Req
 			return
 		}
 		fichaPeriodizadaJSON = result.Ficha
+		h.recordEvidencePipelineTelemetry(r.Context(), aluno.ID, contexto, result, time.Since(pipelineStart).Milliseconds())
 	}
 
 	fichaJSONBytes, err := json.Marshal(fichaPeriodizadaJSON)

@@ -36,6 +36,7 @@ func GetMigrations() ([]Migration, error) {
 		{Version: 12, Name: "alter_fichas_treino_web_sved", Path: "sql/0012_alter_fichas_treino_web_sved.up.sql"},
 		{Version: 13, Name: "create_consultas_base_conhecimento", Path: "sql/0013_create_consultas_base_conhecimento.up.sql"},
 		{Version: 14, Name: "seed_base_conhecimento", Path: "sql/0014_seed_base_conhecimento.up.sql"},
+		{Version: 15, Name: "create_training_pipeline_events", Path: "sql/0015_create_training_pipeline_events.up.sql"},
 	}
 
 	migrations := make([]Migration, len(files))
