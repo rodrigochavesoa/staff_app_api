@@ -7,6 +7,11 @@
 ![License](https://img.shields.io/badge/License-Apache--2.0-blue)
 ![Status](https://img.shields.io/badge/status-v0.1.0%20release%20staging-orange)
 
+STAFF App API is an open-source backend for building fitness, sport and health
+applications. It exists to help developers, coaches, students and makers create
+real-world e-fitness systems without starting from zero or depending on closed,
+expensive platforms.
+
 Frontend-agnostic Go backend for student management, anamnese intake,
 training-sheet workflows, running periodization, Garmin activity processing,
 SVED metrics, exercise libraries, local RAG and administrative reporting.
