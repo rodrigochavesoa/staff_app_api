@@ -156,12 +156,64 @@ reasoning in the PR.
 
 ## Commit and PR Style
 
-- Use clear commit messages.
+### Conventional Commits
+
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```text
+<type>(optional-scope): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Rules:
+
+- Use an imperative, concise description (≤ ~72 characters on the subject line).
+- Do not end the subject with a period.
+- Use `type(scope):` only when a scope helps (examples: `api`, `garmin`, `docs`,
+  `ci`, `docker`). Scope is optional.
+- Breaking changes: add `!` after the type/scope (`feat(api)!: ...`) and/or a
+  footer `BREAKING CHANGE: <details>`. Call out breaking API behavior in the PR
+  as well.
+
+Allowed types:
+
+| Type | When to use |
+|------|-------------|
+| `feat` | New user-facing capability |
+| `fix` | Bug fix |
+| `docs` | Documentation only |
+| `refactor` | Code change with no intended behavior change |
+| `test` | Tests only |
+| `chore` | Maintenance (deps, tooling, housekeeping) |
+| `ci` | CI/CD workflow changes |
+| `build` | Build system, Docker image packaging, scripts that produce artifacts |
+| `perf` | Performance improvement |
+| `style` | Formatting only (no logic change) |
+
+Examples:
+
+```text
+feat(api): add public running calendar endpoint
+fix(garmin): reject empty FIT uploads before parse
+docs: document local Swagger UI and Redoc
+ci: pin TruffleHog image tag in workflow
+chore(licenses): add module license allowlist gate
+feat(api)!: rename training sheet status field
+
+BREAKING CHANGE: clients must send `status` instead of `estado`.
+```
+
+### Pull requests
+
 - Keep PRs focused.
 - Include screenshots only for optional frontend experiments, not for backend
   behavior.
 - Mention breaking API behavior explicitly.
 - Link issues with `Closes #123` when applicable.
+- Prefer Conventional Commit subjects for the PR title when practical.
 
 ## Review and Merge Policy
 
