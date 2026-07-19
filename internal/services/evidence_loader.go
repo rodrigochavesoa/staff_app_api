@@ -148,17 +148,6 @@ func (l *SQLStructuredContextLoader) loadSVEDSummary(ctx context.Context, alunoI
 	return &summary, nil
 }
 
-func nonEmptyStrings(values []string) []string {
-	out := make([]string, 0, len(values))
-	for _, value := range values {
-		value = strings.TrimSpace(value)
-		if value != "" {
-			out = append(out, value)
-		}
-	}
-	return out
-}
-
 func truncateEvidenceText(text string, max int) string {
 	text = strings.TrimSpace(text)
 	if len(text) <= max {
