@@ -173,6 +173,18 @@ func TestTrainingProviderChainClinicalSafetyRulesFallbackToLocal(t *testing.T) {
 			},
 			wantReason: "restrição cardiorrespiratória",
 		},
+		{
+			name:       "cervical restriction",
+			req:        testGenerationRequest("dor cervical crônica"),
+			fixture:    "testdata/ai/gemini_periodized_cervical_unsafe.json",
+			wantReason: "restrição cervical",
+		},
+		{
+			name:       "pregnancy restriction",
+			req:        testGenerationRequest("aluna gestante segundo trimestre"),
+			fixture:    "testdata/ai/gemini_periodized_pregnancy_unsafe.json",
+			wantReason: "restrição gestacional",
+		},
 	}
 
 	for _, tt := range tests {

@@ -388,6 +388,38 @@ var clinicalSafetyRules = []clinicalSafetyRule{
 		},
 	},
 	{
+		Reason:   "restrição cervical/pescoço",
+		Triggers: []string{"cervical", "pescoço", "pescoco", "hérnia cervical", "hernia cervical", "whiplash"},
+		BlockedExercises: []string{
+			"desenvolvimento militar", "shrugs", "encolhimento", "remada alta", "rollout",
+			"abdominal com carga na nuca", "sit-up com peso",
+		},
+	},
+	{
+		Reason:   "restrição de punho/cotovelo",
+		Triggers: []string{"punho", "cotovelo", "epicondilite", "túnel do carpo", "tunel do carpo", "tendinite de punho"},
+		BlockedExercises: []string{
+			"curl com barra", "rosca direta", "skull crusher", "fundo no banco", "dip",
+			"flexão diamante", "flexao diamante", "clean",
+		},
+	},
+	{
+		Reason:   "restrição de tornozelo",
+		Triggers: []string{"tornozelo", "entorse", "tendão de aquiles", "tendao de aquiles", "fascite"},
+		BlockedExercises: []string{
+			"salto", "box jump", "pliometria", "corrida em escada", "panturrilha em pé unilateral",
+			"afundo", "avanço", "avanco",
+		},
+	},
+	{
+		Reason:   "restrição gestacional",
+		Triggers: []string{"gestante", "gravidez", "grávida", "gravida", "prenatal", "pré-natal", "pre-natal"},
+		BlockedExercises: []string{
+			"hiit", "tabata", "burpee", "pliometria", "agachamento livre", "levantamento terra",
+			"abdominal supra", "crunch", "prancha lateral dinâmica", "valsalva",
+		},
+	},
+	{
 		Reason:   "restrição cardiorrespiratória de alto risco",
 		Triggers: []string{"cardiopatia", "cardíaco", "cardiaco", "hipertensão", "hipertensao", "arritmia", "dor no peito", "dispneia"},
 		BlockedExercises: []string{

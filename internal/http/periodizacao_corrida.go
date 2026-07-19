@@ -18,17 +18,11 @@ import (
 	"staff_app/internal/corrida/blocos"
 	"staff_app/internal/daniels"
 	"staff_app/internal/domain"
+	"staff_app/internal/services"
 	"staff_app/internal/sqlite"
 
 	"github.com/go-chi/chi/v5"
 )
-
-// BlocksAIProvider is an optional enrichment/generation provider for corrida blocks.
-// Production wiring is backlog; tests may inject a fake without real API keys.
-type BlocksAIProvider interface {
-	Name() string
-	Available() bool
-}
 
 type PeriodizacaoCorridaHandler struct {
 	repo          *sqlite.PeriodizacaoCorridaRepository
@@ -37,7 +31,7 @@ type PeriodizacaoCorridaHandler struct {
 	anamneseRepo  *sqlite.AnamneseRepository
 	cfg           *config.Config
 	templatesPath string
-	blocksAI      BlocksAIProvider
+	blocksAI      services.BlocksAIProvider
 }
 
 func NewPeriodizacaoCorridaHandler(db *sqlite.DB, cfg *config.Config) *PeriodizacaoCorridaHandler {
@@ -48,10 +42,12 @@ func NewPeriodizacaoCorridaHandler(db *sqlite.DB, cfg *config.Config) *Periodiza
 		anamneseRepo:  sqlite.NewAnamneseRepository(db),
 		cfg:           cfg,
 		templatesPath: filepath.Join("data", "json", "templates_daniels_blocos.json"),
+		// Default assistive path: local enricher only (no remote API keys).
+		blocksAI: services.LocalBlocksAIProvider{},
 	}
 }
 
-func (h *PeriodizacaoCorridaHandler) WithBlocksAIProvider(p BlocksAIProvider) *PeriodizacaoCorridaHandler {
+func (h *PeriodizacaoCorridaHandler) WithBlocksAIProvider(p services.BlocksAIProvider) *PeriodizacaoCorridaHandler {
 	h.blocksAI = p
 	return h
 }

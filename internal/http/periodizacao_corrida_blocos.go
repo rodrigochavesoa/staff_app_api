@@ -12,6 +12,7 @@ import (
 
 	"staff_app/internal/corrida/blocos"
 	"staff_app/internal/domain"
+	"staff_app/internal/services"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -455,9 +456,27 @@ func (h *PeriodizacaoCorridaHandler) GerarBlocos(w http.ResponseWriter, r *http.
 		return
 	}
 
-	aiMode := "assistive"
+	aiMode := services.AITrainingModeAssistive
 	if h.cfg != nil && h.cfg.AITrainingMode != "" {
-		aiMode = h.cfg.AITrainingMode
+		aiMode = strings.TrimSpace(strings.ToLower(h.cfg.AITrainingMode))
+	}
+
+	warnings := make([]string, 0)
+	highRisk := services.HighCardioRiskFromText(req.Limitacoes)
+	if req.AlunoID > 0 {
+		if a, err := h.anamneseRepo.FindActiveByAlunoID(r.Context(), req.AlunoID); err == nil && a != nil && a.RiskScoreCached >= 3 {
+			highRisk = true
+		}
+	}
+
+	// Hard clinical safety before any enrichment: never keep I/R under high cardio risk.
+	if highRisk {
+		for i := range days {
+			days[i].Blocos = blocos.ApplyPaces(blocos.DowngradeHardIntensities(days[i].Blocos), req.VDOT)
+			days[i].DuracaoMinutos = blocos.DurationMinutes(days[i].Blocos)
+		}
+		distribuicao, durTotal = recomputePreviewStats(days)
+		warnings = append(warnings, "intensidades I/R reduzidas por risco cardiorrespiratório alto")
 	}
 
 	meta := map[string]any{
@@ -468,45 +487,76 @@ func (h *PeriodizacaoCorridaHandler) GerarBlocos(w http.ResponseWriter, r *http.
 		"fallback_reason":   "",
 		"safety_validated":  true,
 		"quality_validated": true,
-		"warnings":          []string{},
+		"warnings":          warnings,
 	}
 
-	// Clinical safety: downgrade I/R when active anamnese risk is high.
-	if req.AlunoID > 0 {
-		if a, err := h.anamneseRepo.FindActiveByAlunoID(r.Context(), req.AlunoID); err == nil && a != nil && a.RiskScoreCached >= 3 {
-			for i := range days {
-				days[i].Blocos = blocos.ApplyPaces(blocos.DowngradeHardIntensities(days[i].Blocos), req.VDOT)
-				days[i].DuracaoMinutos = blocos.DurationMinutes(days[i].Blocos)
-			}
-			distribuicao = map[string]int{}
-			durTotal = 0
-			for _, d := range days {
-				durTotal += d.DuracaoMinutos
-				for k, v := range blocos.IntensityDistribution(d.Blocos) {
-					distribuicao[k] += v
-				}
-			}
-			meta["warnings"] = []string{"intensidades I/R reduzidas por risco cardiorrespiratório alto"}
-		}
+	enrichReq := &services.BlocksEnrichRequest{
+		Days:           days,
+		VDOT:           req.VDOT,
+		DistanciaProva: req.DistanciaProva,
+		Nivel:          req.Nivel,
+		Objetivo:       firstNonEmpty(req.Objetivo, "performance"),
+		Limitacoes:     req.Limitacoes,
+		HighCardioRisk: highRisk,
 	}
 
 	switch aiMode {
-	case "off":
+	case services.AITrainingModeOff:
 		meta["fallback_used"] = true
 		meta["fallback_reason"] = "ai_training_mode_off"
-	case "required":
-		// required exige provider de blocos aprovado (real ou fake injetado). Local sozinho não basta.
-		if !h.hasBlocksAIProvider() {
+	case services.AITrainingModeRequired:
+		// required rejects the default local enricher — needs an approved non-local provider
+		// (fake in tests or real key only when staging is authorized).
+		if !h.hasBlocksAIProvider() || h.blocksAI.Name() == "local" {
 			returnError(w, http.StatusServiceUnavailable, "Nenhum provedor de IA de blocos disponível para AI_TRAINING_MODE=required")
 			return
 		}
-		meta["ai_used"] = true
+		enriched, err := h.blocksAI.Enrich(r.Context(), enrichReq)
+		if err != nil {
+			returnError(w, http.StatusServiceUnavailable, fmt.Sprintf("Falha no provedor de IA de blocos: %v", err))
+			return
+		}
+		if err := services.ValidateBlocksSafety(enriched.Days, highRisk); err != nil {
+			returnError(w, http.StatusServiceUnavailable, err.Error())
+			return
+		}
+		days = enriched.Days
+		distribuicao, durTotal = recomputePreviewStats(days)
+		meta["ai_used"] = h.blocksAI.Name() != "local"
 		meta["provider"] = h.blocksAI.Name()
+		meta["model"] = h.blocksAI.Model()
 		meta["fallback_used"] = false
-	default:
-		// assistive futuro/backlog: nesta fase gerar-blocos permanece local-only.
-		meta["fallback_used"] = true
-		meta["fallback_reason"] = "ai_assistive_blocos_backlog_local_only"
+		if len(enriched.Warnings) > 0 {
+			warnings = append(warnings, enriched.Warnings...)
+			meta["warnings"] = warnings
+		}
+	default: // assistive
+		if !h.hasBlocksAIProvider() {
+			meta["fallback_used"] = true
+			meta["fallback_reason"] = "no_blocks_ai_provider"
+			break
+		}
+		enriched, err := h.blocksAI.Enrich(r.Context(), enrichReq)
+		if err != nil {
+			meta["fallback_used"] = true
+			meta["fallback_reason"] = fmt.Sprintf("blocks provider %s failed: %v", h.blocksAI.Name(), err)
+			break
+		}
+		if err := services.ValidateBlocksSafety(enriched.Days, highRisk); err != nil {
+			meta["fallback_used"] = true
+			meta["fallback_reason"] = fmt.Sprintf("provider %s rejected by safety: %v", h.blocksAI.Name(), err)
+			break
+		}
+		days = enriched.Days
+		distribuicao, durTotal = recomputePreviewStats(days)
+		meta["ai_used"] = h.blocksAI.Name() != "local"
+		meta["provider"] = h.blocksAI.Name()
+		meta["model"] = h.blocksAI.Model()
+		meta["fallback_used"] = false
+		if len(enriched.Warnings) > 0 {
+			warnings = append(warnings, enriched.Warnings...)
+			meta["warnings"] = warnings
+		}
 	}
 
 	flatBlocos := make([]domain.BlocoCorrida, 0)
@@ -515,15 +565,27 @@ func (h *PeriodizacaoCorridaHandler) GerarBlocos(w http.ResponseWriter, r *http.
 	}
 
 	returnSuccess(w, http.StatusOK, map[string]any{
-		"blocos":         flatBlocos,
-		"dias":           days,
-		"duracao_total":  durTotal,
-		"distribuicao":   distribuicao,
-		"ai_metadata":    meta,
-		"objetivo":       firstNonEmpty(req.Objetivo, "performance"),
-		"limitacoes":     req.Limitacoes,
-		"usou_fallback":  meta["fallback_used"],
+		"blocos":        flatBlocos,
+		"dias":          days,
+		"duracao_total": durTotal,
+		"distribuicao":  distribuicao,
+		"ai_metadata":   meta,
+		"objetivo":      firstNonEmpty(req.Objetivo, "performance"),
+		"limitacoes":    req.Limitacoes,
+		"usou_fallback": meta["fallback_used"],
 	}, "Blocos gerados com sucesso")
+}
+
+func recomputePreviewStats(days []blocos.PreviewDay) (map[string]int, float64) {
+	distribuicao := map[string]int{}
+	var durTotal float64
+	for _, d := range days {
+		durTotal += d.DuracaoMinutos
+		for k, v := range blocos.IntensityDistribution(d.Blocos) {
+			distribuicao[k] += v
+		}
+	}
+	return distribuicao, durTotal
 }
 
 func parsePositiveID(w http.ResponseWriter, raw, errMsg string) (int64, bool) {

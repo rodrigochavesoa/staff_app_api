@@ -1,0 +1,23 @@
+{
+  "tipo": "periodizada",
+  "frequencia": 3,
+  "objetivo": "Hipertrofia",
+  "nivel": "intermediario",
+  "observacoes": "Fixture anonimizada com exercicio inadequado para restricao cervical.",
+  "treinos": [
+    {
+      "letra": "A",
+      "nome": "A - Ombros",
+      "exercicios": [
+        {
+          "nome": "Desenvolvimento Militar",
+          "grupo_muscular": "Ombros",
+          "series": 3,
+          "repeticoes": "8-10",
+          "descanso": 90,
+          "cadencia": "3010"
+        }
+      ]
+    }
+  ]
+}

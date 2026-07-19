@@ -292,7 +292,73 @@ func TestBlocosDinamicosCorridaFlow(t *testing.T) {
 		}
 	})
 
-	t.Run("gerar-blocos AI required without provider returns 503", func(t *testing.T) {
+	t.Run("gerar-blocos AI assistive local enricher", func(t *testing.T) {
+		cfgAssistive := &config.Config{
+			CorsOrigins:    []string{"*"},
+			SecretKey:      "super-secret-key-change-me",
+			AITrainingMode: "assistive",
+		}
+		routerAssistive := NewRouter(cfgAssistive, db)
+		payload := `{
+			"vdot": 45,
+			"distancia_prova": "10K",
+			"nivel": "intermediario",
+			"dias_semana": 4,
+			"objetivo": "performance"
+		}`
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/corrida/gerar-blocos", bytes.NewBufferString(payload))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", authHeader)
+		w := httptest.NewRecorder()
+		routerAssistive.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+		}
+		body := w.Body.String()
+		if !strings.Contains(body, `"fallback_used":false`) && !strings.Contains(body, `"fallback_used": false`) {
+			t.Fatalf("expected fallback_used false for assistive local enricher, body=%s", body)
+		}
+		if !strings.Contains(body, "local-blocks-enricher") {
+			t.Fatalf("expected local-blocks-enricher model, body=%s", body)
+		}
+		if !strings.Contains(body, "zona E") && !strings.Contains(body, "zona T") && !strings.Contains(body, "zona M") {
+			t.Fatalf("expected enriched intensity notes, body=%s", body)
+		}
+	})
+
+	t.Run("gerar-blocos AI assistive downgrades from limitacoes text", func(t *testing.T) {
+		cfgAssistive := &config.Config{
+			CorsOrigins:    []string{"*"},
+			SecretKey:      "super-secret-key-change-me",
+			AITrainingMode: "assistive",
+		}
+		routerAssistive := NewRouter(cfgAssistive, db)
+		payload := `{
+			"vdot": 50,
+			"distancia_prova": "5K",
+			"nivel": "avancado",
+			"dias_semana": 4,
+			"limitacoes": "histórico de arritmia e dor no peito"
+		}`
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/corrida/gerar-blocos", bytes.NewBufferString(payload))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", authHeader)
+		w := httptest.NewRecorder()
+		routerAssistive.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected 200, got %d body=%s", w.Code, w.Body.String())
+		}
+		body := w.Body.String()
+		if !strings.Contains(body, "risco cardiorrespirat") {
+			t.Fatalf("expected cardio risk warning, body=%s", body)
+		}
+		if strings.Contains(body, `"intensity":"I"`) || strings.Contains(body, `"intensity": "I"`) ||
+			strings.Contains(body, `"intensity":"R"`) || strings.Contains(body, `"intensity": "R"`) {
+			t.Fatalf("expected I/R removed under cardio risk, body=%s", body)
+		}
+	})
+
+	t.Run("gerar-blocos AI required without non-local provider returns 503", func(t *testing.T) {
 		cfgRequired := &config.Config{
 			CorsOrigins:    []string{"*"},
 			SecretKey:      "super-secret-key-change-me",

@@ -1,0 +1,23 @@
+{
+  "tipo": "periodizada",
+  "frequencia": 3,
+  "objetivo": "Condicionamento",
+  "nivel": "iniciante",
+  "observacoes": "Fixture anonimizada com circuito inadequado na gestacao.",
+  "treinos": [
+    {
+      "letra": "A",
+      "nome": "A - Circuito",
+      "exercicios": [
+        {
+          "nome": "Circuito HIIT com Burpee",
+          "grupo_muscular": "Global",
+          "series": 4,
+          "repeticoes": "20 segundos",
+          "descanso": 10,
+          "cadencia": "explosiva"
+        }
+      ]
+    }
+  ]
+}
