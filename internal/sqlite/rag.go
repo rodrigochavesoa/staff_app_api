@@ -107,8 +107,12 @@ func (r *RAGRepository) SaveCachedQuery(ctx context.Context, queryOrig, queryNor
 }
 
 func (r *RAGRepository) SearchLocalDocuments(ctx context.Context, query string, modalidade string, k int) ([]domain.KnowledgeDocument, error) {
-	searchPattern := "%" + strings.ToLower(strings.TrimSpace(query)) + "%"
+	// Admin /consulta-base contract: single substring LIKE on the full query.
+	searchPattern := "%" + sanitizeLikeToken(strings.ToLower(strings.TrimSpace(query))) + "%"
 	modLower := strings.ToLower(strings.TrimSpace(modalidade))
+	if k <= 0 {
+		k = 3
+	}
 
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, fonte, COALESCE(titulo, ''), conteudo, COALESCE(tags, ''), COALESCE(modalidade, '')
@@ -121,7 +125,86 @@ func (r *RAGRepository) SearchLocalDocuments(ctx context.Context, query string, 
 		return nil, err
 	}
 	defer rows.Close() // #nosec G104
+	return scanLocalKnowledgeDocuments(rows)
+}
 
+// SearchLocalDocumentCandidates broadens recall for the evidence pipeline:
+// tokenizes the query (≥3 chars) and matches any token via OR LIKE, LIMIT k.
+// Does not change SearchLocalDocuments (admin consulta-base).
+func (r *RAGRepository) SearchLocalDocumentCandidates(ctx context.Context, query string, modalidade string, k int) ([]domain.KnowledgeDocument, error) {
+	tokens := lexicalSQLTokens(query)
+	if len(tokens) == 0 {
+		return r.SearchLocalDocuments(ctx, query, modalidade, k)
+	}
+	if k <= 0 {
+		k = 20
+	}
+	modLower := strings.ToLower(strings.TrimSpace(modalidade))
+
+	var b strings.Builder
+	b.WriteString(`
+		SELECT id, fonte, COALESCE(titulo, ''), conteudo, COALESCE(tags, ''), COALESCE(modalidade, '')
+		FROM base_conhecimento_documentos
+		WHERE ativo = 1 AND (
+	`)
+	args := make([]any, 0, len(tokens)*3+2)
+	for i, tok := range tokens {
+		if i > 0 {
+			b.WriteString(" OR ")
+		}
+		b.WriteString("(LOWER(conteudo) LIKE ? OR LOWER(titulo) LIKE ? OR LOWER(tags) LIKE ?)")
+		pat := "%" + tok + "%"
+		args = append(args, pat, pat, pat)
+	}
+	b.WriteString(`
+		)
+		ORDER BY CASE WHEN LOWER(COALESCE(modalidade, '')) = ? THEN 0 ELSE 1 END, id DESC
+		LIMIT ?
+	`)
+	args = append(args, modLower, k)
+
+	rows, err := r.db.QueryContext(ctx, b.String(), args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close() // #nosec G104
+	return scanLocalKnowledgeDocuments(rows)
+}
+
+const maxLexicalSQLTokens = 8
+
+func lexicalSQLTokens(query string) []string {
+	fields := strings.Fields(strings.ToLower(strings.TrimSpace(query)))
+	out := make([]string, 0, len(fields))
+	seen := make(map[string]struct{}, len(fields))
+	for _, f := range fields {
+		f = strings.Trim(f, ".,;:!?()[]{}\"'")
+		f = sanitizeLikeToken(f)
+		if len([]rune(f)) < 3 {
+			continue
+		}
+		if _, ok := seen[f]; ok {
+			continue
+		}
+		seen[f] = struct{}{}
+		out = append(out, f)
+		if len(out) >= maxLexicalSQLTokens {
+			break
+		}
+	}
+	return out
+}
+
+func sanitizeLikeToken(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r == '%' || r == '_' {
+			return -1
+		}
+		return r
+	}, s)
+}
+
+func scanLocalKnowledgeDocuments(rows *sql.Rows) ([]domain.KnowledgeDocument, error) {
 	var list []domain.KnowledgeDocument
 	rank := 1
 	for rows.Next() {
@@ -153,11 +236,9 @@ func (r *RAGRepository) SearchLocalDocuments(ctx context.Context, query string, 
 		})
 		rank++
 	}
-
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-
 	return list, nil
 }
 

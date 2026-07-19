@@ -109,7 +109,7 @@ func (s *HybridKnowledgeEvidenceSearcher) Search(ctx context.Context, req Eviden
 	byKey := make(map[string]KnowledgeEvidence)
 
 	for _, q := range queries {
-		docs, err := s.Docs.SearchLocalDocuments(ctx, q, modalidade, hybridCandidateLimit)
+		docs, err := s.listLexicalCandidates(ctx, q, modalidade)
 		if err != nil {
 			return nil, err
 		}
@@ -174,6 +174,77 @@ func EvidenceTopK(complexity string) int {
 		return 5
 	}
 	return 3
+}
+
+// listLexicalCandidates prefers token-OR SQL (LocalDocumentCandidateSource).
+// Falls back to short-term SearchLocalDocuments when candidates are unavailable/empty.
+func (s *HybridKnowledgeEvidenceSearcher) listLexicalCandidates(ctx context.Context, query, modalidade string) ([]domain.KnowledgeDocument, error) {
+	if src, ok := s.Docs.(LocalDocumentCandidateSource); ok {
+		docs, err := src.SearchLocalDocumentCandidates(ctx, query, modalidade, hybridCandidateLimit)
+		if err != nil {
+			return nil, err
+		}
+		if len(docs) > 0 {
+			return docs, nil
+		}
+	}
+	return s.listCandidatesExpanded(ctx, query, modalidade)
+}
+
+func (s *HybridKnowledgeEvidenceSearcher) listCandidatesExpanded(ctx context.Context, query, modalidade string) ([]domain.KnowledgeDocument, error) {
+	byKey := make(map[string]domain.KnowledgeDocument)
+	for _, term := range expandLexicalCandidateQueries(query) {
+		docs, err := s.Docs.SearchLocalDocuments(ctx, term, modalidade, hybridCandidateLimit)
+		if err != nil {
+			return nil, err
+		}
+		for _, doc := range docs {
+			key := evidenceDedupKey(doc.Fonte, doc.Conteudo)
+			if _, ok := byKey[key]; !ok {
+				byKey[key] = doc
+			}
+		}
+		if len(byKey) >= hybridCandidateLimit {
+			break
+		}
+	}
+	out := make([]domain.KnowledgeDocument, 0, len(byKey))
+	for _, doc := range byKey {
+		out = append(out, doc)
+	}
+	return out, nil
+}
+
+func expandLexicalCandidateQueries(query string) []string {
+	seen := make(map[string]struct{})
+	out := make([]string, 0, 12)
+	add := func(s string) {
+		s = strings.ToLower(strings.TrimSpace(s))
+		s = strings.Map(func(r rune) rune {
+			if r == '%' || r == '_' {
+				return -1
+			}
+			return r
+		}, s)
+		if len([]rune(s)) < 3 {
+			return
+		}
+		if _, ok := seen[s]; ok {
+			return
+		}
+		seen[s] = struct{}{}
+		out = append(out, s)
+	}
+	for _, tok := range tokenizeEvidence(query) {
+		add(tok)
+	}
+	if len(out) == 0 {
+		add(query)
+	}
+	for _, fb := range []string{"força", "segurança", "progressão"} {
+		add(fb)
+	}
+	return out
 }
 
 func evidenceModalidade(req EvidenceSearchRequest) string {

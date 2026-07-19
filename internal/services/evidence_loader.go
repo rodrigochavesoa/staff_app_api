@@ -19,6 +19,12 @@ type LocalDocumentSearcher interface {
 	SearchLocalDocuments(ctx context.Context, query string, modalidade string, k int) ([]domain.KnowledgeDocument, error)
 }
 
+// LocalDocumentCandidateSource returns a broad candidate set for hybrid ranking.
+// Optional: HybridKnowledgeEvidenceSearcher prefers this over substring SearchLocalDocuments.
+type LocalDocumentCandidateSource interface {
+	SearchLocalDocumentCandidates(ctx context.Context, query string, modalidade string, k int) ([]domain.KnowledgeDocument, error)
+}
+
 // ContextQueryDB is the SQL surface needed for history and SVED aggregates.
 type ContextQueryDB interface {
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
