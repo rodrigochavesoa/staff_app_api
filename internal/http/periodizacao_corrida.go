@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"staff_app/internal/config"
@@ -191,8 +192,14 @@ func (h *PeriodizacaoCorridaHandler) Gerar(w http.ResponseWriter, r *http.Reques
 	// 4. Prepare timestamps for archiving/generation
 	nowTimeStr := time.Now().Format("2006-01-02 15:04:05")
 
-	// 5. Estimate VDOT and calculate target zones
-	vdot, err := daniels.EstimateVDOTByRace(paceSec*5, 5.0)
+	// 5. Estimate VDOT from race distance + pace (sec/km), then target zones
+	distKM, ok := raceDistanceKM(req.DistanciaProva)
+	if !ok {
+		returnError(w, http.StatusBadRequest, "Distância de prova inválida")
+		return
+	}
+	raceTimeSec := int(float64(paceSec)*distKM + 0.5)
+	vdot, err := daniels.EstimateVDOTByRace(raceTimeSec, distKM)
 	if err != nil {
 		returnError(w, http.StatusInternalServerError, "Error estimating VDOT")
 		return
@@ -215,17 +222,6 @@ func (h *PeriodizacaoCorridaHandler) Gerar(w http.ResponseWriter, r *http.Reques
 	}
 
 	// 6. Generate detailed training weeks deterministically
-	var distKM float64
-	switch req.DistanciaProva {
-	case "5K":
-		distKM = 5.0
-	case "10K":
-		distKM = 10.0
-	case "21K":
-		distKM = 21.1
-	case "42K":
-		distKM = 42.2
-	}
 
 	semanas := make([]domain.SemanaJSON, duracaoSemanas)
 	for i := 1; i <= duracaoSemanas; i++ {
@@ -1093,6 +1089,22 @@ func generateHexHash() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+// raceDistanceKM maps distancia_prova labels to kilometers for Daniels VDOT.
+func raceDistanceKM(distanciaProva string) (float64, bool) {
+	switch strings.TrimSpace(distanciaProva) {
+	case "5K":
+		return 5.0, true
+	case "10K":
+		return 10.0, true
+	case "21K":
+		return 21.1, true
+	case "42K":
+		return 42.2, true
+	default:
+		return 0, false
+	}
 }
 
 func validateVolume(dist string, level string, vol float64) error {

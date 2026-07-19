@@ -58,15 +58,19 @@ func loadCSVExercises(filePath string) ([]csvExercise, error) {
 	colCodigo := -1
 	colNome := -1
 	colGrupo := -1
+	colFoco := -1
 
 	for i, h := range headers {
-		hLower := strings.ToLower(h)
-		if hLower == "código" || hLower == "codigo" {
+		hLower := strings.ToLower(strings.TrimSpace(h))
+		switch hLower {
+		case "código", "codigo":
 			colCodigo = i
-		} else if hLower == "nome do exercício" || hLower == "nome do exercicio" || hLower == "nome" {
+		case "nome do exercício", "nome do exercicio", "nome":
 			colNome = i
-		} else if hLower == "grupo muscular" || hLower == "grupo" {
+		case "grupo_muscular", "grupo muscular", "grupo":
 			colGrupo = i
+		case "musculo_foco", "músculo_foco", "musculo foco", "músculo foco":
+			colFoco = i
 		}
 	}
 
@@ -93,6 +97,9 @@ func loadCSVExercises(filePath string) ([]csvExercise, error) {
 		}
 		if colGrupo >= 0 && colGrupo < len(row) {
 			ex.GrupoMuscular = strings.TrimSpace(row[colGrupo])
+		}
+		if colFoco >= 0 && colFoco < len(row) {
+			ex.MusculoFoco = strings.TrimSpace(row[colFoco])
 		}
 
 		if ex.Nome != "" {
@@ -121,7 +128,11 @@ func (h *ExercicioHandler) ListBiblioteca(w http.ResponseWriter, r *http.Request
 	}
 
 	csvPath := filepath.Join("data", "csv", "exercicios_com_grupos.csv")
-	csvList, _ := loadCSVExercises(csvPath)
+	csvList, err := loadCSVExercises(csvPath)
+	if err != nil {
+		writeJSONError(w, "Failed to load CSV exercise library: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	dbList, err := h.repo.List(r.Context(), map[string]string{"status": "ativo"})
 	if err != nil {
