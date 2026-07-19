@@ -27,6 +27,7 @@ consumers are free to choose their own visual stack.
 - [Quickstart](#quickstart)
 - [Configuration](#configuration)
 - [Using the API](#using-the-api)
+- [Interactive API docs](#interactive-api-docs)
 - [Docker](#docker)
 - [Quality Gates](#quality-gates)
 - [Operational Scripts](#operational-scripts)
@@ -232,6 +233,53 @@ Current local contract status:
 | Score | 97/100 |
 | Accepted informs | Description duplication only |
 
+## Interactive API docs
+
+Explore [`openapi.yaml`](openapi.yaml) locally with open-source **Swagger UI** and
+**Redoc**. No SwaggerHub subscription, no swagger.io login, no VPS and no GHCR.
+
+1. Start the API (if you want **Try it out** to hit a live server):
+
+```bash
+docker compose up -d
+curl -s http://localhost:5000/health
+```
+
+2. Start the docs stack:
+
+```bash
+./scripts/api_docs.sh up
+```
+
+Equivalent Compose command:
+
+```bash
+docker compose -f docker-compose.docs.yml up -d
+```
+
+3. Open in a browser:
+
+| UI | URL |
+|---|---|
+| Swagger UI | http://localhost:8080 |
+| Redoc | http://localhost:8081 |
+
+The OpenAPI `servers` entry targets `http://localhost:5000`. Swagger UI **Try it
+out** calls that API from your browser (CORS already allows `http://localhost:*`).
+Browsing the docs works even when the API is stopped; live requests need step 1.
+
+Stop docs:
+
+```bash
+./scripts/api_docs.sh down
+```
+
+Optional ports:
+
+```bash
+DOCS_PORT=8080 REDOC_PORT=8081 ./scripts/api_docs.sh up
+```
+
 ## Docker
 
 ```bash
@@ -240,6 +288,39 @@ docker compose build
 docker compose up -d
 docker compose ps
 curl -s http://localhost:5000/health
+```
+
+### Versioned release images
+
+Build local tags (`staff_app_api:<version>` and `staff_app_api:sha-<short>`).
+The image name matches the GitHub repository (`staff_app_api`), not a hyphenated alias.
+
+```bash
+./scripts/build_release_image.sh
+```
+
+Optional registry prefix (do not hardcode a private registry without authorization):
+
+```bash
+IMAGE_REGISTRY=ghcr.io/<owner> ./scripts/build_release_image.sh
+# → ghcr.io/<owner>/staff_app_api:v0.1.0
+```
+
+On tag pushes (`v*`), GitHub Actions workflow `release-image` builds/pushes to
+`ghcr.io/<owner>/<repo>` (i.e. `staff_app_api`) and uploads SBOM + module license
+artifacts. Staging example:
+
+```bash
+export STAFF_APP_IMAGE=ghcr.io/rodrigochavesoa/staff_app_api:v0.1.0
+export STAFF_APP_PULL_POLICY=always
+docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+```
+
+License / SBOM helpers:
+
+```bash
+./scripts/check_licenses.sh
+./scripts/generate_sbom.sh
 ```
 
 The container runs as a non-root user and persists data through named volumes:
@@ -305,6 +386,21 @@ Creates a consistent SQLite backup under `backups/`.
 Stops the API container, preserves a pre-restore copy, restores the database and
 starts the API again.
 
+### Interactive API docs
+
+```bash
+./scripts/api_docs.sh up
+./scripts/api_docs.sh down
+```
+
+### Release image / licenses / SBOM
+
+```bash
+./scripts/build_release_image.sh
+./scripts/check_licenses.sh
+./scripts/generate_sbom.sh
+```
+
 ### Smoke test
 
 ```bash
@@ -349,6 +445,8 @@ Files expected in the public package:
 |-- go.mod
 |-- go.sum
 |-- openapi.yaml
+|-- docker-compose.docs.yml
+|-- scripts/api_docs.sh
 |-- README.md
 |-- CHANGELOG.md
 |-- LICENSE

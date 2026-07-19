@@ -1,0 +1,14 @@
+# Staging overlay: run a pre-built versioned image instead of a local build.
+# Usage (on the staging host, after placing .env in /opt/staff_app):
+#
+#   export STAFF_APP_IMAGE=ghcr.io/rodrigochavesoa/staff_app_api:v0.1.0
+#   docker compose -f docker-compose.yml -f docker-compose.staging.yml pull
+#   docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+#
+# IMAGE_REGISTRY / image name are not hardcoded in the base compose file.
+
+services:
+  api:
+    image: ${STAFF_APP_IMAGE:?set STAFF_APP_IMAGE to the versioned image ref}
+    build: !reset null
+    pull_policy: ${STAFF_APP_PULL_POLICY:-always}

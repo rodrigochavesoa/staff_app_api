@@ -1,0 +1,115 @@
+name: Release image
+
+# Builds and pushes versioned images to GHCR when a v* tag is pushed.
+# Tags: :<version> and :sha-<shortsha>
+# Requires GitHub Packages write (GITHUB_TOKEN). Does not deploy to a VPS.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Image version tag (e.g. v0.1.0). Defaults to git describe."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+# Image package name follows the GitHub repo (staff_app_api), not a hyphenated alias.
+jobs:
+  docker:
+    name: Build and push GHCR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve tags
+        id: meta
+        run: |
+          SHA="$(git rev-parse --short HEAD)"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.version }}" ]]; then
+            VERSION="${{ inputs.version }}"
+          elif [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME}"
+          else
+            VERSION="$(git describe --tags --abbrev=0)"
+          fi
+          # ghcr.io/<owner>/<repo> — always matches github.com/<owner>/<repo>
+          IMAGE="$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}
+            ${{ steps.meta.outputs.image }}:sha-${{ steps.meta.outputs.sha }}
+          labels: |
+            org.opencontainers.image.title=staff_app_api
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+
+  sbom-licenses:
+    name: SBOM and license gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Module license gate
+        run: ./scripts/check_licenses.sh
+
+      - name: Generate SBOM (Syft)
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          if [[ "${GITHUB_REF_TYPE}" != "tag" ]]; then
+            VERSION="$(git describe --tags --abbrev=0 2>/dev/null || echo unknown)"
+          fi
+          SHA="$(git rev-parse --short HEAD)"
+          mkdir -p artifacts/sbom
+          docker run --rm -v "$PWD:/src" -w /src anchore/syft:v1.20.0 dir:/src \
+            --exclude './artifacts/**' \
+            --exclude './api/**' \
+            --exclude './frontend_lab/**' \
+            --exclude './docs/**' \
+            --exclude './.git/**' \
+            -o "spdx-json=artifacts/sbom/staff_app_api-${VERSION}-sha-${SHA}.spdx.json" \
+            -o "cyclonedx-json=artifacts/sbom/staff_app_api-${VERSION}-sha-${SHA}.cdx.json"
+          # Image SBOM (includes Alpine OS packages; GPL in base OS is expected)
+          docker build -t "staff_app_api:ci-sbom" .
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$PWD/artifacts/sbom:/out" anchore/syft:v1.20.0 \
+            "staff_app_api:ci-sbom" \
+            -o "spdx-json=/out/staff_app_api-${VERSION}-sha-${SHA}-image.spdx.json" \
+            -o "cyclonedx-json=/out/staff_app_api-${VERSION}-sha-${SHA}-image.cdx.json"
+
+      - name: Upload SBOM and license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-licenses-${{ github.ref_name }}
+          path: artifacts/

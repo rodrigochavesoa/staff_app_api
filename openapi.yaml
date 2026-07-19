@@ -1,11 +1,11 @@
 openapi: 3.0.0
 info:
-    title: Sistema RC Staff API
-    description: API REST frontend-agnostic e desacoplada em Go para o sistema RC Staff (musculação, corrida, RAG, SVED e relatórios administrativos).
+    title: STAFF App API
+    description: Frontend-agnostic Go REST API for student management, anamnese intake, training sheets, running periodization, Garmin activity processing, SVED metrics, local RAG and administrative reporting.
     version: 0.1.0-rc
 servers:
     - url: http://localhost:5000
-      description: Servidor de desenvolvimento local
+      description: Local development server
 tags:
     - name: Health
       description: Health checks, readiness and liveness endpoints.
@@ -72,7 +72,7 @@ paths:
                         text/html:
                             schema:
                                 type: string
-                                example: "<h1>RC Staff API</h1>"
+                                example: "<h1>STAFF App API</h1>"
             description: Index endpoint com informação básica do servidor (`GET /`).
     /health:
         get:

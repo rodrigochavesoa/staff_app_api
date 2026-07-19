@@ -5,6 +5,9 @@ bin/
 coverage.out
 coverage.html
 
+# Local release / audit artifacts (regenerate via scripts/)
+artifacts/
+
 # Local env (keep .env.example public)
 .env
 .env.*

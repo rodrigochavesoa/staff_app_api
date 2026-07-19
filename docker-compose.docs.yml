@@ -1,0 +1,39 @@
+# Local interactive OpenAPI docs (Swagger UI + Redoc).
+# Does not start the API. Point "Try it out" at http://localhost:5000 (see openapi.yaml servers).
+#
+#   ./scripts/api_docs.sh up
+#   # or: docker compose -f docker-compose.docs.yml up -d
+#
+# Swagger UI: http://localhost:8080
+# Redoc:      http://localhost:8081
+#
+# No SwaggerHub, no swagger.io login, no VPS, no GHCR.
+
+name: staff_app_docs
+
+services:
+  swagger-ui:
+    image: swaggerapi/swagger-ui:v5.27.1
+    container_name: staff_api_swagger
+    ports:
+      - "${DOCS_PORT:-8080}:8080"
+    environment:
+      SWAGGER_JSON: /openapi.yaml
+      # Keep the UI usable when the API is down; Try it out still targets servers in the spec.
+      DOC_EXPANSION: list
+      DEFAULT_MODEL_EXPAND_DEPTH: 1
+    volumes:
+      - ./openapi.yaml:/openapi.yaml:ro
+    restart: unless-stopped
+
+  redoc:
+    image: redocly/redoc:v2.5.0
+    container_name: staff_api_redoc
+    ports:
+      - "${REDOC_PORT:-8081}:80"
+    environment:
+      SPEC_URL: openapi.yaml
+      PAGE_TITLE: STAFF App API
+    volumes:
+      - ./openapi.yaml:/usr/share/nginx/html/openapi.yaml:ro
+    restart: unless-stopped
