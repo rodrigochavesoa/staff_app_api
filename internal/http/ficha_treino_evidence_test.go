@@ -102,6 +102,19 @@ func TestGerarPeriodizadaSimpleCaseEvidenceMetadata(t *testing.T) {
 	if aiMetadata["ai_used"].(bool) != true {
 		t.Fatalf("ai_used=%v want true with stub provider", aiMetadata["ai_used"])
 	}
+	reasons, ok := aiMetadata["evidence_reasons"].([]any)
+	if !ok || len(reasons) == 0 {
+		t.Fatalf("evidence_reasons missing or empty: %v", aiMetadata["evidence_reasons"])
+	}
+	if reasons[0].(string) != "complexidade_simples: busca não acionada" {
+		t.Fatalf("evidence_reasons[0]=%v", reasons[0])
+	}
+	if _, ok := aiMetadata["confidence_score"].(float64); !ok {
+		t.Fatalf("confidence_score missing: %v", aiMetadata["confidence_score"])
+	}
+	if aiMetadata["evidence_fallback_used"].(bool) != false {
+		t.Fatalf("evidence_fallback_used=%v want false", aiMetadata["evidence_fallback_used"])
+	}
 }
 
 func periodizedTrainingJSON(exerciseName string) string {

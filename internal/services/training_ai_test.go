@@ -100,6 +100,15 @@ func TestTrainingProviderChainAcceptsAnonymizedFixture(t *testing.T) {
 	if result.Metadata.Complexity != "moderado" {
 		t.Fatalf("expected complexity moderado, got %q", result.Metadata.Complexity)
 	}
+	if len(result.Metadata.Sources) != 1 || result.Metadata.Sources[0] != "Fixture" {
+		t.Fatalf("expected sources=[Fixture], got %v", result.Metadata.Sources)
+	}
+	if result.Metadata.EvidenceFallback {
+		t.Fatal("evidence_fallback_used should be false when evidence present")
+	}
+	if result.Metadata.ConfidenceScore <= 0 {
+		t.Fatalf("expected confidence_score > 0, got %v", result.Metadata.ConfidenceScore)
+	}
 	if result.Ficha["tipo"] != "periodizada" {
 		t.Fatalf("expected periodizada ficha, got %+v", result.Ficha["tipo"])
 	}
@@ -385,9 +394,10 @@ func testTrainingContext() *AthleteTrainingContext {
 		},
 		Evidencias: []KnowledgeEvidence{
 			{
-				Fonte:    "Fixture",
-				Conteudo: "Progressao de carga deve respeitar restricoes clinicas e sinais de dor.",
-				Tags:     []string{"progressao", "seguranca"},
+				Fonte:      "Fixture",
+				Conteudo:   "Progressao de carga deve respeitar restricoes clinicas e sinais de dor.",
+				Tags:       []string{"progressao", "seguranca"},
+				Relevancia: 0.85,
 			},
 		},
 	}

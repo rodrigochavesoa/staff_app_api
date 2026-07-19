@@ -78,17 +78,22 @@ type KnowledgeEvidence struct {
 }
 
 type AIMetadata struct {
-	AIUsed           bool     `json:"ai_used"`
-	Provider         string   `json:"provider"`
-	Model            string   `json:"model"`
-	FallbackUsed     bool     `json:"fallback_used"`
-	FallbackReason   string   `json:"fallback_reason,omitempty"`
-	SafetyValidated  bool     `json:"safety_validated"`
-	QualityValidated bool     `json:"quality_validated"`
-	ContextUsed      bool     `json:"context_used"`
-	EvidenceCount    int      `json:"evidence_count"`
-	Complexity       string   `json:"complexity,omitempty"`
-	Warnings         []string `json:"warnings"`
+	AIUsed            bool     `json:"ai_used"`
+	Provider          string   `json:"provider"`
+	Model             string   `json:"model"`
+	FallbackUsed      bool     `json:"fallback_used"`
+	FallbackReason    string   `json:"fallback_reason,omitempty"`
+	SafetyValidated   bool     `json:"safety_validated"`
+	QualityValidated  bool     `json:"quality_validated"`
+	ContextUsed       bool     `json:"context_used"`
+	EvidenceCount     int      `json:"evidence_count"`
+	Complexity        string   `json:"complexity,omitempty"`
+	Warnings          []string `json:"warnings"`
+	Sources           []string `json:"sources,omitempty"`
+	ConfidenceScore   float64  `json:"confidence_score,omitempty"`
+	EvidenceFallback  bool     `json:"evidence_fallback_used"`
+	Validations       []string `json:"validations,omitempty"`
+	EvidenceReasons   []string `json:"evidence_reasons,omitempty"`
 }
 
 type GenerationResult struct {
@@ -181,7 +186,7 @@ func (c *TrainingProviderChain) Resolve(ctx context.Context, req *GenerationRequ
 	}
 
 	if c == nil || c.mode == AITrainingModeOff {
-		return localTrainingResult(req.LocalFicha, false, "")
+		return localTrainingResult(req.LocalFicha, false, "", req.Contexto)
 	}
 
 	var reasons []string
@@ -191,7 +196,7 @@ func (c *TrainingProviderChain) Resolve(ctx context.Context, req *GenerationRequ
 		if c.mode == AITrainingModeRequired {
 			return nil, errors.New(reason)
 		}
-		return localTrainingResult(req.LocalFicha, false, reason)
+		return localTrainingResult(req.LocalFicha, false, reason, req.Contexto)
 	}
 
 	for _, provider := range providers {
@@ -199,7 +204,7 @@ func (c *TrainingProviderChain) Resolve(ctx context.Context, req *GenerationRequ
 			continue
 		}
 		if provider.Name() == "local" {
-			return localTrainingResult(req.LocalFicha, len(reasons) > 0, strings.Join(reasons, "; "))
+			return localTrainingResult(req.LocalFicha, len(reasons) > 0, strings.Join(reasons, "; "), req.Contexto)
 		}
 
 		providerCtx, cancel := context.WithTimeout(ctx, c.timeout)
@@ -278,6 +283,7 @@ func (c *TrainingProviderChain) Resolve(ctx context.Context, req *GenerationRequ
 			Complexity:       contextComplexity(req.Contexto),
 			Warnings:         warnings,
 		}
+		EnrichMetadata(ctx, &metadata, req.Contexto)
 		ficha["ai_metadata"] = metadata
 		c.record(ctx, &TelemetryData{
 			Provider:      provider.Name(),
@@ -293,7 +299,7 @@ func (c *TrainingProviderChain) Resolve(ctx context.Context, req *GenerationRequ
 	if c.mode == AITrainingModeRequired {
 		return nil, fmt.Errorf("all AI training providers failed: %s", strings.Join(reasons, "; "))
 	}
-	return localTrainingResult(req.LocalFicha, len(reasons) > 0, strings.Join(reasons, "; "))
+	return localTrainingResult(req.LocalFicha, len(reasons) > 0, strings.Join(reasons, "; "), req.Contexto)
 }
 
 func (c *TrainingProviderChain) record(ctx context.Context, data *TelemetryData) {
@@ -303,7 +309,7 @@ func (c *TrainingProviderChain) record(ctx context.Context, data *TelemetryData)
 	_ = c.telemetry.Record(ctx, data)
 }
 
-func localTrainingResult(local map[string]any, fallbackUsed bool, fallbackReason string) (*GenerationResult, error) {
+func localTrainingResult(local map[string]any, fallbackUsed bool, fallbackReason string, athleteCtx *AthleteTrainingContext) (*GenerationResult, error) {
 	ficha := cloneMap(local)
 	metadata := AIMetadata{
 		AIUsed:           false,
@@ -313,10 +319,12 @@ func localTrainingResult(local map[string]any, fallbackUsed bool, fallbackReason
 		FallbackReason:   fallbackReason,
 		SafetyValidated:  true,
 		QualityValidated: false,
-		ContextUsed:      false,
-		EvidenceCount:    0,
+		ContextUsed:      athleteCtx != nil,
+		EvidenceCount:    evidenceCount(athleteCtx),
+		Complexity:       contextComplexity(athleteCtx),
 		Warnings:         []string{},
 	}
+	EnrichMetadata(context.Background(), &metadata, athleteCtx)
 	ficha["ai_metadata"] = metadata
 	return &GenerationResult{Ficha: ficha, Metadata: metadata}, nil
 }
