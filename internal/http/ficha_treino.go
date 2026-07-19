@@ -19,13 +19,14 @@ import (
 )
 
 type FichaTreinoHandler struct {
-	repo         *sqlite.FichaTreinoRepository
-	db           *sqlite.DB
-	alunoRepo    *sqlite.AlunoRepository
-	fichaWebRepo *sqlite.FichaWebRepository
-	anamRepo     *sqlite.AnamneseRepository
-	ragRepo      *sqlite.RAGRepository
-	trainingAI   *services.TrainingProviderChain
+	repo             *sqlite.FichaTreinoRepository
+	db               *sqlite.DB
+	alunoRepo        *sqlite.AlunoRepository
+	fichaWebRepo     *sqlite.FichaWebRepository
+	anamRepo         *sqlite.AnamneseRepository
+	ragRepo          *sqlite.RAGRepository
+	trainingAI       *services.TrainingProviderChain
+	evidencePipeline *services.EvidencePipeline
 }
 
 func NewFichaTreinoHandler(db *sqlite.DB, trainingAI ...*services.TrainingProviderChain) *FichaTreinoHandler {
@@ -33,14 +34,17 @@ func NewFichaTreinoHandler(db *sqlite.DB, trainingAI ...*services.TrainingProvid
 	if len(trainingAI) > 0 {
 		chain = trainingAI[0]
 	}
+	anamRepo := sqlite.NewAnamneseRepository(db)
+	ragRepo := sqlite.NewRAGRepository(db)
 	return &FichaTreinoHandler{
-		repo:         sqlite.NewFichaTreinoRepository(db),
-		db:           db,
-		alunoRepo:    sqlite.NewAlunoRepository(db),
-		fichaWebRepo: sqlite.NewFichaWebRepository(db),
-		anamRepo:     sqlite.NewAnamneseRepository(db),
-		ragRepo:      sqlite.NewRAGRepository(db),
-		trainingAI:   chain,
+		repo:             sqlite.NewFichaTreinoRepository(db),
+		db:               db,
+		alunoRepo:        sqlite.NewAlunoRepository(db),
+		fichaWebRepo:     sqlite.NewFichaWebRepository(db),
+		anamRepo:         anamRepo,
+		ragRepo:          ragRepo,
+		trainingAI:       chain,
+		evidencePipeline: services.NewEvidencePipeline(db, anamRepo, ragRepo),
 	}
 }
 

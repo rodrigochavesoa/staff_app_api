@@ -1,0 +1,9 @@
+{
+  "name": "spec moderado from restricoes and historico",
+  "frequencia": 3,
+  "restricoes": "evitar impacto",
+  "observacoes": "",
+  "want_complexity": "moderado",
+  "want_score": 2,
+  "historico_count": 1
+}

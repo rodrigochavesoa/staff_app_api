@@ -1,0 +1,14 @@
+{
+  "name": "complexo from frequencia, restricoes and anamnese risk>=2",
+  "frequencia": 5,
+  "restricoes": "hipertensao controlada",
+  "observacoes": "",
+  "anamnese": {
+    "risk_score": 2,
+    "patologias": "",
+    "lesoes_atuais": "",
+    "dores_cronicas": ""
+  },
+  "want_complexity": "complexo",
+  "want_score": 4
+}

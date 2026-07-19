@@ -1,0 +1,14 @@
+{
+  "name": "moderado from anamnese clinical text only needs second point",
+  "frequencia": 3,
+  "restricoes": "dor leve",
+  "observacoes": "",
+  "anamnese": {
+    "risk_score": 0,
+    "patologias": "lombalgia leve",
+    "lesoes_atuais": "",
+    "dores_cronicas": ""
+  },
+  "want_complexity": "moderado",
+  "want_score": 2
+}

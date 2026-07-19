@@ -1,0 +1,14 @@
+{
+  "name": "spec complexo clinical stack",
+  "frequencia": 5,
+  "restricoes": "hipertensao controlada",
+  "observacoes": "",
+  "anamnese": {
+    "risk_score": 2,
+    "patologias": "lombalgia",
+    "lesoes_atuais": "",
+    "dores_cronicas": ""
+  },
+  "want_complexity": "complexo",
+  "want_score": 5
+}

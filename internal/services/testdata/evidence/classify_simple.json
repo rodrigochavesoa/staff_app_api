@@ -1,0 +1,8 @@
+{
+  "name": "spec simple baseline",
+  "frequencia": 3,
+  "restricoes": "",
+  "observacoes": "",
+  "want_complexity": "simples",
+  "want_score": 0
+}
