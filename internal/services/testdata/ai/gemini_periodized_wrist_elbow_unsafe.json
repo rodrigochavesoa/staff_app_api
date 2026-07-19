@@ -1,0 +1,23 @@
+{
+  "tipo": "periodizada",
+  "frequencia": 3,
+  "objetivo": "Hipertrofia",
+  "nivel": "intermediario",
+  "observacoes": "Fixture anonimizada com exercicio inadequado para restricao de punho/cotovelo.",
+  "treinos": [
+    {
+      "letra": "A",
+      "nome": "A - Bracos",
+      "exercicios": [
+        {
+          "nome": "Rosca Direta com Barra",
+          "grupo_muscular": "Biceps",
+          "series": 3,
+          "repeticoes": "8-10",
+          "descanso": 75,
+          "cadencia": "3010"
+        }
+      ]
+    }
+  ]
+}

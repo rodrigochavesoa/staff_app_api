@@ -1569,11 +1569,22 @@ paths:
     /api/v1/corrida/gerar-blocos:
         post:
             operationId: postCorridaGerarBlocos
-            summary: Preview de blocos de corrida (local-only nesta fase; assistive IA é backlog)
+            summary: Preview de blocos de corrida (templates + enriquecedor local assistivo)
             description: |
-                Gera preview determinístico por templates Daniels.
-                `AI_TRAINING_MODE=off|assistive` retorna local com fallback (assistive de blocos ainda é backlog).
-                `AI_TRAINING_MODE=required` retorna 503 se não houver BlocksAIProvider aprovado (real ou fake injetado).
+                Gera preview por templates Daniels e aplica o safety gate de corrida
+                (downgrade de intensidades `I`/`R` sob risco cardiorrespiratório alto via anamnese
+                ou texto em `limitacoes`).
+
+                Modos `AI_TRAINING_MODE`:
+                - `off`: templates locais com `ai_metadata.fallback_used=true` e
+                  `fallback_reason=ai_training_mode_off`.
+                - `assistive` (padrão): usa `LocalBlocksAIProvider` (enriquecedor determinístico,
+                  sem chave real). Em sucesso típico: `provider=local`,
+                  `model=local-blocks-enricher`, `ai_used=false`, `fallback_used=false`.
+                  Em falha/rejeição de safety do enricher: mantém templates com fallback.
+                - `required`: exige `BlocksAIProvider` **não-local** aprovado (fake em testes ou
+                  provider remoto só em staging autorizado). O enricher local **não** satisfaz
+                  `required` → HTTP 503.
             tags: [Periodização Corrida]
             security:
                 - BearerAuth: []
@@ -3057,24 +3068,24 @@ components:
                     example: local
                 model:
                     type: string
-                    description: Modelo do provedor ou local-deterministic.
-                    example: local-deterministic
+                    description: Modelo do provedor, `local-deterministic` (fichas) ou `local-blocks-enricher` (blocos assistivos).
+                    example: local-blocks-enricher
                 fallback_used:
                     type: boolean
-                    description: Indica se houve fallback após falha/rejeição de provedor anterior.
+                    description: Indica se houve fallback após falha/rejeição de provedor anterior ou modo `off`.
                     example: false
                 fallback_reason:
                     type: string
-                    description: Motivo resumido do fallback, quando aplicável.
-                    example: ai_assistive_blocos_backlog_local_only
+                    description: Motivo resumido do fallback, quando aplicável (ex. `ai_training_mode_off`).
+                    example: ai_training_mode_off
                 safety_validated:
                     type: boolean
                     description: Indica se a saída passou pelo safety gate determinístico.
-                    example: false
+                    example: true
                 quality_validated:
                     type: boolean
                     description: Indica se a saída passou pelas validações de qualidade técnica.
-                    example: false
+                    example: true
                 context_used:
                     type: boolean
                     description: Indica se contexto estruturado do aluno foi carregado para a pipeline.
@@ -3093,15 +3104,16 @@ components:
                     items:
                         type: string
                     example:
-                        - exemplo
+                        - intensidades I/R reduzidas por risco cardiorrespiratório alto
             example:
                 ai_used: false
                 provider: local
-                model: local-deterministic
-                fallback_used: true
-                fallback_reason: ai_assistive_blocos_backlog_local_only
+                model: local-blocks-enricher
+                fallback_used: false
+                fallback_reason: ""
                 safety_validated: true
                 quality_validated: true
                 context_used: false
                 evidence_count: 0
                 complexity: simples
+                warnings: []

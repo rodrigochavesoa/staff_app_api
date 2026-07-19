@@ -1,0 +1,23 @@
+{
+  "tipo": "periodizada",
+  "frequencia": 3,
+  "objetivo": "Condicionamento",
+  "nivel": "intermediario",
+  "observacoes": "Fixture anonimizada com exercicio inadequado para restricao de tornozelo.",
+  "treinos": [
+    {
+      "letra": "A",
+      "nome": "A - Membros Inferiores",
+      "exercicios": [
+        {
+          "nome": "Box Jump Pliometria",
+          "grupo_muscular": "Pernas",
+          "series": 4,
+          "repeticoes": "6",
+          "descanso": 90,
+          "cadencia": "explosiva"
+        }
+      ]
+    }
+  ]
+}

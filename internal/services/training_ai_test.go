@@ -180,6 +180,18 @@ func TestTrainingProviderChainClinicalSafetyRulesFallbackToLocal(t *testing.T) {
 			wantReason: "restrição cervical",
 		},
 		{
+			name:       "wrist elbow restriction",
+			req:        testGenerationRequest("epicondilite lateral e dor no punho"),
+			fixture:    "testdata/ai/gemini_periodized_wrist_elbow_unsafe.json",
+			wantReason: "restrição de punho/cotovelo",
+		},
+		{
+			name:       "ankle restriction",
+			req:        testGenerationRequest("entorse de tornozelo recente"),
+			fixture:    "testdata/ai/gemini_periodized_ankle_unsafe.json",
+			wantReason: "restrição de tornozelo",
+		},
+		{
 			name:       "pregnancy restriction",
 			req:        testGenerationRequest("aluna gestante segundo trimestre"),
 			fixture:    "testdata/ai/gemini_periodized_pregnancy_unsafe.json",
