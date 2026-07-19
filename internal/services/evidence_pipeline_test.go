@@ -9,7 +9,7 @@ import (
 
 type panicSearcher struct{}
 
-func (panicSearcher) Search(context.Context, GenerationRequest, *AnamneseTrainingHint) ([]KnowledgeEvidence, error) {
+func (panicSearcher) Search(context.Context, EvidenceSearchRequest) ([]KnowledgeEvidence, error) {
 	panic("search must not run for simple cases")
 }
 
@@ -24,7 +24,7 @@ func TestEvidencePipelineSimpleSkipsEvidenceSearch(t *testing.T) {
 	pipeline := &EvidencePipeline{
 		Structured: NewSQLStructuredContextLoader(newTestContextDB(t), fakeAnamneseFinder{}),
 		Classifier: DeterministicCaseComplexityClassifier{},
-		Searcher:   NewLocalKnowledgeEvidenceSearcher(docs),
+		Searcher:   NewHybridKnowledgeEvidenceSearcher(docs),
 	}
 
 	ctxOut, err := pipeline.Build(t.Context(), 1, GenerationRequest{
@@ -79,7 +79,7 @@ func TestEvidencePipelineModeradoSearchesEvidence(t *testing.T) {
 	pipeline := &EvidencePipeline{
 		Structured: NewSQLStructuredContextLoader(newTestContextDB(t), fakeAnamneseFinder{anamnese: anam}),
 		Classifier: DeterministicCaseComplexityClassifier{},
-		Searcher:   NewLocalKnowledgeEvidenceSearcher(docs),
+		Searcher:   NewHybridKnowledgeEvidenceSearcher(docs),
 	}
 
 	ctxOut, err := pipeline.Build(t.Context(), 1, GenerationRequest{

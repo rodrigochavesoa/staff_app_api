@@ -1,0 +1,23 @@
+[
+  {
+    "fonte": "guia-lombalgia-estabilizacao",
+    "titulo": "Estabilizacao lombar em musculacao",
+    "conteudo": "Em lombalgia mecanica, priorizar estabilizacao do core, evitar carga axial excessiva e progressao gradual de amplitude.",
+    "tags": ["lombalgia", "core", "estabilizacao"],
+    "modalidade": "musculacao"
+  },
+  {
+    "fonte": "guia-hipertrofia-geral",
+    "titulo": "Hipertrofia para intermediarios",
+    "conteudo": "Volume moderado, frequencia 3x e progressao de carga sao suficientes para hipertrofia em individuos saudaveis.",
+    "tags": ["hipertrofia", "volume"],
+    "modalidade": "musculacao"
+  },
+  {
+    "fonte": "guia-ombro-mobilidade",
+    "titulo": "Mobilidade de ombro",
+    "conteudo": "Exercicios de mobilidade escapular e fortalecimento de manguito rotador para dor no ombro.",
+    "tags": ["ombro", "mobilidade"],
+    "modalidade": "musculacao"
+  }
+]

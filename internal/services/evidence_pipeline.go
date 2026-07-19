@@ -18,7 +18,7 @@ func NewEvidencePipeline(db ContextQueryDB, anam ActiveAnamneseFinder, docs Loca
 	return &EvidencePipeline{
 		Structured: NewSQLStructuredContextLoader(db, anam),
 		Classifier: DeterministicCaseComplexityClassifier{},
-		Searcher:   NewLocalKnowledgeEvidenceSearcher(docs),
+		Searcher:   NewHybridKnowledgeEvidenceSearcher(docs),
 	}
 }
 
@@ -45,7 +45,13 @@ func (p *EvidencePipeline) Build(ctx context.Context, alunoID int64, req Generat
 	result.Complexidade = classified.Complexity
 
 	if classified.Complexity != "simples" && p.Searcher != nil {
-		evidencias, err := p.Searcher.Search(ctx, req, result.Anamnese)
+		evidencias, err := p.Searcher.Search(ctx, EvidenceSearchRequest{
+			Generation: req,
+			Anamnese:   result.Anamnese,
+			Complexity: classified.Complexity,
+			Modalidade: "musculacao",
+			TopK:       EvidenceTopK(classified.Complexity),
+		})
 		if err != nil {
 			return nil, err
 		}

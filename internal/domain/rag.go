@@ -5,8 +5,10 @@ import "time"
 type KnowledgeDocument struct {
 	Rank       int      `json:"rank"`
 	Fonte      string   `json:"fonte"`
+	Titulo     string   `json:"titulo,omitempty"`
 	Conteudo   string   `json:"conteudo"`
 	Tags       []string `json:"tags"`
+	Modalidade string   `json:"modalidade,omitempty"`
 	Relevancia float64  `json:"relevancia"`
 }
 

@@ -145,8 +145,10 @@ func (r *RAGRepository) SearchLocalDocuments(ctx context.Context, query string, 
 		list = append(list, domain.KnowledgeDocument{
 			Rank:       rank,
 			Fonte:      fonte,
+			Titulo:     titulo,
 			Conteudo:   conteudo,
 			Tags:       tags,
+			Modalidade: mod,
 			Relevancia: 1.0,
 		})
 		rank++
