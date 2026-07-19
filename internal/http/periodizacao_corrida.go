@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -42,7 +41,7 @@ func NewPeriodizacaoCorridaHandler(db *sqlite.DB, cfg *config.Config) *Periodiza
 		garminRepo:    sqlite.NewGarminRepository(db),
 		anamneseRepo:  sqlite.NewAnamneseRepository(db),
 		cfg:           cfg,
-		templatesPath: filepath.Join("data", "json", "templates_daniels_blocos.json"),
+		templatesPath: resolveStaffDataPath("json", "templates_daniels_blocos.json"),
 		// Default assistive path: local enricher only (no remote API keys).
 		blocksAI: services.LocalBlocksAIProvider{},
 	}
@@ -221,224 +220,6 @@ func (h *PeriodizacaoCorridaHandler) Gerar(w http.ResponseWriter, r *http.Reques
 		Descricao: "Ritmo alvo da prova",
 	}
 
-	// 6. Generate detailed training weeks deterministically
-
-	semanas := make([]domain.SemanaJSON, duracaoSemanas)
-	for i := 1; i <= duracaoSemanas; i++ {
-		fase := GetFaseForWeek(i, duracaoSemanas)
-
-		var weekVol float64
-		w1 := duracaoSemanas / 4
-		if w1 < 1 {
-			w1 = 1
-		}
-		w2 := duracaoSemanas / 4
-		if w2 < 1 {
-			w2 = 1
-		}
-		w3 := duracaoSemanas / 4
-		if w3 < 1 {
-			w3 = 1
-		}
-		w4 := duracaoSemanas - w1 - w2 - w3
-
-		if fase == "Base" {
-			ratio := 0.6
-			if w1 > 1 {
-				ratio = 0.6 + 0.4*float64(i-1)/float64(w1-1)
-			} else {
-				ratio = 1.0
-			}
-			weekVol = req.VolumeSemanal * ratio
-		} else if fase == "Build" || fase == "Intensidade" {
-			weekVol = req.VolumeSemanal
-		} else { // Taper
-			k := i - (w1 + w2 + w3)
-			ratio := 0.8
-			if w4 > 1 {
-				ratio = 0.8 - 0.3*float64(k-1)/float64(w4-1)
-			} else {
-				ratio = 0.5
-			}
-			weekVol = req.VolumeSemanal * ratio
-		}
-
-		isRecovery := false
-		if duracaoSemanas >= 12 && i%4 == 0 && fase != "Taper" {
-			weekVol = weekVol * 0.70
-			isRecovery = true
-		}
-
-		weekVol = math.Round(weekVol*10) / 10
-
-		numDays := len(req.DiasSemana)
-		treinos := make([]domain.TreinoJSON, numDays)
-
-		weights := make([]float64, numDays)
-		if numDays == 2 {
-			weights[0] = 0.4
-			weights[1] = 0.6
-		} else if numDays == 3 {
-			weights[0] = 0.3
-			weights[1] = 0.3
-			weights[2] = 0.4
-		} else if numDays == 4 {
-			weights[0] = 0.2
-			weights[1] = 0.25
-			weights[2] = 0.2
-			weights[3] = 0.35
-		} else if numDays == 5 {
-			weights[0] = 0.15
-			weights[1] = 0.2
-			weights[2] = 0.15
-			weights[3] = 0.2
-			weights[4] = 0.3
-		} else {
-			for d := 0; d < numDays-1; d++ {
-				weights[d] = 0.75 / float64(numDays-1)
-			}
-			weights[numDays-1] = 0.25
-		}
-
-		for d := 0; d < numDays; d++ {
-			diaSemana := req.DiasSemana[d]
-			distRaw := weekVol * weights[d]
-			dist := math.Round(distRaw*10) / 10
-
-			isLastDay := (d == numDays-1)
-			isQualityDay := (d == 1 && numDays >= 4) || (d == 0 && numDays == 3)
-
-			var tipo, zona, paceAlvo, descricao string
-
-			if isRecovery {
-				if isLastDay {
-					tipo = "Long Run"
-					zona = "E"
-					paceAlvo = zonasMap["E"].PaceAlvo
-					descricao = "Corrida longa em ritmo confortável e regenerativo."
-				} else {
-					tipo = "Corrida Fácil"
-					zona = "E"
-					paceAlvo = zonasMap["E"].PaceAlvo
-					descricao = "Corrida fácil regenerativa de recuperação."
-				}
-			} else {
-				switch fase {
-				case "Base":
-					if isLastDay {
-						tipo = "Long Run"
-						zona = "E"
-						paceAlvo = zonasMap["E"].PaceAlvo
-						descricao = "Corrida longa em ritmo fácil para desenvolver resistência aeróbica."
-					} else {
-						tipo = "Corrida Fácil"
-						zona = "E"
-						paceAlvo = zonasMap["E"].PaceAlvo
-						descricao = "Corrida contínua em ritmo fácil e confortável."
-					}
-				case "Build":
-					if isLastDay {
-						tipo = "Long Run"
-						zona = "E"
-						paceAlvo = zonasMap["E"].PaceAlvo
-						descricao = "Corrida longa em ritmo fácil."
-					} else if isQualityDay && dist >= 6.0 {
-						tipo = "Tempo Run"
-						zona = "T"
-						paceAlvo = zonasMap["T"].PaceAlvo
-						distT := math.Round((dist-4.0)*10) / 10
-						if distT < 1.0 {
-							distT = 1.0
-						}
-						descricao = fmt.Sprintf("Aquecimento 2km E + %.1fkm em ritmo de Limiar (zona T) + Desaquecimento 2km E.", distT)
-					} else {
-						tipo = "Corrida Fácil"
-						zona = "E"
-						paceAlvo = zonasMap["E"].PaceAlvo
-						descricao = "Corrida contínua em ritmo fácil."
-					}
-				case "Intensidade":
-					if isLastDay {
-						tipo = "Long Run"
-						zona = "E"
-						paceAlvo = zonasMap["E"].PaceAlvo
-						descricao = "Corrida longa em ritmo fácil."
-					} else if isQualityDay && dist >= 6.0 {
-						tipo = "Intervalados"
-						zona = "I"
-						paceAlvo = zonasMap["I"].PaceAlvo
-						tiros := int(math.Floor(dist - 4.0))
-						if tiros < 1 {
-							tiros = 1
-						}
-						descricao = fmt.Sprintf("Aquecimento 2km E + %d tiros de 1km na zona I (recuperação 3min trote) + Desaquecimento 2km E.", tiros)
-					} else {
-						tipo = "Corrida Fácil"
-						zona = "E"
-						paceAlvo = zonasMap["E"].PaceAlvo
-						descricao = "Corrida contínua em ritmo fácil."
-					}
-				case "Taper":
-					if i == duracaoSemanas && isLastDay {
-						tipo = "Corrida de Prova"
-						zona = "RACE"
-						dist = distKM
-						paceAlvo = req.PaceBase
-						descricao = "Dia da Prova! Mantenha o ritmo planejado e aproveite a corrida."
-					} else if isLastDay {
-						tipo = "Long Run"
-						zona = "E"
-						paceAlvo = zonasMap["E"].PaceAlvo
-						descricao = "Corrida longa em ritmo fácil com volume reduzido."
-					} else if isQualityDay && i != duracaoSemanas && dist >= 6.0 {
-						tipo = "Tempo Run"
-						zona = "T"
-						paceAlvo = zonasMap["T"].PaceAlvo
-						distT := math.Round((dist-4.0)*0.5*10) / 10
-						if distT < 1.0 {
-							distT = 1.0
-						}
-						descricao = fmt.Sprintf("Aquecimento 2km E + %.1fkm na zona T + Desaquecimento 2km E.", distT)
-					} else {
-						tipo = "Corrida Fácil"
-						zona = "E"
-						paceAlvo = zonasMap["E"].PaceAlvo
-						descricao = "Corrida curta e fácil de polimento."
-					}
-				}
-			}
-
-			treinos[d] = domain.TreinoJSON{
-				Dia:       diaSemana,
-				Tipo:      tipo,
-				Distancia: dist,
-				Zona:      zona,
-				PaceAlvo:  paceAlvo,
-				Descricao: descricao,
-				Concluido: false,
-			}
-		}
-
-		suplDesc := "Fortalecimento geral de core (15-20 min)."
-		if req.Nivel == "avancado" || req.Nivel == "elite" {
-			if fase == "Base" || fase == "Build" {
-				suplDesc = "Fortalecimento de membros inferiores e core (30 min)."
-			} else if fase == "Intensidade" {
-				suplDesc = "Exercícios de mobilidade e estabilidade (20 min)."
-			}
-		}
-
-		semanas[i-1] = domain.SemanaJSON{
-			Numero:      i,
-			Fase:        fase,
-			VolumeTotal: weekVol,
-			Treinos:     treinos,
-			TreinamentoSuplementar: map[string]any{
-				"descricao": suplDesc,
-			},
-		}
-	}
-
 	modoGeracao, err := blocos.NormalizeModoGeracao(req.UsarBlocos, req.ModoGeracao)
 	if err != nil {
 		returnError(w, http.StatusBadRequest, err.Error())
@@ -458,6 +239,226 @@ func (h *PeriodizacaoCorridaHandler) Gerar(w http.ResponseWriter, r *http.Reques
 			return
 		}
 	} else {
+		// Flat mode: generate detailed training weeks deterministically.
+		semanas := make([]domain.SemanaJSON, duracaoSemanas)
+		for i := 1; i <= duracaoSemanas; i++ {
+			fase := GetFaseForWeek(i, duracaoSemanas)
+
+			var weekVol float64
+			w1 := duracaoSemanas / 4
+			if w1 < 1 {
+				w1 = 1
+			}
+			w2 := duracaoSemanas / 4
+			if w2 < 1 {
+				w2 = 1
+			}
+			w3 := duracaoSemanas / 4
+			if w3 < 1 {
+				w3 = 1
+			}
+			w4 := duracaoSemanas - w1 - w2 - w3
+
+			switch fase {
+			case "Base":
+				ratio := 0.6
+				if w1 > 1 {
+					ratio = 0.6 + 0.4*float64(i-1)/float64(w1-1)
+				} else {
+					ratio = 1.0
+				}
+				weekVol = req.VolumeSemanal * ratio
+			case "Build", "Intensidade":
+				weekVol = req.VolumeSemanal
+			default: // Taper
+				k := i - (w1 + w2 + w3)
+				ratio := 0.8
+				if w4 > 1 {
+					ratio = 0.8 - 0.3*float64(k-1)/float64(w4-1)
+				} else {
+					ratio = 0.5
+				}
+				weekVol = req.VolumeSemanal * ratio
+			}
+
+			isRecovery := false
+			if duracaoSemanas >= 12 && i%4 == 0 && fase != "Taper" {
+				weekVol = weekVol * 0.70
+				isRecovery = true
+			}
+
+			weekVol = math.Round(weekVol*10) / 10
+
+			numDays := len(req.DiasSemana)
+			treinos := make([]domain.TreinoJSON, numDays)
+
+			weights := make([]float64, numDays)
+			switch numDays {
+			case 2:
+				weights[0] = 0.4
+				weights[1] = 0.6
+			case 3:
+				weights[0] = 0.3
+				weights[1] = 0.3
+				weights[2] = 0.4
+			case 4:
+				weights[0] = 0.2
+				weights[1] = 0.25
+				weights[2] = 0.2
+				weights[3] = 0.35
+			case 5:
+				weights[0] = 0.15
+				weights[1] = 0.2
+				weights[2] = 0.15
+				weights[3] = 0.2
+				weights[4] = 0.3
+			default:
+				for d := 0; d < numDays-1; d++ {
+					weights[d] = 0.75 / float64(numDays-1)
+				}
+				weights[numDays-1] = 0.25
+			}
+
+			for d := 0; d < numDays; d++ {
+				diaSemana := req.DiasSemana[d]
+				distRaw := weekVol * weights[d]
+				dist := math.Round(distRaw*10) / 10
+
+				isLastDay := (d == numDays-1)
+				isQualityDay := (d == 1 && numDays >= 4) || (d == 0 && numDays == 3)
+
+				var tipo, zona, paceAlvo, descricao string
+
+				if isRecovery {
+					if isLastDay {
+						tipo = "Long Run"
+						zona = "E"
+						paceAlvo = zonasMap["E"].PaceAlvo
+						descricao = "Corrida longa em ritmo confortável e regenerativo."
+					} else {
+						tipo = "Corrida Fácil"
+						zona = "E"
+						paceAlvo = zonasMap["E"].PaceAlvo
+						descricao = "Corrida fácil regenerativa de recuperação."
+					}
+				} else {
+					switch fase {
+					case "Base":
+						if isLastDay {
+							tipo = "Long Run"
+							zona = "E"
+							paceAlvo = zonasMap["E"].PaceAlvo
+							descricao = "Corrida longa em ritmo fácil para desenvolver resistência aeróbica."
+						} else {
+							tipo = "Corrida Fácil"
+							zona = "E"
+							paceAlvo = zonasMap["E"].PaceAlvo
+							descricao = "Corrida contínua em ritmo fácil e confortável."
+						}
+					case "Build":
+						if isLastDay {
+							tipo = "Long Run"
+							zona = "E"
+							paceAlvo = zonasMap["E"].PaceAlvo
+							descricao = "Corrida longa em ritmo fácil."
+						} else if isQualityDay && dist >= 6.0 {
+							tipo = "Tempo Run"
+							zona = "T"
+							paceAlvo = zonasMap["T"].PaceAlvo
+							distT := math.Round((dist-4.0)*10) / 10
+							if distT < 1.0 {
+								distT = 1.0
+							}
+							descricao = fmt.Sprintf("Aquecimento 2km E + %.1fkm em ritmo de Limiar (zona T) + Desaquecimento 2km E.", distT)
+						} else {
+							tipo = "Corrida Fácil"
+							zona = "E"
+							paceAlvo = zonasMap["E"].PaceAlvo
+							descricao = "Corrida contínua em ritmo fácil."
+						}
+					case "Intensidade":
+						if isLastDay {
+							tipo = "Long Run"
+							zona = "E"
+							paceAlvo = zonasMap["E"].PaceAlvo
+							descricao = "Corrida longa em ritmo fácil."
+						} else if isQualityDay && dist >= 6.0 {
+							tipo = "Intervalados"
+							zona = "I"
+							paceAlvo = zonasMap["I"].PaceAlvo
+							tiros := int(math.Floor(dist - 4.0))
+							if tiros < 1 {
+								tiros = 1
+							}
+							descricao = fmt.Sprintf("Aquecimento 2km E + %d tiros de 1km na zona I (recuperação 3min trote) + Desaquecimento 2km E.", tiros)
+						} else {
+							tipo = "Corrida Fácil"
+							zona = "E"
+							paceAlvo = zonasMap["E"].PaceAlvo
+							descricao = "Corrida contínua em ritmo fácil."
+						}
+					case "Taper":
+						if i == duracaoSemanas && isLastDay {
+							tipo = "Corrida de Prova"
+							zona = "RACE"
+							dist = distKM
+							paceAlvo = req.PaceBase
+							descricao = "Dia da Prova! Mantenha o ritmo planejado e aproveite a corrida."
+						} else if isLastDay {
+							tipo = "Long Run"
+							zona = "E"
+							paceAlvo = zonasMap["E"].PaceAlvo
+							descricao = "Corrida longa em ritmo fácil com volume reduzido."
+						} else if isQualityDay && i != duracaoSemanas && dist >= 6.0 {
+							tipo = "Tempo Run"
+							zona = "T"
+							paceAlvo = zonasMap["T"].PaceAlvo
+							distT := math.Round((dist-4.0)*0.5*10) / 10
+							if distT < 1.0 {
+								distT = 1.0
+							}
+							descricao = fmt.Sprintf("Aquecimento 2km E + %.1fkm na zona T + Desaquecimento 2km E.", distT)
+						} else {
+							tipo = "Corrida Fácil"
+							zona = "E"
+							paceAlvo = zonasMap["E"].PaceAlvo
+							descricao = "Corrida curta e fácil de polimento."
+						}
+					}
+				}
+
+				treinos[d] = domain.TreinoJSON{
+					Dia:       diaSemana,
+					Tipo:      tipo,
+					Distancia: dist,
+					Zona:      zona,
+					PaceAlvo:  paceAlvo,
+					Descricao: descricao,
+					Concluido: false,
+				}
+			}
+
+			suplDesc := "Fortalecimento geral de core (15-20 min)."
+			if req.Nivel == "avancado" || req.Nivel == "elite" {
+				switch fase {
+				case "Base", "Build":
+					suplDesc = "Fortalecimento de membros inferiores e core (30 min)."
+				case "Intensidade":
+					suplDesc = "Exercícios de mobilidade e estabilidade (20 min)."
+				}
+			}
+
+			semanas[i-1] = domain.SemanaJSON{
+				Numero:      i,
+				Fase:        fase,
+				VolumeTotal: weekVol,
+				Treinos:     treinos,
+				TreinamentoSuplementar: map[string]any{
+					"descricao": suplDesc,
+				},
+			}
+		}
+
 		planoDetalhado = domain.PlanoDetalhado{
 			VDOT:                   vdot,
 			DistanciaProva:         distKM,
