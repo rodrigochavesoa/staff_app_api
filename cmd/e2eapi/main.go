@@ -7,16 +7,20 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	_ "modernc.org/sqlite"
 )
 
 func main() {
@@ -30,6 +34,9 @@ func main() {
 
 	c := &client{base: base, http: &http.Client{Timeout: 60 * time.Second}}
 	suffix := strconv.FormatInt(time.Now().UnixNano()%1_000_000_000, 10)
+	// Unique display name: historico is matched by aluno nome (not id); shared names
+	// inflate complexity via prior E2E fichas.
+	alunoNome := "Aluno E2E " + suffix
 	failed := 0
 	step := func(name string, fn func() error) {
 		fmt.Printf("\n== %s ==\n", name)
@@ -120,7 +127,7 @@ func main() {
 		}
 		email := "e2e_" + suffix + "@example.com"
 		code, body, err = c.do(http.MethodPost, "/api/v1/pre-cadastro", "", map[string]any{
-			"nome": "Aluno E2E", "email": email, "telefone": "11999990000",
+			"nome": alunoNome, "email": email, "telefone": "11999990000",
 			"data_nascimento": "1990-05-15", "genero": "masculino", "plano_id": planoID,
 		})
 		if err != nil {
@@ -169,8 +176,10 @@ func main() {
 		if code != 200 {
 			return fmt.Errorf("anamnese metadata status=%d body=%s", code, truncate(body))
 		}
+		// Keep clinical free-text empty so the first gerar-periodizada stays complexity=simples
+		// (non-empty patologias alone scores anamnese_clinica and can tip into moderado).
 		code, body, err = c.do(http.MethodPost, "/api/v1/anamnese/submit/"+anamneseToken, "", map[string]any{
-			"peso": 78.0, "altura": 1.75, "patologias": "Nenhuma grave", "medicamentos": "",
+			"peso": 78.0, "altura": 1.75, "patologias": "", "medicamentos": "",
 			"lesoes_atuais": "", "dores_cronicas": "",
 			"parq_doenca_cardiaca": 0, "parq_dor_peito": 0, "parq_tontura": 0,
 			"parq_problema_osseo": 0, "parq_medicamento_pressao": 0, "parq_impedimento_activity": 0,
@@ -188,7 +197,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-		if code != 200 || !bytes.Contains(body, []byte("Aluno E2E")) {
+		if code != 200 || !bytes.Contains(body, []byte(alunoNome)) {
 			return fmt.Errorf("pendentes status=%d body=%s", code, truncate(body))
 		}
 		code, _, err = c.do(http.MethodGet, fmt.Sprintf("/api/v1/admin/anamnese/%d", anamneseID), token, nil)
@@ -226,11 +235,11 @@ func main() {
 	})
 
 	step("4. Aluno operacional", func() error {
-		code, body, err := c.do(http.MethodGet, "/api/v1/alunos/search?q=E2E", token, nil)
+		code, body, err := c.do(http.MethodGet, "/api/v1/alunos/search?q="+suffix, token, nil)
 		if err != nil {
 			return err
 		}
-		if code != 200 || !bytes.Contains(body, []byte("Aluno E2E")) {
+		if code != 200 || !bytes.Contains(body, []byte(alunoNome)) {
 			return fmt.Errorf("search status=%d body=%s", code, truncate(body))
 		}
 		code, _, err = c.do(http.MethodGet, fmt.Sprintf("/api/v1/alunos/%d", alunoID), token, nil)
@@ -259,7 +268,79 @@ func main() {
 	})
 
 	step("5. Fichas musculação", func() error {
-		code, body, err := c.do(http.MethodPost, "/api/v1/fichas/manual/criar", token, map[string]any{
+		// Evidence pipeline first (before manual ficha) so historico does not inflate complexity.
+		// Simples: anamnese clínica fraca + sem restrições → score 1 (PR1/PR2/PR4/PR5).
+		code, body, err := c.do(http.MethodPost, "/api/v1/fichas/gerar-periodizada", token, map[string]any{
+			"aluno_id": alunoID, "frequencia": 3, "objetivo": "Hipertrofia", "nivel": "Intermediário",
+		})
+		if err != nil {
+			return err
+		}
+		if code != 201 {
+			return fmt.Errorf("gerar-periodizada status=%d body=%s", code, truncate(body))
+		}
+		periodFichaID = mustInt(body, "ficha_id")
+		periodHash = mustString(body, "hash_link")
+		if periodFichaID <= 0 || periodHash == "" {
+			return fmt.Errorf("periodizada missing ficha_id/hash_link")
+		}
+		if err := assertEvidenceAIMetadata(body, evidenceMetaExpect{
+			Complexity:           "simples",
+			EvidenceCount:        0,
+			EvidenceFallback:     false,
+			EvidenceReasonSubstr: "complexidade_simples",
+			ContextUsed:          true,
+		}); err != nil {
+			return fmt.Errorf("gerar-periodizada simples: %w", err)
+		}
+
+		// Public ficha reads before a second periodizada archives the first hash.
+		code, _, err = c.do(http.MethodGet, "/api/v1/ficha/"+periodHash+"/json", "", nil)
+		if err != nil {
+			return err
+		}
+		if code != 200 {
+			return fmt.Errorf("ficha json status=%d", code)
+		}
+		code, _, err = c.do(http.MethodGet, "/api/v1/ficha/"+periodHash+"/treino/A", "", nil)
+		if err != nil {
+			return err
+		}
+		if code != 200 {
+			return fmt.Errorf("treino letra A status=%d", code)
+		}
+
+		// Moderado: restrições + histórico da periodizada anterior → score >= 2 → busca acionada.
+		code, body, err = c.do(http.MethodPost, "/api/v1/fichas/gerar-periodizada", token, map[string]any{
+			"aluno_id": alunoID, "frequencia": 3, "objetivo": "Hipertrofia", "nivel": "Intermediário",
+			"restricoes": "dor lombar",
+		})
+		if err != nil {
+			return err
+		}
+		if code != 201 {
+			return fmt.Errorf("gerar-periodizada moderado status=%d body=%s", code, truncate(body))
+		}
+		if err := assertEvidenceAIMetadata(body, evidenceMetaExpect{
+			Complexity:           "moderado",
+			EvidenceReasonSubstr: "busca_acionada",
+			ContextUsed:          true,
+		}); err != nil {
+			return fmt.Errorf("gerar-periodizada moderado: %w", err)
+		}
+		// Track latest periodizada for cleanup (first hash may be archived).
+		if id := mustInt(body, "ficha_id"); id > 0 {
+			periodFichaID = id
+		}
+		if h := mustString(body, "hash_link"); h != "" {
+			periodHash = h
+		}
+
+		if err := assertTrainingPipelineTelemetry(alunoID, []string{"simples", "moderado"}); err != nil {
+			return fmt.Errorf("PR5 telemetry: %w", err)
+		}
+
+		code, body, err = c.do(http.MethodPost, "/api/v1/fichas/manual/criar", token, map[string]any{
 			"aluno_id": alunoID, "titulo_ficha": "Manual E2E", "observacoes": "e2e",
 			"exercicios": []map[string]any{{
 				"nome": "Agachamento", "grupo_muscular": "Pernas", "series": 3,
@@ -306,35 +387,6 @@ func main() {
 		}
 		if code != 409 {
 			return fmt.Errorf("expected OCC 409, got %d", code)
-		}
-
-		code, body, err = c.do(http.MethodPost, "/api/v1/fichas/gerar-periodizada", token, map[string]any{
-			"aluno_id": alunoID, "frequencia": 3, "objetivo": "Hipertrofia", "nivel": "Intermediário",
-		})
-		if err != nil {
-			return err
-		}
-		if code != 201 {
-			return fmt.Errorf("gerar-periodizada status=%d body=%s", code, truncate(body))
-		}
-		periodFichaID = mustInt(body, "ficha_id")
-		periodHash = mustString(body, "hash_link")
-		if periodFichaID <= 0 || periodHash == "" {
-			return fmt.Errorf("periodizada missing ficha_id/hash_link")
-		}
-		code, _, err = c.do(http.MethodGet, "/api/v1/ficha/"+periodHash+"/json", "", nil)
-		if err != nil {
-			return err
-		}
-		if code != 200 {
-			return fmt.Errorf("ficha json status=%d", code)
-		}
-		code, _, err = c.do(http.MethodGet, "/api/v1/ficha/"+periodHash+"/treino/A", "", nil)
-		if err != nil {
-			return err
-		}
-		if code != 200 {
-			return fmt.Errorf("treino letra A status=%d", code)
 		}
 
 		// Also create public link from manual ficha for feedback/marcar path
@@ -1047,6 +1099,188 @@ func truncate(b []byte) string {
 		return s[:400] + "..."
 	}
 	return s
+}
+
+type evidenceMetaExpect struct {
+	Complexity           string
+	EvidenceCount        int
+	MinEvidenceCount     int
+	EvidenceFallback     bool
+	EvidenceReasonSubstr string
+	ContextUsed          bool
+	RequireConfidence    bool
+}
+
+func assertEvidenceAIMetadata(body []byte, want evidenceMetaExpect) error {
+	meta := nestedMap(body, "data", "ai_metadata")
+	if meta == nil {
+		return fmt.Errorf("missing data.ai_metadata in %s", truncate(body))
+	}
+	complexity, _ := meta["complexity"].(string)
+	if want.Complexity != "" && complexity != want.Complexity {
+		return fmt.Errorf("complexity=%q want %q", complexity, want.Complexity)
+	}
+	count := int(toInt64(meta["evidence_count"]))
+	if want.Complexity == "simples" {
+		if count != want.EvidenceCount {
+			return fmt.Errorf("evidence_count=%d want %d", count, want.EvidenceCount)
+		}
+	}
+	if want.MinEvidenceCount > 0 && count < want.MinEvidenceCount {
+		return fmt.Errorf("evidence_count=%d want >= %d", count, want.MinEvidenceCount)
+	}
+	fb, ok := meta["evidence_fallback_used"].(bool)
+	if !ok {
+		return fmt.Errorf("evidence_fallback_used missing")
+	}
+	if want.Complexity == "simples" && fb != want.EvidenceFallback {
+		return fmt.Errorf("evidence_fallback_used=%v want %v", fb, want.EvidenceFallback)
+	}
+	ctxUsed, _ := meta["context_used"].(bool)
+	if ctxUsed != want.ContextUsed {
+		return fmt.Errorf("context_used=%v want %v", ctxUsed, want.ContextUsed)
+	}
+	if meta["confidence_score"] == nil {
+		return fmt.Errorf("confidence_score missing")
+	}
+	if score, ok := meta["confidence_score"].(float64); ok && score <= 0 {
+		return fmt.Errorf("confidence_score=%v want > 0", score)
+	}
+	reasons, _ := meta["evidence_reasons"].([]any)
+	if want.EvidenceReasonSubstr != "" {
+		found := false
+		for _, r := range reasons {
+			s, _ := r.(string)
+			if strings.Contains(s, want.EvidenceReasonSubstr) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("evidence_reasons=%v missing substr %q", reasons, want.EvidenceReasonSubstr)
+		}
+	}
+	validations, _ := meta["validations"].([]any)
+	if len(validations) == 0 {
+		return fmt.Errorf("validations empty")
+	}
+	return nil
+}
+
+func nestedMap(body []byte, keys ...string) map[string]any {
+	var cur any
+	if err := json.Unmarshal(body, &cur); err != nil {
+		return nil
+	}
+	for _, k := range keys {
+		m, ok := cur.(map[string]any)
+		if !ok {
+			return nil
+		}
+		cur = m[k]
+	}
+	out, _ := cur.(map[string]any)
+	return out
+}
+
+// assertTrainingPipelineTelemetry verifies PR5 rows (optional DB access).
+// Uses E2E_SQLITE_PATH, or docker cp from E2E_DOCKER_CONTAINER (default staff_api).
+func assertTrainingPipelineTelemetry(alunoID int64, wantComplexities []string) error {
+	dbPath, cleanup, err := resolveE2ESQLitePath()
+	if err != nil {
+		return err
+	}
+	if dbPath == "" {
+		fmt.Println("SKIP PR5 sqlite check (set E2E_SQLITE_PATH or run with Docker container staff_api)")
+		return nil
+	}
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		return fmt.Errorf("open sqlite: %w", err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query(`
+		SELECT complexity, evidence_requested, evidence_count, endpoint
+		FROM training_pipeline_events
+		WHERE aluno_id = ?
+		ORDER BY id DESC
+		LIMIT 10
+	`, alunoID)
+	if err != nil {
+		return fmt.Errorf("query events (migration 0015 applied?): %w", err)
+	}
+	defer rows.Close()
+
+	seen := map[string]bool{}
+	n := 0
+	for rows.Next() {
+		var complexity, endpoint string
+		var requested, count int
+		if err := rows.Scan(&complexity, &requested, &count, &endpoint); err != nil {
+			return err
+		}
+		if endpoint != "gerar-periodizada" {
+			return fmt.Errorf("endpoint=%q", endpoint)
+		}
+		seen[complexity] = true
+		n++
+		if complexity == "simples" && (requested != 0 || count != 0) {
+			return fmt.Errorf("simples row requested=%d count=%d", requested, count)
+		}
+		if complexity == "moderado" && requested != 1 {
+			return fmt.Errorf("moderado row evidence_requested=%d want 1", requested)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	if n == 0 {
+		return fmt.Errorf("no training_pipeline_events for aluno_id=%d", alunoID)
+	}
+	for _, c := range wantComplexities {
+		if !seen[c] {
+			return fmt.Errorf("missing telemetry complexity %q (seen %v)", c, seen)
+		}
+	}
+	fmt.Printf("PR5 telemetry OK: %d event(s) for aluno_id=%d complexities=%v\n", n, alunoID, seen)
+	return nil
+}
+
+func resolveE2ESQLitePath() (string, func(), error) {
+	if p := strings.TrimSpace(os.Getenv("E2E_SQLITE_PATH")); p != "" {
+		return p, nil, nil
+	}
+	if strings.EqualFold(os.Getenv("E2E_SKIP_TELEMETRY_DB"), "1") {
+		return "", nil, nil
+	}
+	container := env("E2E_DOCKER_CONTAINER", "staff_api")
+	remote := env("E2E_DOCKER_DB_PATH", "/app/data/db/fichas_treino.db")
+	if _, err := exec.LookPath("docker"); err != nil {
+		return "", nil, nil
+	}
+	// Probe container
+	probe := exec.Command("docker", "inspect", "-f", "{{.State.Running}}", container)
+	out, err := probe.Output()
+	if err != nil || !strings.Contains(string(out), "true") {
+		return "", nil, nil
+	}
+	tmp, err := os.CreateTemp("", "staff-e2e-*.db")
+	if err != nil {
+		return "", nil, err
+	}
+	local := tmp.Name()
+	_ = tmp.Close()
+	cp := exec.Command("docker", "cp", container+":"+remote, local)
+	if out, err := cp.CombinedOutput(); err != nil {
+		_ = os.Remove(local)
+		return "", nil, fmt.Errorf("docker cp: %w (%s)", err, truncate(out))
+	}
+	return local, func() { _ = os.Remove(local) }, nil
 }
 
 func mustString(body []byte, key string) string {
