@@ -40,7 +40,7 @@ func TestAnamnesePreCadastroFlow(t *testing.T) {
 
 	// Create test admin and token
 	adminHeader := testAuthHeader(t, db, cfg)
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 
 	// Create a test plan first
 	planoRepo := sqlite.NewPlanoRepository(db)

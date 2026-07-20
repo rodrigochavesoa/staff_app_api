@@ -122,7 +122,7 @@ func TestHistoricoFrequenciaBuscaFlow(t *testing.T) {
 	}
 
 	cfg := &config.Config{CorsOrigins: []string{"*"}}
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 	authHeader := testAuthHeader(t, db, cfg)
 
 	// ----------------------------------------------------

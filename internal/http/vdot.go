@@ -16,17 +16,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// VDOTHandler handles HTTP requests for VDOT calculations and test management.
 type VDOTHandler struct {
 	repo repositories.Teste3kmRepository
 }
 
-// NewVDOTHandler creates a new VDOTHandler instance.
 func NewVDOTHandler(repo repositories.Teste3kmRepository) *VDOTHandler {
 	return &VDOTHandler{repo: repo}
 }
 
-// CreateRequest defines the request body for creating a new 3k test record.
 type CreateRequest struct {
 	TempoSegundos int    `json:"tempo_segundos"`
 	PSE           *int   `json:"pse,omitempty"`
@@ -35,14 +32,13 @@ type CreateRequest struct {
 	Observacoes   string `json:"observacoes,omitempty"`
 }
 
-// writeJSONError sends a JSON formatted error response.
 func writeJSONError(w http.ResponseWriter, msg string, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
-// Create handles POST /api/v1/alunos/{id}/vdot
+// POST /api/v1/alunos/{id}/vdot
 func (h *VDOTHandler) Create(w http.ResponseWriter, r *http.Request) {
 	alunoIDStr := chi.URLParam(r, "id")
 	alunoID, err := strconv.ParseInt(alunoIDStr, 10, 64)
@@ -62,14 +58,12 @@ func (h *VDOTHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Calculate VDOT and zones
 	vdotRes, err := daniels.Calculate3kTest(req.TempoSegundos)
 	if err != nil {
 		writeJSONError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Parse date
 	dataTeste := time.Now()
 	if req.DataTeste != "" {
 		if t, err := time.Parse("2006-01-02", req.DataTeste); err == nil {
@@ -85,7 +79,7 @@ func (h *VDOTHandler) Create(w http.ResponseWriter, r *http.Request) {
 		fonte = "manual"
 	}
 
-	// 1. Process PSE and calculate IndiceConfianca
+	// IndiceConfianca: PSE 9–10 → 85; PSE válido abaixo de 9 → 70; ausente ou fora de 0–10 → 50.
 	var pse *int
 	var confianca int
 
@@ -99,7 +93,6 @@ func (h *VDOTHandler) Create(w http.ResponseWriter, r *http.Request) {
 				confianca = 70
 			}
 		} else {
-			// Out of bounds PSE is treated as nil/missing
 			pse = nil
 			confianca = 50
 		}
@@ -108,7 +101,6 @@ func (h *VDOTHandler) Create(w http.ResponseWriter, r *http.Request) {
 		confianca = 50
 	}
 
-	// 2. Trim and limit observacoes to 500 characters
 	observacoes := strings.TrimSpace(req.Observacoes)
 	if len(observacoes) > 500 {
 		observacoes = observacoes[:500]
@@ -137,7 +129,7 @@ func (h *VDOTHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.repo.Create(r.Context(), teste); err != nil {
-		// Detect foreign key violation in SQLite
+		// SQLite não expõe sql.ErrForeignKey; mensagem contém "FOREIGN KEY".
 		if strings.Contains(err.Error(), "FOREIGN KEY") {
 			writeJSONError(w, "Failed to save test. Student does not exist.", http.StatusNotFound)
 			return
@@ -151,7 +143,7 @@ func (h *VDOTHandler) Create(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(teste)
 }
 
-// List handles GET /api/v1/alunos/{id}/vdot
+// GET /api/v1/alunos/{id}/vdot
 func (h *VDOTHandler) List(w http.ResponseWriter, r *http.Request) {
 	alunoIDStr := chi.URLParam(r, "id")
 	alunoID, err := strconv.ParseInt(alunoIDStr, 10, 64)
@@ -166,8 +158,8 @@ func (h *VDOTHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Always return an empty JSON array instead of null
 	if tests == nil {
+		// Resposta JSON: [] em vez de null quando não há testes.
 		tests = []*domain.Teste3km{}
 	}
 
@@ -176,7 +168,7 @@ func (h *VDOTHandler) List(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(tests)
 }
 
-// Delete handles DELETE /api/v1/alunos/{id}/vdot/{teste_id}
+// DELETE /api/v1/alunos/{id}/vdot/{teste_id}
 func (h *VDOTHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	alunoIDStr := chi.URLParam(r, "id")
 	alunoID, err := strconv.ParseInt(alunoIDStr, 10, 64)

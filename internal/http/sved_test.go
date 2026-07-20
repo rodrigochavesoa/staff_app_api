@@ -37,7 +37,7 @@ func TestSVEDFlow(t *testing.T) {
 		CorsOrigins: []string{"*"},
 	}
 
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 
 	// Seed Alunos and Planos
 	_, err = db.ExecContext(ctx, "INSERT INTO planos (id, nome, preco_default, ativo) VALUES (1, 'Plano Premium', 299.00, 1)")

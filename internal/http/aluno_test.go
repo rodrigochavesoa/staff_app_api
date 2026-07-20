@@ -39,7 +39,7 @@ func TestAlunoEndpoints(t *testing.T) {
 	var ctx context.Context = t.Context()
 
 	cfg := &config.Config{CorsOrigins: []string{"*"}}
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 	authHeader := testAuthHeader(t, db, cfg)
 
 	// 1. POST /api/v1/alunos - Success

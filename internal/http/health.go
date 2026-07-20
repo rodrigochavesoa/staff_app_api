@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"time"
 
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 )
 
 type HealthHandler struct {
-	db *sqlite.DB
+	db repositories.DatabaseHealth
 }
 
-func NewHealthHandler(db *sqlite.DB) *HealthHandler {
+func NewHealthHandler(db repositories.DatabaseHealth) *HealthHandler {
 	return &HealthHandler{db: db}
 }
 

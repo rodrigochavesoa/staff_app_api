@@ -73,7 +73,7 @@ func TestBaseConhecimentoFlow(t *testing.T) {
 		},
 	}
 
-	router := NewRouter(cfg, db, WithRAGProviders(mockEmbed, mockStore))
+	router := NewRouter(cfg, depsForTestDB(db), WithRAGProviders(mockEmbed, mockStore))
 	ragRepo := sqlite.NewRAGRepository(db)
 
 	// Seeding admin token
@@ -255,7 +255,7 @@ func TestBaseConhecimentoFlow(t *testing.T) {
 
 	t.Run("Fallback HTTP 503 - No Providers or Local Documents", func(t *testing.T) {
 		mockEmbed.err = errors.New("embedding server down")
-		
+
 		// Querying something that doesn't exist locally (no documents match "invalido")
 		reqBody := `{"query":"invalido","k":3}`
 		req, _ := http.NewRequest(http.MethodPost, "/api/v1/admin/consulta-base", bytes.NewBufferString(reqBody))

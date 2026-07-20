@@ -39,7 +39,7 @@ func TestAnamneseReenviarEmailAndSettings(t *testing.T) {
 	}
 
 	adminHeader := testAuthHeader(t, db, cfg)
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 
 	// Create a test plan
 	planoRepo := sqlite.NewPlanoRepository(db)

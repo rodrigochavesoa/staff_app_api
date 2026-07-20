@@ -43,6 +43,7 @@ func main() {
 		logger.Error("Failed to initialize database", err)
 		os.Exit(1)
 	}
+	deps := http.NewSQLiteDeps(db)
 
 	// 4. Ensure a first admin exists on fresh databases.
 	if err := bootstrapAdmin(context.Background(), db, cfg); err != nil {
@@ -54,7 +55,7 @@ func main() {
 	syncExerciseCatalog(db)
 
 	// 6. Initialize HTTP Server
-	server := http.NewServer(cfg, db)
+	server := http.NewServer(cfg, deps)
 
 	// 7. Start HTTP Server with graceful shutdown
 	if err := server.Start(); err != nil {

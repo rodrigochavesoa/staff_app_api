@@ -48,7 +48,7 @@ func TestVDOTEndpoints(t *testing.T) {
 	}
 
 	cfg := &config.Config{CorsOrigins: []string{"*"}}
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 	authHeader := testAuthHeader(t, db, cfg)
 
 	// 1. Test POST /api/v1/alunos/1/vdot (Success, High PSE = 9 -> Confidence = 85)

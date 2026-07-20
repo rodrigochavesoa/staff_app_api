@@ -5,7 +5,6 @@ import (
 	"os"
 	"staff_app/internal/config"
 	"staff_app/internal/services"
-	"staff_app/internal/sqlite"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -34,7 +33,7 @@ func WithTrainingProviders(providers ...services.TrainingProvider) RouterOption 
 }
 
 // NewRouter initializes and configures the HTTP router with middlewares and routes
-func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Handler {
+func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler {
 	options := &routerOptions{}
 	for _, opt := range opts {
 		opt(options)
@@ -51,7 +50,7 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 	r.Use(CorsMiddleware(cfg.CorsOrigins))
 
 	// Health Handler
-	healthHandler := NewHealthHandler(db)
+	healthHandler := NewHealthHandler(deps.Health)
 
 	// Register Routes
 	r.Get("/", healthHandler.Index)
@@ -59,55 +58,55 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 	r.Get("/ping", healthHandler.Ping)
 
 	// VDOT Handler
-	vdotHandler := NewVDOTHandler(sqlite.NewTeste3kmRepository(db))
+	vdotHandler := NewVDOTHandler(deps.Teste3km)
 
 	// Aluno Handler
-	alunoHandler := NewAlunoHandler(sqlite.NewAlunoRepository(db))
+	alunoHandler := NewAlunoHandler(deps.Alunos)
 
 	// Ficha Web Handler
-	fichaWebHandler := NewFichaWebHandler(sqlite.NewFichaWebRepository(db), sqlite.NewAlunoRepository(db))
+	fichaWebHandler := NewFichaWebHandler(deps.Fichas, deps.Alunos)
 
 	// Feedback Handler
-	feedbackHandler := NewFeedbackHandler(sqlite.NewFeedbackRepository(db), sqlite.NewFichaWebRepository(db))
+	feedbackHandler := NewFeedbackHandler(deps.Feedback, deps.Fichas)
 
 	// Garmin Handler
-	garminHandler := NewGarminHandler(cfg, sqlite.NewGarminRepository(db), sqlite.NewAlunoRepository(db))
+	garminHandler := NewGarminHandler(cfg, deps.Garmin, deps.Alunos)
 
 	// Auth & Plans Handlers
-	authHandler := NewAuthHandler(sqlite.NewUserRepository(db), cfg.SecretKey)
-	planoHandler := NewPlanoHandler(sqlite.NewPlanoRepository(db))
+	authHandler := NewAuthHandler(deps.Users, cfg.SecretKey)
+	planoHandler := NewPlanoHandler(deps.Planos)
 
 	// Pre-Cadastro & Anamnese Handlers
 	preCadastroHandler := NewPreCadastroHandler(
-		sqlite.NewPreRegistroRepository(db),
-		sqlite.NewAlunoRepository(db),
-		sqlite.NewPlanoRepository(db),
-		sqlite.NewAnamneseRepository(db),
-		sqlite.NewConfiguracaoRepository(db),
+		deps.PreRegistro,
+		deps.Alunos,
+		deps.Planos,
+		deps.Anamnese,
+		deps.Configuracao,
 	)
 	anamneseHandler := NewAnamneseHandler(
-		sqlite.NewAnamneseRepository(db),
-		sqlite.NewAlunoRepository(db),
-		sqlite.NewUserRepository(db),
-		sqlite.NewConfiguracaoRepository(db),
+		deps.Anamnese,
+		deps.Alunos,
+		deps.Users,
+		deps.Configuracao,
 	)
-	exercicioHandler := NewExercicioHandler(sqlite.NewExercicioRepository(db))
+	exercicioHandler := NewExercicioHandler(deps.Exercicios)
 	periodizacaoCorridaHandler := NewPeriodizacaoCorridaHandler(
-		sqlite.NewPeriodizacaoCorridaRepository(db),
-		sqlite.NewAlunoRepository(db),
-		sqlite.NewGarminRepository(db),
-		sqlite.NewAnamneseRepository(db),
+		deps.PeriodizacaoCorrida,
+		deps.Alunos,
+		deps.Garmin,
+		deps.Anamnese,
 		cfg,
 	)
 	adminConfigHandler := NewAdminConfigHandler(
-		sqlite.NewConfiguracaoRepository(db),
-		sqlite.NewDashboardRepository(db),
+		deps.Configuracao,
+		deps.Dashboard,
 	)
 	historicoHandler := NewHistoricoHandler(
-		sqlite.NewHistoricoRepository(db),
-		sqlite.NewAlunoRepository(db),
-		sqlite.NewFichaWebRepository(db),
-		sqlite.NewPeriodizacaoCorridaRepository(db),
+		deps.Historico,
+		deps.Alunos,
+		deps.Fichas,
+		deps.PeriodizacaoCorrida,
 		cfg.SecretKey,
 	)
 	trainingChain := services.NewTrainingProviderChain(
@@ -164,16 +163,14 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 			r.Get("/aluno/{aluno_id}/fichas", fichaWebHandler.ListByAluno)
 
 			// New Ficha Treino (Fase 2) management endpoints
-			anamRepo := sqlite.NewAnamneseRepository(db)
-			ragRepo := sqlite.NewRAGRepository(db)
 			fichaTreinoHandler := NewFichaTreinoHandler(
-				sqlite.NewFichaTreinoRepository(db),
-				sqlite.NewAlunoRepository(db),
-				sqlite.NewFichaWebRepository(db),
-				anamRepo,
-				ragRepo,
-				services.NewEvidencePipeline(db, anamRepo, ragRepo),
-				sqlite.NewEvidencePipelineTelemetryRecorder(db),
+				deps.FichaTreino,
+				deps.Alunos,
+				deps.Fichas,
+				deps.Anamnese,
+				deps.RAG,
+				deps.EvidencePipeline,
+				deps.EvidenceTelemetry,
 				trainingChain,
 			)
 			r.Route("/fichas", func(r chi.Router) {
@@ -186,7 +183,7 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 			r.Get("/metodos/{metodo}", fichaTreinoHandler.GetMetodoInfo)
 
 			// SVED (Fase 3) endpoints
-			svedHandler := NewSVEDHandler(sqlite.NewSVEDRepository(db))
+			svedHandler := NewSVEDHandler(deps.SVED)
 			r.Route("/sved", func(r chi.Router) {
 				r.Post("/calcular", svedHandler.Calcular)
 				r.Get("/historico/{aluno_id}/{exercicio_nome}", svedHandler.GetHistorico)
@@ -303,7 +300,7 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 				r.Get("/dashboard/stats", adminConfigHandler.DashboardStats)
 
 				// Specialised reports (Fase 4)
-				relatoriosHandler := NewRelatoriosHandler(sqlite.NewRelatoriosRepository(db))
+				relatoriosHandler := NewRelatoriosHandler(deps.Relatorios)
 				r.Route("/relatorios", func(r chi.Router) {
 					r.Get("/dashboard", relatoriosHandler.GetDashboardResumo)
 					r.Get("/patologias", relatoriosHandler.GetPatologias)
@@ -328,7 +325,7 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 					}
 				}
 
-				ragHandler := NewRAGHandler(sqlite.NewRAGRepository(db), embedProvider, vectorStore)
+				ragHandler := NewRAGHandler(deps.RAG, embedProvider, vectorStore)
 				r.Route("/consulta-base", func(r chi.Router) {
 					r.Post("/", ragHandler.Search)
 					r.Get("/historico", ragHandler.GetHistorico)
