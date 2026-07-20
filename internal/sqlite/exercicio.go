@@ -18,50 +18,10 @@ func NewExercicioRepository(db *DB) *ExercicioRepository {
 	return &ExercicioRepository{db: db}
 }
 
-// GetByCodigo busca um exercício por seu código
+// GetByCodigo busca um exercício por seu código.
+// When ctx carries a Sync transaction (WithTx), the lookup uses that tx.
 func (r *ExercicioRepository) GetByCodigo(ctx context.Context, codigo int) (*domain.ExercicioReabilitacao, error) {
-	query := `
-		SELECT 
-			codigo, nome, categoria, 
-			COALESCE(descricao_terapeutica, ''), COALESCE(descricao, ''), COALESCE(indicacoes, ''),
-			COALESCE(contraindicacoes, ''), COALESCE(restricoes_sugeridas, ''), COALESCE(grupo_muscular, ''), 
-			COALESCE(musculo_foco, ''), COALESCE(tipo_exercicio, ''), COALESCE(intensidade, ''), 
-			nivel_prioridade, COALESCE(fonte_cientifica, ''), COALESCE(url, ''), 
-			COALESCE(url_secundaria, ''), COALESCE(video_url, ''), COALESCE(criado_por, ''), 
-			criado_em, status, COALESCE(notas_profissional, ''), atualizado_em, atualizado_por
-		FROM exercicios_reabilitacao
-		WHERE codigo = ?
-	`
-	row := r.db.QueryRowContext(ctx, query, codigo)
-
-	var ex domain.ExercicioReabilitacao
-	var criStr string
-	var updStr, updPor sql.NullString
-
-	err := row.Scan(
-		&ex.Codigo, &ex.Nome, &ex.Categoria, &ex.DescricaoTerapeutica, &ex.Descricao, &ex.Indicacoes,
-		&ex.Contraindicacoes, &ex.RestricoesSugeridas, &ex.GrupoMuscular, &ex.MusculoFoco,
-		&ex.TipoExercicio, &ex.Intensidade, &ex.NivelPrioridade, &ex.FonteCientifica,
-		&ex.Url, &ex.UrlSecundaria, &ex.VideoUrl, &ex.CriadoPor, &criStr, &ex.Status,
-		&ex.NotasProfissional, &updStr, &updPor,
-	)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	ex.CriadoEm, _ = parseDateTime(criStr)
-	if updStr.Valid && updStr.String != "" {
-		t, _ := parseDateTime(updStr.String)
-		ex.AtualizadoEm = &t
-	}
-	if updPor.Valid {
-		ex.AtualizadoPor = updPor.String
-	}
-
-	return &ex, nil
+	return r.getByCodigoConn(ctx, codigo)
 }
 
 // GetByNome busca um exercício pelo nome (exato, case-insensitive)
