@@ -33,7 +33,7 @@ type combinedExercise struct {
 	Origem      string `json:"origem"`
 }
 
-// ListBiblioteca lists active exercises from the DB (catalog materializado na startup).
+// ListBiblioteca lista exercícios ativos e informa a origem do catálogo materializado na inicialização.
 func (h *ExercicioHandler) ListBiblioteca(w http.ResponseWriter, r *http.Request) {
 	busca := strings.TrimSpace(r.URL.Query().Get("busca"))
 	grupo := strings.TrimSpace(r.URL.Query().Get("grupo_muscular"))
@@ -124,7 +124,6 @@ type createExercicioRequest struct {
 	NotasProfissional    string `json:"notas_profissional"`
 }
 
-// Create cria um novo exercício personalizado (Normal/Terapêutico)
 func (h *ExercicioHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req createExercicioRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -144,7 +143,7 @@ func (h *ExercicioHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verificar duplicidade de nome
+	// Verifica duplicidade de nome.
 	existing, err := h.repo.GetByNome(r.Context(), req.Nome)
 	if err != nil {
 		writeJSONError(w, "Error checking duplicate name", http.StatusInternalServerError)
@@ -155,7 +154,7 @@ func (h *ExercicioHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Determinar ranges e descobrir próximo código
+	// Determina as faixas e descobre o próximo código.
 	var min, max int
 	if req.Categoria == "terapeutico" {
 		min, max = 5000, 5999
@@ -222,7 +221,6 @@ func (h *ExercicioHandler) Create(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(ex)
 }
 
-// List lista os exercícios cadastrados no banco de dados com filtros
 func (h *ExercicioHandler) List(w http.ResponseWriter, r *http.Request) {
 	filters := make(map[string]string)
 	filters["categoria"] = r.URL.Query().Get("categoria")
@@ -242,7 +240,6 @@ func (h *ExercicioHandler) List(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(list)
 }
 
-// GetByID obtém detalhes do exercício
 func (h *ExercicioHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	codeStr := chi.URLParam(r, "codigo")
 	codigo, err := strconv.Atoi(codeStr)
@@ -266,7 +263,6 @@ func (h *ExercicioHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(ex)
 }
 
-// Update edita atributos de um exercício (bloqueia alteração de codigo e categoria)
 func (h *ExercicioHandler) Update(w http.ResponseWriter, r *http.Request) {
 	codeStr := chi.URLParam(r, "codigo")
 	codigo, err := strconv.Atoi(codeStr)
@@ -297,7 +293,7 @@ func (h *ExercicioHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Se alterou o nome, verificar duplicidade
+	// Se o nome mudou, verifica duplicidade.
 	if !strings.EqualFold(req.Nome, ex.Nome) {
 		existing, err := h.repo.GetByNome(r.Context(), req.Nome)
 		if err == nil && existing != nil {
@@ -342,7 +338,6 @@ func (h *ExercicioHandler) Update(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(ex)
 }
 
-// Activar ativa um exercício desativado
 func (h *ExercicioHandler) Activar(w http.ResponseWriter, r *http.Request) {
 	codeStr := chi.URLParam(r, "codigo")
 	codigo, err := strconv.Atoi(codeStr)
@@ -380,7 +375,6 @@ func (h *ExercicioHandler) Activar(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]any{"status": "success", "message": "Exercício reativado com sucesso."})
 }
 
-// Desactivar desativa um exercício (soft delete)
 func (h *ExercicioHandler) Desactivar(w http.ResponseWriter, r *http.Request) {
 	codeStr := chi.URLParam(r, "codigo")
 	codigo, err := strconv.Atoi(codeStr)
@@ -418,7 +412,6 @@ func (h *ExercicioHandler) Desactivar(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]any{"status": "success", "message": "Exercício desativado com sucesso."})
 }
 
-// Delete realiza hard delete permanente (requer header X-Confirm-Hard-Delete: CONFIRMAR)
 func (h *ExercicioHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	confirm := r.Header.Get("X-Confirm-Hard-Delete")
 	if confirm != "CONFIRMAR" {
@@ -453,7 +446,6 @@ func (h *ExercicioHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]any{"status": "success", "message": "Exercício deletado permanentemente do sistema."})
 }
 
-// Estatisticas retorna contagens gerais e ranges livres
 func (h *ExercicioHandler) Estatisticas(w http.ResponseWriter, r *http.Request) {
 	stats, err := h.repo.GetEstatisticas(r.Context())
 	if err != nil {
@@ -466,7 +458,6 @@ func (h *ExercicioHandler) Estatisticas(w http.ResponseWriter, r *http.Request) 
 	_ = json.NewEncoder(w).Encode(stats)
 }
 
-// Grupos lista grupos musculares únicos
 func (h *ExercicioHandler) Grupos(w http.ResponseWriter, r *http.Request) {
 	grupos, err := h.repo.GetUniqueGrupos(r.Context())
 	if err != nil {
@@ -479,7 +470,6 @@ func (h *ExercicioHandler) Grupos(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(grupos)
 }
 
-// Tipos lista tipos de exercícios únicos
 func (h *ExercicioHandler) Tipos(w http.ResponseWriter, r *http.Request) {
 	tipos, err := h.repo.GetUniqueTipos(r.Context())
 	if err != nil {
@@ -492,11 +482,6 @@ func (h *ExercicioHandler) Tipos(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(tipos)
 }
 
-// ----------------------------------------------------------------------------
-// SUGESTÕES DE REABILITAÇÃO (JUDGE SYSTEM)
-// ----------------------------------------------------------------------------
-
-// ListSugestoes lista sugestões pendentes
 func (h *ExercicioHandler) ListSugestoes(w http.ResponseWriter, r *http.Request) {
 	prioStr := r.URL.Query().Get("prioridade")
 	ordem := r.URL.Query().Get("ordem")
@@ -520,7 +505,6 @@ func (h *ExercicioHandler) ListSugestoes(w http.ResponseWriter, r *http.Request)
 	_ = json.NewEncoder(w).Encode(list)
 }
 
-// ApproveSugestao aprova sugestão e insere exercício na faixa 5000-5999 (Transacional)
 func (h *ExercicioHandler) ApproveSugestao(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
@@ -547,7 +531,7 @@ func (h *ExercicioHandler) ApproveSugestao(w http.ResponseWriter, r *http.Reques
 		nomeFinal = sug.NomeExercicio
 	}
 
-	// Verificar duplicidade de nome final
+	// Verifica duplicidade do nome final.
 	existing, err := h.repo.GetByNome(r.Context(), nomeFinal)
 	if err == nil && existing != nil {
 		writeJSONError(w, "Já existe um exercício com este nome.", http.StatusBadRequest)
@@ -602,7 +586,6 @@ type rejectSugestaoRequest struct {
 	Motivo string `json:"motivo"`
 }
 
-// RejectSugestao rejeita sugestão
 func (h *ExercicioHandler) RejectSugestao(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)

@@ -16,13 +16,11 @@ import (
 	"staff_app/internal/repositories"
 )
 
-// AdminConfigHandler handles HTTP requests for system configurations and administrative dashboard stats.
 type AdminConfigHandler struct {
 	configRepo    repositories.ConfiguracaoRepository
 	dashboardRepo repositories.DashboardRepository
 }
 
-// NewAdminConfigHandler creates a new AdminConfigHandler instance.
 func NewAdminConfigHandler(configRepo repositories.ConfiguracaoRepository, dashboardRepo repositories.DashboardRepository) *AdminConfigHandler {
 	return &AdminConfigHandler{
 		configRepo:    configRepo,
@@ -30,7 +28,6 @@ func NewAdminConfigHandler(configRepo repositories.ConfiguracaoRepository, dashb
 	}
 }
 
-// List handles GET /api/v1/admin/configuracoes
 func (h *AdminConfigHandler) List(w http.ResponseWriter, r *http.Request) {
 	configs, err := h.configRepo.List(r.Context())
 	if err != nil {
@@ -39,7 +36,7 @@ func (h *AdminConfigHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mask sensitive configuration values (such as SMTP_PASSWORD)
+	// Mascara valores sensíveis, como SMTP_PASSWORD.
 	for _, c := range configs {
 		if c.Sensivel {
 			if c.Valor != "" {
@@ -58,12 +55,11 @@ func (h *AdminConfigHandler) List(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// updateConfigRequest defines the PUT request body for updating configurations
+// updateConfigRequest representa o corpo de PUT para atualizar configurações.
 type updateConfigRequest struct {
 	Configuracoes map[string]string `json:"configuracoes"`
 }
 
-// Update handles PUT /api/v1/admin/configuracoes
 func (h *AdminConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 	var req updateConfigRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -71,7 +67,7 @@ func (h *AdminConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch current configuration keys to check for existence and validate types
+	// Carrega as chaves atuais para validar existência e tipos.
 	dbConfigs, err := h.configRepo.List(r.Context())
 	if err != nil {
 		logger.Error("Failed to list database configurations during update", err)
@@ -99,24 +95,24 @@ func (h *AdminConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Handle sensitive values
+		// Trata valores sensíveis.
 		if dbCfg.Sensivel {
 			if val == "********" {
-				// Mask sent back means no change, skip this key
+				// O valor mascarado significa que não houve alteração.
 				continue
 			}
 			if val == "" {
-				// Empty string means clear/wipe the password
+				// Uma string vazia limpa a senha.
 				dbCfg.Valor = ""
 			} else {
-				// Otherwise substitute the new password
+				// Caso contrário, substitui pela nova senha.
 				dbCfg.Valor = val
 			}
 		} else {
 			dbCfg.Valor = strings.TrimSpace(val)
 		}
 
-		// Type validations
+		// Validações de tipo.
 		switch dbCfg.Tipo {
 		case "boolean":
 			lowerVal := strings.ToLower(dbCfg.Valor)
@@ -131,7 +127,7 @@ func (h *AdminConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 				writeJSONError(w, fmt.Sprintf("Valor inválido para chave %s. Esperado número inteiro.", key), http.StatusBadRequest)
 				return
 			}
-			// Specific validation for port range
+			// Validação específica do intervalo de portas.
 			if key == "SMTP_PORT" {
 				if portVal < 1 || portVal > 65535 {
 					writeJSONError(w, "SMTP_PORT deve ficar entre 1 e 65535.", http.StatusBadRequest)
@@ -150,7 +146,7 @@ func (h *AdminConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// Specific validation for email formats
+		// Validação específica do formato de e-mail.
 		if strings.HasSuffix(key, "_EMAIL") && dbCfg.Valor != "" {
 			if !isBasicEmail(dbCfg.Valor) {
 				writeJSONError(w, fmt.Sprintf("Valor inválido para chave %s. Esperado formato de e-mail válido.", key), http.StatusBadRequest)
@@ -178,7 +174,7 @@ func (h *AdminConfigHandler) Update(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// testSMTPRequest defines the POST request body for testing SMTP connection
+// testSMTPRequest representa o corpo de POST para testar a conexão SMTP.
 type testSMTPRequest struct {
 	ToEmail   string  `json:"to_email"`
 	Host      *string `json:"host,omitempty"`
@@ -189,7 +185,6 @@ type testSMTPRequest struct {
 	FromName  *string `json:"from_name,omitempty"`
 }
 
-// TestSMTP handles POST /api/v1/admin/configuracoes/testar-smtp
 func (h *AdminConfigHandler) TestSMTP(w http.ResponseWriter, r *http.Request) {
 	var req testSMTPRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -203,7 +198,7 @@ func (h *AdminConfigHandler) TestSMTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Load existing configurations from DB to use as defaults
+	// Carrega as configurações atuais para usar como padrão.
 	dbConfigs, err := h.configRepo.List(r.Context())
 	if err != nil {
 		logger.Error("Failed to fetch configurations for SMTP test", err)
@@ -216,7 +211,7 @@ func (h *AdminConfigHandler) TestSMTP(w http.ResponseWriter, r *http.Request) {
 		configMap[c.Chave] = c.Valor
 	}
 
-	// Resolve actual SMTP parameters, checking overrides from the payload
+	// Resolve os parâmetros SMTP, considerando sobrescritas do payload.
 	host := configMap["SMTP_HOST"]
 	if req.Host != nil {
 		host = strings.TrimSpace(*req.Host)
@@ -250,7 +245,7 @@ func (h *AdminConfigHandler) TestSMTP(w http.ResponseWriter, r *http.Request) {
 		fromName = strings.TrimSpace(*req.FromName)
 	}
 
-	// Basic validation of inputs
+	// Validação básica dos dados de entrada.
 	if host == "" {
 		writeJSONError(w, "Host do servidor SMTP não configurado.", http.StatusBadRequest)
 		return
@@ -269,7 +264,7 @@ func (h *AdminConfigHandler) TestSMTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Log SMTP test request safely, without passwords
+	// Registra o teste SMTP sem expor senhas.
 	logger.Info("Starting SMTP connection test",
 		"to_email", req.ToEmail,
 		"host", host,
@@ -278,7 +273,7 @@ func (h *AdminConfigHandler) TestSMTP(w http.ResponseWriter, r *http.Request) {
 		"from_email", fromEmail,
 	)
 
-	// Execute actual SMTP send
+	// Executa o envio SMTP.
 	subject := "Teste de Conexão SMTP - Sistema RC Staff"
 	body := fmt.Sprintf("Olá,\n\nEste é um e-mail de teste enviado pelo Sistema RC Staff para validar as configurações de SMTP.\n\nSe você recebeu este e-mail, as configurações estão corretas!\n\nEnviado em: %s\n", time.Now().Format("2006-01-02 15:04:05"))
 
@@ -296,7 +291,6 @@ func (h *AdminConfigHandler) TestSMTP(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// DashboardStats handles GET /api/v1/admin/dashboard/stats
 func (h *AdminConfigHandler) DashboardStats(w http.ResponseWriter, r *http.Request) {
 	stats, err := h.dashboardRepo.GetStats(r.Context())
 	if err != nil {
@@ -310,7 +304,7 @@ func (h *AdminConfigHandler) DashboardStats(w http.ResponseWriter, r *http.Reque
 	_ = json.NewEncoder(w).Encode(stats)
 }
 
-// sendEmailRaw connects to SMTP server and sends a simple text email with implicit SMTPS or STARTTLS
+// sendEmailRaw conecta ao SMTP e envia uma mensagem simples via SMTPS ou STARTTLS.
 func sendEmailRaw(host string, port int, user, password, fromEmail, fromName, toEmail string, subject, body string) error {
 	if !isBasicEmail(fromEmail) || !isBasicEmail(toEmail) || hasHeaderInjection(fromName) {
 		return fmt.Errorf("invalid SMTP envelope or header value")
@@ -322,7 +316,7 @@ func sendEmailRaw(host string, port int, user, password, fromEmail, fromName, to
 	var conn net.Conn
 	var err error
 
-	// Connect using SMTPS (Implicit TLS) for port 465
+	// Conecta via SMTPS (TLS implícito) na porta 465.
 	if port == 465 {
 		tlsConfig := &tls.Config{
 			ServerName: host,
@@ -343,7 +337,7 @@ func sendEmailRaw(host string, port int, user, password, fromEmail, fromName, to
 	}
 	defer client.Close()
 
-	// Use STARTTLS for standard ports if not already connected via SMTPS
+	// Usa STARTTLS nas portas padrão quando não está conectado via SMTPS.
 	if port != 465 && (port == 587 || port == 25 || port == 2525) {
 		tlsConfig := &tls.Config{
 			ServerName: host,
@@ -354,7 +348,7 @@ func sendEmailRaw(host string, port int, user, password, fromEmail, fromName, to
 		}
 	}
 
-	// Authenticate if a user is provided
+	// Autentica quando um usuário foi informado.
 	if user != "" || password != "" {
 		auth := smtp.PlainAuth("", user, password, host)
 		if err := client.Auth(auth); err != nil {

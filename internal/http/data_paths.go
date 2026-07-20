@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// resolveStaffDataPath returns an absolute path under staff_app/data (or STAFF_DATA_DIR).
+// resolveStaffDataPath retorna um caminho absoluto sob staff_app/data ou STAFF_DATA_DIR.
 func resolveStaffDataPath(parts ...string) string {
 	return filepath.Join(append([]string{staffAppDataDir()}, parts...)...)
 }

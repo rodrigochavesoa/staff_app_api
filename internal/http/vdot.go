@@ -38,7 +38,7 @@ func writeJSONError(w http.ResponseWriter, msg string, code int) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
-// POST /api/v1/alunos/{id}/vdot
+// Create registra um teste de 3 km e calcula o VDOT correspondente.
 func (h *VDOTHandler) Create(w http.ResponseWriter, r *http.Request) {
 	alunoIDStr := chi.URLParam(r, "id")
 	alunoID, err := strconv.ParseInt(alunoIDStr, 10, 64)
@@ -143,7 +143,7 @@ func (h *VDOTHandler) Create(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(teste)
 }
 
-// GET /api/v1/alunos/{id}/vdot
+// List retorna os testes de 3 km do aluno.
 func (h *VDOTHandler) List(w http.ResponseWriter, r *http.Request) {
 	alunoIDStr := chi.URLParam(r, "id")
 	alunoID, err := strconv.ParseInt(alunoIDStr, 10, 64)
@@ -168,7 +168,7 @@ func (h *VDOTHandler) List(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(tests)
 }
 
-// DELETE /api/v1/alunos/{id}/vdot/{teste_id}
+// Delete remove um teste de 3 km pertencente ao aluno.
 func (h *VDOTHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	alunoIDStr := chi.URLParam(r, "id")
 	alunoID, err := strconv.ParseInt(alunoIDStr, 10, 64)

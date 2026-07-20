@@ -43,9 +43,9 @@ type garminUploadResponse struct {
 
 func (h *GarminHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, h.cfg.MaxUploadBytes)
-	// Limit multipart memory allocation to 10MB to prevent excessive RAM usage (G120)
+	// Limita a memória do multipart a 10 MB para evitar uso excessivo de RAM (G120).
 	const maxMultipartMemory = 10 * 1024 * 1024
-	// #nosec G120 - MaxBytesReader is used above to bound the total request body size, preventing memory exhaustion DoS
+	// #nosec G120 - MaxBytesReader limita o corpo total da requisição e evita exaustão de memória.
 	if err := r.ParseMultipartForm(maxMultipartMemory); err != nil {
 		writeGarminJSON(w, http.StatusBadRequest, garminUploadResponse{
 			Success: false,
@@ -111,7 +111,7 @@ func (h *GarminHandler) Upload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GarminHandler) processCSV(w http.ResponseWriter, r *http.Request, path, filename string, alunoID int64) {
-	// #nosec G304 - path is dynamically generated inside the upload handler and verified to be safe (contained inside GarminUploadDir)
+	// #nosec G304 - o caminho é gerado no handler e validado para permanecer em GarminUploadDir.
 	f, err := os.Open(path)
 	if err != nil {
 		writeGarminJSON(w, http.StatusInternalServerError, garminUploadResponse{
@@ -447,7 +447,7 @@ func (h *GarminHandler) alunoIDParam(w http.ResponseWriter, r *http.Request) (in
 }
 
 func (h *GarminHandler) saveUpload(src io.Reader, alunoID int64, originalName string) (string, string, error) {
-	// Restrict directory permission to 0750 (G301)
+	// Restringe a permissão do diretório a 0750 (G301).
 	if err := os.MkdirAll(h.cfg.GarminUploadDir, 0o750); err != nil {
 		return "", "", err
 	}
@@ -465,8 +465,8 @@ func (h *GarminHandler) saveUpload(src io.Reader, alunoID int64, originalName st
 		return "", "", fmt.Errorf("invalid upload destination")
 	}
 
-	// #nosec G304 - cleanDst is verified to stay inside cleanRoot (no path traversal allowed)
-	// Restrict file permission to 0600 (G302)
+	// #nosec G304 - cleanDst é validado para permanecer em cleanRoot, sem travessia de diretório.
+	// Restringe a permissão do arquivo a 0600 (G302).
 	out, err := os.OpenFile(cleanDst, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
 		return "", "", err

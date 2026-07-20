@@ -55,7 +55,7 @@ func NewFichaTreinoHandler(
 	}
 }
 
-// generateToken generates a secure random URL hash for public links (90 days).
+// generateToken gera um token aleatório seguro para links públicos.
 func generateToken() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
@@ -83,7 +83,6 @@ type CreateManualFichaRequest struct {
 	Exercicios  []ExercicioPrescritoRequest `json:"exercicios"`
 }
 
-// CreateManual handles POST /api/v1/fichas/manual/criar
 func (h *FichaTreinoHandler) CreateManual(w http.ResponseWriter, r *http.Request) {
 	var req CreateManualFichaRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -101,7 +100,6 @@ func (h *FichaTreinoHandler) CreateManual(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Fetch student
 	aluno, err := h.alunoRepo.GetByID(r.Context(), req.AlunoID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -116,7 +114,6 @@ func (h *FichaTreinoHandler) CreateManual(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Prepare exercises JSON content
 	now := time.Now()
 	nowStr := now.Format("2006-01-02 15:04:05")
 
@@ -221,7 +218,6 @@ func (h *FichaTreinoHandler) CreateManual(w http.ResponseWriter, r *http.Request
 	})
 }
 
-// GetByID handles GET /api/v1/fichas/{id}
 func (h *FichaTreinoHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -281,7 +277,6 @@ type EditFichaParams struct {
 	Duracao    int    `json:"duracao"`
 }
 
-// EditManual handles PUT /api/v1/fichas/{id}/editar-manual
 func (h *FichaTreinoHandler) EditManual(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -296,7 +291,6 @@ func (h *FichaTreinoHandler) EditManual(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Try to get version from If-Match header first
 	ifMatch := r.Header.Get("If-Match")
 	var reqVersion int
 	if ifMatch != "" {
@@ -306,18 +300,15 @@ func (h *FichaTreinoHandler) EditManual(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	// If not in If-Match, check in payload
 	if reqVersion == 0 {
 		reqVersion = req.Versao
 	}
 
-	// If still 0 or negative, return 400 Bad Request
 	if reqVersion <= 0 {
 		writeJSONError(w, "versao or If-Match header must be a positive integer to ensure optimistic lock", http.StatusBadRequest)
 		return
 	}
 
-	// Fetch current sheet
 	f, err := h.repo.GetByID(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -328,13 +319,11 @@ func (h *FichaTreinoHandler) EditManual(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Check OCC conflict
 	if f.Versao != reqVersion {
 		writeJSONError(w, "Conflito de concorrência ao atualizar a ficha (OCC)", http.StatusConflict)
 		return
 	}
 
-	// Update metadata and parameters if provided
 	if req.ParametrosTreino != nil {
 		if req.ParametrosTreino.Perfil != "" {
 			f.Nivel = req.ParametrosTreino.Perfil
@@ -394,7 +383,6 @@ func (h *FichaTreinoHandler) EditManual(w http.ResponseWriter, r *http.Request) 
 	f.Cadencia = firstCadencia
 	f.RestSeconds = firstRestSeconds
 
-	// Construct updated JSON
 	fichaData := map[string]any{
 		"aluno":            f.Aluno,
 		"titulo":           f.Turma,
@@ -411,7 +399,6 @@ func (h *FichaTreinoHandler) EditManual(w http.ResponseWriter, r *http.Request) 
 	}
 	f.FichaJSON = string(fichaJSONBytes)
 
-	// Save to DB
 	if err := h.repo.Update(r.Context(), f); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			writeJSONError(w, "Conflito de concorrência ao atualizar a ficha (OCC)", http.StatusConflict)
@@ -430,7 +417,6 @@ func (h *FichaTreinoHandler) EditManual(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
-// Delete handles DELETE /api/v1/fichas/{id}
 func (h *FichaTreinoHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	confirm := r.Header.Get("X-Confirm-Hard-Delete")
 	if confirm != "CONFIRMAR" {
@@ -472,7 +458,6 @@ type GerarFichaPeriodizadaRequest struct {
 	Observacoes string `json:"observacoes"`
 }
 
-// GerarPeriodizada handles POST /api/v1/fichas/gerar-periodizada
 func (h *FichaTreinoHandler) GerarPeriodizada(w http.ResponseWriter, r *http.Request) {
 	var req GerarFichaPeriodizadaRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -489,7 +474,6 @@ func (h *FichaTreinoHandler) GerarPeriodizada(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Fetch student
 	aluno, err := h.alunoRepo.GetByID(r.Context(), req.AlunoID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -504,7 +488,6 @@ func (h *FichaTreinoHandler) GerarPeriodizada(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Generate deterministic workout divisions
 	divisoes := map[int][]string{
 		2: {"A - Treino Completo Superior", "B - Treino Completo Inferior"},
 		3: {"A - Push (Peito, Ombros, Tríceps)", "B - Pull (Costas, Bíceps)", "C - Legs (Pernas, Glúteos)"},
@@ -795,7 +778,6 @@ type MetodoInfo struct {
 	BaseCientifica string `json:"base_cientifica"`
 }
 
-// GetMetodoInfo handles GET /api/v1/metodos/{metodo}
 func (h *FichaTreinoHandler) GetMetodoInfo(w http.ResponseWriter, r *http.Request) {
 	metodo := chi.URLParam(r, "metodo")
 	if metodo == "" {
