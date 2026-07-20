@@ -2,17 +2,17 @@ package http
 
 import (
 	"context"
+	"fmt"
 
 	"staff_app/internal/platform/logger"
 	"staff_app/internal/services"
 )
 
 func (h *FichaTreinoHandler) loadTrainingContext(ctx context.Context, alunoID int64, req GerarFichaPeriodizadaRequest) (*services.AthleteTrainingContext, error) {
-	pipeline := h.evidencePipeline
-	if pipeline == nil {
-		pipeline = services.NewEvidencePipeline(h.db, h.anamRepo, h.ragRepo)
+	if h == nil || h.evidencePipeline == nil {
+		return nil, fmt.Errorf("evidence pipeline is not configured")
 	}
-	return pipeline.Build(ctx, alunoID, services.GenerationRequest{
+	return h.evidencePipeline.Build(ctx, alunoID, services.GenerationRequest{
 		Frequencia:  req.Frequencia,
 		Objetivo:    req.Objetivo,
 		Nivel:       req.Nivel,
