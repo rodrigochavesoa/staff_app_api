@@ -8,15 +8,15 @@ import (
 	"strings"
 
 	"staff_app/internal/domain"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 )
 
 type PlanoHandler struct {
-	repo *sqlite.PlanoRepository
+	repo repositories.PlanoRepository
 }
 
-func NewPlanoHandler(db *sqlite.DB) *PlanoHandler {
-	return &PlanoHandler{repo: sqlite.NewPlanoRepository(db)}
+func NewPlanoHandler(repo repositories.PlanoRepository) *PlanoHandler {
+	return &PlanoHandler{repo: repo}
 }
 
 type planoRequest struct {

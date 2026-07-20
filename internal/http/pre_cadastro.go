@@ -10,26 +10,32 @@ import (
 	"time"
 
 	"staff_app/internal/domain"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type PreCadastroHandler struct {
-	preRepo    *sqlite.PreRegistroRepository
-	alunoRepo  *sqlite.AlunoRepository
-	planoRepo  *sqlite.PlanoRepository
-	anamRepo   *sqlite.AnamneseRepository
-	configRepo *sqlite.ConfiguracaoRepository
+	preRepo    repositories.PreRegistroRepository
+	alunoRepo  repositories.AlunoRepository
+	planoRepo  repositories.PlanoRepository
+	anamRepo   repositories.AnamneseRepository
+	configRepo repositories.ConfiguracaoRepository
 }
 
-func NewPreCadastroHandler(db *sqlite.DB) *PreCadastroHandler {
+func NewPreCadastroHandler(
+	pre repositories.PreRegistroRepository,
+	aluno repositories.AlunoRepository,
+	plano repositories.PlanoRepository,
+	anam repositories.AnamneseRepository,
+	config repositories.ConfiguracaoRepository,
+) *PreCadastroHandler {
 	return &PreCadastroHandler{
-		preRepo:    sqlite.NewPreRegistroRepository(db),
-		alunoRepo:  sqlite.NewAlunoRepository(db),
-		planoRepo:  sqlite.NewPlanoRepository(db),
-		anamRepo:   sqlite.NewAnamneseRepository(db),
-		configRepo: sqlite.NewConfiguracaoRepository(db),
+		preRepo:    pre,
+		alunoRepo:  aluno,
+		planoRepo:  plano,
+		anamRepo:   anam,
+		configRepo: config,
 	}
 }
 

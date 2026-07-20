@@ -39,7 +39,7 @@ func testAuthHeader(t *testing.T, db *sqlite.DB, cfg *config.Config) string {
 		t.Fatalf("failed to create test admin: %v", err)
 	}
 
-	token, err := NewAuthHandler(db, cfg.SecretKey).signToken(user, time.Now().UTC())
+	token, err := NewAuthHandler(sqlite.NewUserRepository(db), cfg.SecretKey).signToken(user, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("failed to sign test token: %v", err)
 	}

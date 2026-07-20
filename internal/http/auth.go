@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"staff_app/internal/domain"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -25,16 +25,16 @@ const (
 type userContextKey struct{}
 
 type AuthHandler struct {
-	users     *sqlite.UserRepository
+	users     repositories.UserRepository
 	secretKey string
 }
 
-func NewAuthHandler(db *sqlite.DB, secretKey string) *AuthHandler {
+func NewAuthHandler(users repositories.UserRepository, secretKey string) *AuthHandler {
 	if secretKey == "" {
 		secretKey = defaultSecretKey
 	}
 	return &AuthHandler{
-		users:     sqlite.NewUserRepository(db),
+		users:     users,
 		secretKey: secretKey,
 	}
 }

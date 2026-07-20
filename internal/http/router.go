@@ -62,7 +62,7 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 	vdotHandler := NewVDOTHandler(db)
 
 	// Aluno Handler
-	alunoHandler := NewAlunoHandler(db)
+	alunoHandler := NewAlunoHandler(sqlite.NewAlunoRepository(db))
 
 	// Ficha Web Handler
 	fichaWebHandler := NewFichaWebHandler(sqlite.NewFichaWebRepository(db), sqlite.NewAlunoRepository(db))
@@ -74,12 +74,23 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 	garminHandler := NewGarminHandler(cfg, db)
 
 	// Auth & Plans Handlers
-	authHandler := NewAuthHandler(db, cfg.SecretKey)
-	planoHandler := NewPlanoHandler(db)
+	authHandler := NewAuthHandler(sqlite.NewUserRepository(db), cfg.SecretKey)
+	planoHandler := NewPlanoHandler(sqlite.NewPlanoRepository(db))
 
 	// Pre-Cadastro & Anamnese Handlers
-	preCadastroHandler := NewPreCadastroHandler(db)
-	anamneseHandler := NewAnamneseHandler(db)
+	preCadastroHandler := NewPreCadastroHandler(
+		sqlite.NewPreRegistroRepository(db),
+		sqlite.NewAlunoRepository(db),
+		sqlite.NewPlanoRepository(db),
+		sqlite.NewAnamneseRepository(db),
+		sqlite.NewConfiguracaoRepository(db),
+	)
+	anamneseHandler := NewAnamneseHandler(
+		sqlite.NewAnamneseRepository(db),
+		sqlite.NewAlunoRepository(db),
+		sqlite.NewUserRepository(db),
+		sqlite.NewConfiguracaoRepository(db),
+	)
 	exercicioHandler := NewExercicioHandler(db)
 	periodizacaoCorridaHandler := NewPeriodizacaoCorridaHandler(db, cfg)
 	adminConfigHandler := NewAdminConfigHandler(db)
