@@ -10,22 +10,22 @@ import (
 	"time"
 
 	"staff_app/internal/domain"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 
 	"github.com/go-chi/chi/v5"
 )
 
 // FeedbackHandler handles HTTP routes for training plan feedback and notifications.
 type FeedbackHandler struct {
-	repo     *sqlite.FeedbackRepository
-	linkRepo *sqlite.FichaWebRepository
+	repo     repositories.FeedbackRepository
+	linkRepo repositories.FichaRepository
 }
 
 // NewFeedbackHandler creates a new FeedbackHandler instance.
-func NewFeedbackHandler(db *sqlite.DB) *FeedbackHandler {
+func NewFeedbackHandler(repo repositories.FeedbackRepository, links repositories.FichaRepository) *FeedbackHandler {
 	return &FeedbackHandler{
-		repo:     sqlite.NewFeedbackRepository(db),
-		linkRepo: sqlite.NewFichaWebRepository(db),
+		repo:     repo,
+		linkRepo: links,
 	}
 }
 

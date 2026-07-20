@@ -65,10 +65,10 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 	alunoHandler := NewAlunoHandler(db)
 
 	// Ficha Web Handler
-	fichaWebHandler := NewFichaWebHandler(db)
+	fichaWebHandler := NewFichaWebHandler(sqlite.NewFichaWebRepository(db), sqlite.NewAlunoRepository(db))
 
 	// Feedback Handler
-	feedbackHandler := NewFeedbackHandler(db)
+	feedbackHandler := NewFeedbackHandler(sqlite.NewFeedbackRepository(db), sqlite.NewFichaWebRepository(db))
 
 	// Garmin Handler
 	garminHandler := NewGarminHandler(cfg, db)
@@ -83,7 +83,13 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 	exercicioHandler := NewExercicioHandler(db)
 	periodizacaoCorridaHandler := NewPeriodizacaoCorridaHandler(db, cfg)
 	adminConfigHandler := NewAdminConfigHandler(db)
-	historicoHandler := NewHistoricoHandler(db, cfg.SecretKey)
+	historicoHandler := NewHistoricoHandler(
+		sqlite.NewHistoricoRepository(db),
+		sqlite.NewAlunoRepository(db),
+		sqlite.NewFichaWebRepository(db),
+		sqlite.NewPeriodizacaoCorridaRepository(db),
+		cfg.SecretKey,
+	)
 	trainingChain := services.NewTrainingProviderChain(
 		cfg.AITrainingMode,
 		time.Duration(cfg.AITrainingTimeoutSec)*time.Second,

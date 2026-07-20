@@ -123,6 +123,9 @@ type HistoricoRepository interface {
 	MarkTreinoRealizado(ctx context.Context, tr *domain.TreinoRealizado) error
 	UnmarkTreinoRealizado(ctx context.Context, fichaID int64, dataTreino string) error
 	GetHistoricoFichaByID(ctx context.Context, id int64) (*domain.HistoricoFicha, error)
+	// Resolve aluno from musculação ficha when marking treinos as authenticated trainer.
+	GetFichaTreinoAlunoNomeByID(ctx context.Context, fichaID int64) (string, error)
+	GetAlunoIDByNome(ctx context.Context, nome string) (int64, error)
 }
 
 type ExercicioRepository interface {
