@@ -1,20 +1,16 @@
 package http
 
 import (
-	"encoding/csv"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"staff_app/internal/domain"
+	"staff_app/internal/exercicios/csvsync"
 	"staff_app/internal/sqlite"
 
 	"github.com/go-chi/chi/v5"
@@ -30,86 +26,6 @@ func NewExercicioHandler(db *sqlite.DB) *ExercicioHandler {
 	}
 }
 
-type csvExercise struct {
-	Codigo        int    `json:"codigo"`
-	Nome          string `json:"nome"`
-	GrupoMuscular string `json:"grupo"`
-	MusculoFoco   string `json:"musculo_foco"`
-	Categoria     string `json:"categoria"`
-	Origem        string `json:"origem"`
-}
-
-func loadCSVExercises(filePath string) ([]csvExercise, error) {
-	file, err := os.Open(filepath.Clean(filePath)) // #nosec G304
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	headers, err := reader.Read()
-	if err != nil {
-		return nil, err
-	}
-
-	colCodigo := -1
-	colNome := -1
-	colGrupo := -1
-	colFoco := -1
-
-	for i, h := range headers {
-		hLower := strings.ToLower(strings.TrimSpace(h))
-		switch hLower {
-		case "código", "codigo":
-			colCodigo = i
-		case "nome do exercício", "nome do exercicio", "nome":
-			colNome = i
-		case "grupo_muscular", "grupo muscular", "grupo":
-			colGrupo = i
-		case "musculo_foco", "músculo_foco", "musculo foco", "músculo foco":
-			colFoco = i
-		}
-	}
-
-	var list []csvExercise
-	for {
-		row, err := reader.Read()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		var ex csvExercise
-		ex.Categoria = "normal"
-		ex.Origem = "csv"
-
-		if colCodigo >= 0 && colCodigo < len(row) {
-			codeVal, _ := strconv.Atoi(strings.TrimSpace(row[colCodigo]))
-			ex.Codigo = codeVal
-		}
-		if colNome >= 0 && colNome < len(row) {
-			ex.Nome = strings.TrimSpace(row[colNome])
-		}
-		if colGrupo >= 0 && colGrupo < len(row) {
-			ex.GrupoMuscular = strings.TrimSpace(row[colGrupo])
-		}
-		if colFoco >= 0 && colFoco < len(row) {
-			ex.MusculoFoco = strings.TrimSpace(row[colFoco])
-		}
-
-		if ex.Nome != "" {
-			list = append(list, ex)
-		}
-	}
-
-	return list, nil
-}
-
 type combinedExercise struct {
 	Codigo      int    `json:"codigo"`
 	Nome        string `json:"nome"`
@@ -119,19 +35,12 @@ type combinedExercise struct {
 	Origem      string `json:"origem"`
 }
 
-// ListBiblioteca lista exercicios unificados (CSV + Banco) com filtros
+// ListBiblioteca lists active exercises from the DB (catalog materializado na startup).
 func (h *ExercicioHandler) ListBiblioteca(w http.ResponseWriter, r *http.Request) {
 	busca := strings.TrimSpace(r.URL.Query().Get("busca"))
 	grupo := strings.TrimSpace(r.URL.Query().Get("grupo_muscular"))
 	if grupo == "" {
 		grupo = strings.TrimSpace(r.URL.Query().Get("grupo"))
-	}
-
-	csvPath := filepath.Join("data", "csv", "exercicios_com_grupos.csv")
-	csvList, err := loadCSVExercises(csvPath)
-	if err != nil {
-		writeJSONError(w, "Failed to load CSV exercise library: "+err.Error(), http.StatusInternalServerError)
-		return
 	}
 
 	dbList, err := h.repo.List(r.Context(), map[string]string{"status": "ativo"})
@@ -140,33 +49,20 @@ func (h *ExercicioHandler) ListBiblioteca(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var combined []combinedExercise
-	var seenCodes = make(map[int]bool)
-
+	combined := make([]combinedExercise, 0, len(dbList))
 	for _, ex := range dbList {
+		origem := "database"
+		if ex.CriadoPor == csvsync.CatalogMarker {
+			origem = "csv"
+		}
 		combined = append(combined, combinedExercise{
 			Codigo:      ex.Codigo,
 			Nome:        ex.Nome,
 			Grupo:       ex.GrupoMuscular,
 			MusculoFoco: ex.MusculoFoco,
 			Categoria:   ex.Categoria,
-			Origem:      "database",
+			Origem:      origem,
 		})
-		seenCodes[ex.Codigo] = true
-	}
-
-	for _, ex := range csvList {
-		if !seenCodes[ex.Codigo] {
-			combined = append(combined, combinedExercise{
-				Codigo:      ex.Codigo,
-				Nome:        ex.Nome,
-				Grupo:       ex.GrupoMuscular,
-				MusculoFoco: ex.MusculoFoco,
-				Categoria:   ex.Categoria,
-				Origem:      ex.Origem,
-			})
-			seenCodes[ex.Codigo] = true
-		}
 	}
 
 	var filtered []combinedExercise

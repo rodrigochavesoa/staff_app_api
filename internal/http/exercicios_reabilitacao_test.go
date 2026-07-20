@@ -12,6 +12,7 @@ import (
 
 	"staff_app/internal/config"
 	"staff_app/internal/domain"
+	"staff_app/internal/exercicios/csvsync"
 	"staff_app/internal/platform/logger"
 	"staff_app/internal/sqlite"
 )
@@ -323,21 +324,31 @@ func TestExerciciosBibliotecaUnificada(t *testing.T) {
 	if respNoCSV.Total != 1 || respNoCSV.TotalTerapeuticos != 1 {
 		t.Errorf("expected 1 therapeutic exercise, got %d", respNoCSV.Total)
 	}
-
-	// 2. Setup mock CSV directory and file
-	csvDir := filepath.Join("data", "csv")
-	err = os.MkdirAll(csvDir, 0755)
-	if err != nil {
-		t.Fatalf("failed to create data/csv dir: %v", err)
+	if len(respNoCSV.Exercicios) != 1 || respNoCSV.Exercicios[0].Origem != "database" {
+		t.Errorf("expected therapeutic origem=database, got %+v", respNoCSV.Exercicios)
 	}
 
-	csvContent := "Código,Nome do Exercício,Grupo Muscular\n1234,Abdominal Supra,Abdômen\n5678,Rosca Direta,Braços\n"
-	err = os.WriteFile(filepath.Join(csvDir, "exercicios_com_grupos.csv"), []byte(csvContent), 0644)
-	if err != nil {
+	// 2. Setup mock CSV and materialize via csvsync (startup parity)
+	csvDir := filepath.Join("data", "csv")
+	if err := os.MkdirAll(csvDir, 0755); err != nil {
+		t.Fatalf("failed to create data/csv dir: %v", err)
+	}
+	csvPath := filepath.Join(csvDir, "exercicios_com_grupos.csv")
+	// Catalog codes must be < 5000 (reserved range for personalizados/terapêuticos).
+	csvContent := "Código,Nome do Exercício,Grupo Muscular\n1234,Abdominal Supra,Abdômen\n4321,Rosca Direta,Braços\n"
+	if err := os.WriteFile(csvPath, []byte(csvContent), 0644); err != nil {
 		t.Fatalf("failed to write mock CSV file: %v", err)
 	}
 
-	// 3. Query library with CSV file present (should return 3 exercises combined)
+	records, err := csvsync.ParseFile(csvPath)
+	if err != nil {
+		t.Fatalf("ParseFile: %v", err)
+	}
+	if _, err := csvsync.Sync(t.Context(), sqlite.NewExercicioRepository(db), records); err != nil {
+		t.Fatalf("Sync: %v", err)
+	}
+
+	// 3. Query library after sync (DB-only handler; 3 exercises)
 	req = httptest.NewRequest(http.MethodGet, "/api/v1/exercicios/biblioteca", nil)
 	req.Header.Set("Authorization", authHeader)
 	w = httptest.NewRecorder()
@@ -356,17 +367,21 @@ func TestExerciciosBibliotecaUnificada(t *testing.T) {
 	_ = json.NewDecoder(w.Body).Decode(&respCSV)
 
 	if respCSV.Total != 3 {
-		t.Errorf("expected 3 total combined exercises, got %d", respCSV.Total)
+		t.Fatalf("expected 3 total combined exercises, got %d (%+v)", respCSV.Total, respCSV.Exercicios)
 	}
 
 	if respCSV.TotalNormais != 2 || respCSV.TotalTerapeuticos != 1 {
 		t.Errorf("mismatch combined counts: normais=%d, terapeuticos=%d", respCSV.TotalNormais, respCSV.TotalTerapeuticos)
 	}
 
-	// Verify sorting (descending by code): 5678 -> 5000 -> 1234
-	if respCSV.Exercicios[0].Codigo != 5678 || respCSV.Exercicios[1].Codigo != 5000 || respCSV.Exercicios[2].Codigo != 1234 {
-		t.Errorf("expected descending sort order: 5678, 5000, 1234; got: %d, %d, %d",
+	// Verify sorting (descending by code): 5000 (DB) -> 4321 (csv) -> 1234 (csv)
+	if respCSV.Exercicios[0].Codigo != 5000 || respCSV.Exercicios[1].Codigo != 4321 || respCSV.Exercicios[2].Codigo != 1234 {
+		t.Errorf("expected descending sort order: 5000, 4321, 1234; got: %d, %d, %d",
 			respCSV.Exercicios[0].Codigo, respCSV.Exercicios[1].Codigo, respCSV.Exercicios[2].Codigo)
+	}
+	if respCSV.Exercicios[0].Origem != "database" || respCSV.Exercicios[1].Origem != "csv" || respCSV.Exercicios[2].Origem != "csv" {
+		t.Errorf("expected origem database/csv/csv, got %q/%q/%q",
+			respCSV.Exercicios[0].Origem, respCSV.Exercicios[1].Origem, respCSV.Exercicios[2].Origem)
 	}
 
 	// 4. Query with search term filters
@@ -379,7 +394,7 @@ func TestExerciciosBibliotecaUnificada(t *testing.T) {
 		Exercicios []combinedExercise `json:"exercicios"`
 	}
 	_ = json.NewDecoder(w.Body).Decode(&respFilter)
-	if len(respFilter.Exercicios) != 1 || respFilter.Exercicios[0].Nome != "Abdominal Supra" {
+	if len(respFilter.Exercicios) != 1 || respFilter.Exercicios[0].Nome != "Abdominal Supra" || respFilter.Exercicios[0].Origem != "csv" {
 		t.Errorf("failed to filter by search term, got: %+v", respFilter.Exercicios)
 	}
 }
