@@ -11,21 +11,19 @@ import (
 	"unicode/utf8"
 
 	"staff_app/internal/domain"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 
 	"github.com/go-chi/chi/v5"
 )
 
 // AlunoHandler handles REST HTTP requests for students (alunos).
 type AlunoHandler struct {
-	repo *sqlite.AlunoRepository
+	repo repositories.AlunoRepository
 }
 
 // NewAlunoHandler creates a new AlunoHandler instance.
-func NewAlunoHandler(db *sqlite.DB) *AlunoHandler {
-	return &AlunoHandler{
-		repo: sqlite.NewAlunoRepository(db),
-	}
+func NewAlunoHandler(repo repositories.AlunoRepository) *AlunoHandler {
+	return &AlunoHandler{repo: repo}
 }
 
 // AlunoRequest represents the payload for POST/PUT requests.

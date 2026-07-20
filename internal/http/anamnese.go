@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"staff_app/internal/domain"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 
 	"strconv"
 
@@ -17,18 +17,23 @@ import (
 )
 
 type AnamneseHandler struct {
-	anamRepo   *sqlite.AnamneseRepository
-	alunoRepo  *sqlite.AlunoRepository
-	userRepo   *sqlite.UserRepository
-	configRepo *sqlite.ConfiguracaoRepository
+	anamRepo   repositories.AnamneseRepository
+	alunoRepo  repositories.AlunoRepository
+	userRepo   repositories.UserRepository
+	configRepo repositories.ConfiguracaoRepository
 }
 
-func NewAnamneseHandler(db *sqlite.DB) *AnamneseHandler {
+func NewAnamneseHandler(
+	anam repositories.AnamneseRepository,
+	aluno repositories.AlunoRepository,
+	user repositories.UserRepository,
+	config repositories.ConfiguracaoRepository,
+) *AnamneseHandler {
 	return &AnamneseHandler{
-		anamRepo:   sqlite.NewAnamneseRepository(db),
-		alunoRepo:  sqlite.NewAlunoRepository(db),
-		userRepo:   sqlite.NewUserRepository(db),
-		configRepo: sqlite.NewConfiguracaoRepository(db),
+		anamRepo:   anam,
+		alunoRepo:  aluno,
+		userRepo:   user,
+		configRepo: config,
 	}
 }
 
@@ -690,7 +695,7 @@ func (h *AnamneseHandler) ReenviarEmail(w http.ResponseWriter, r *http.Request) 
 }
 
 // sendAnamneseEmail sends an email to the student with their health questionnaire link using configured SMTP parameters
-func sendAnamneseEmail(ctx context.Context, configRepo *sqlite.ConfiguracaoRepository, anamRepo *sqlite.AnamneseRepository, token *domain.AnamneseToken, host string, scheme string) error {
+func sendAnamneseEmail(ctx context.Context, configRepo repositories.ConfiguracaoRepository, anamRepo repositories.AnamneseRepository, token *domain.AnamneseToken, host string, scheme string) error {
 	configs, err := configRepo.List(ctx)
 	if err != nil {
 		errFailed := fmt.Errorf("failed to list configurations: %w", err)
@@ -764,7 +769,7 @@ func sendAnamneseEmail(ctx context.Context, configRepo *sqlite.ConfiguracaoRepos
 	return nil
 }
 
-func logEmailFalhou(ctx context.Context, anamRepo *sqlite.AnamneseRepository, token *domain.AnamneseToken, err error) {
+func logEmailFalhou(ctx context.Context, anamRepo repositories.AnamneseRepository, token *domain.AnamneseToken, err error) {
 	audit := &domain.AnamneseTokenAudit{
 		Token:         token.Token,
 		AlunoID:       token.AlunoID,
