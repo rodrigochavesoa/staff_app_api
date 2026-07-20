@@ -14,13 +14,11 @@ import (
 	"staff_app/internal/platform/logger"
 )
 
-// Server wraps the http.Server and handles startup and shutdown
 type Server struct {
 	httpServer *http.Server
 	shutdown   func() error
 }
 
-// NewServer creates a new configured Server instance
 func NewServer(cfg *config.Config, deps Deps) *Server {
 	router := NewRouter(cfg, deps)
 
@@ -38,11 +36,9 @@ func NewServer(cfg *config.Config, deps Deps) *Server {
 	}
 }
 
-// Start runs the HTTP server and listens for OS shutdown signals
 func (s *Server) Start() error {
 	serverErrors := make(chan error, 1)
 
-	// Start server in background goroutine
 	go func() {
 		logger.Info(fmt.Sprintf("HTTP Server listening on %s", s.httpServer.Addr))
 		err := s.httpServer.ListenAndServe()
@@ -51,7 +47,6 @@ func (s *Server) Start() error {
 		}
 	}()
 
-	// Channel to listen for interrupt/termination signals
 	shutdownSignal := make(chan os.Signal, 1)
 	signal.Notify(shutdownSignal, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
@@ -62,18 +57,15 @@ func (s *Server) Start() error {
 	case sig := <-shutdownSignal:
 		logger.Info("Shutdown signal received, stopping HTTP server...", "signal", sig.String())
 
-		// Timeout context for graceful shutdown (15 seconds)
+		// Graceful shutdown com timeout de 15s.
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 
-		// Shutdown HTTP server gracefully
 		if err := s.httpServer.Shutdown(ctx); err != nil {
-			// Force shutdown if graceful fails
 			_ = s.httpServer.Close()
 			return fmt.Errorf("failed to shutdown HTTP server gracefully: %w", err)
 		}
 
-		// Close DB connection pool
 		if s.shutdown != nil {
 			logger.Info("Closing database connection pool...")
 			if err := s.shutdown(); err != nil {

@@ -32,7 +32,6 @@ func WithTrainingProviders(providers ...services.TrainingProvider) RouterOption 
 	}
 }
 
-// NewRouter initializes and configures the HTTP router with middlewares and routes
 func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler {
 	options := &routerOptions{}
 	for _, opt := range opts {
@@ -41,42 +40,31 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 
 	r := chi.NewRouter()
 
-	// 1. standard chi middlewares (request ID, etc.)
 	r.Use(middleware.RequestID)
 
-	// 2. Custom middlewares
 	r.Use(LoggerMiddleware)
 	r.Use(RecoveryMiddleware)
 	r.Use(CorsMiddleware(cfg.CorsOrigins))
 
-	// Health Handler
 	healthHandler := NewHealthHandler(deps.Health)
 
-	// Register Routes
 	r.Get("/", healthHandler.Index)
 	r.Get("/health", healthHandler.Health)
 	r.Get("/ping", healthHandler.Ping)
 
-	// VDOT Handler
 	vdotHandler := NewVDOTHandler(deps.Teste3km)
 
-	// Aluno Handler
 	alunoHandler := NewAlunoHandler(deps.Alunos)
 
-	// Ficha Web Handler
 	fichaWebHandler := NewFichaWebHandler(deps.Fichas, deps.Alunos)
 
-	// Feedback Handler
 	feedbackHandler := NewFeedbackHandler(deps.Feedback, deps.Fichas)
 
-	// Garmin Handler
 	garminHandler := NewGarminHandler(cfg, deps.Garmin, deps.Alunos)
 
-	// Auth & Plans Handlers
 	authHandler := NewAuthHandler(deps.Users, cfg.SecretKey)
 	planoHandler := NewPlanoHandler(deps.Planos)
 
-	// Pre-Cadastro & Anamnese Handlers
 	preCadastroHandler := NewPreCadastroHandler(
 		deps.PreRegistro,
 		deps.Alunos,
@@ -118,34 +106,27 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 		services.NoopTrainingTelemetryRecorder{},
 	)
 
-	// API V1 Route Group
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/ping", healthHandler.Ping)
 
-		// Authentication public endpoints
 		r.Post("/auth/login", authHandler.Login)
 		r.Post("/auth/register", authHandler.Register)
 
-		// Public plans endpoint for future self-registration flows
 		r.Get("/planos", planoHandler.List)
 
-		// Public student-facing ficha and feedback endpoints
 		r.Get("/ficha/{hash}/json", fichaWebHandler.GetByHashJSON)
 		r.Get("/ficha/{hash}/treino/{letra}", fichaWebHandler.GetFichaTreinoLetra)
 		r.Get("/treinos/mes", historicoHandler.GetTreinosMes)
 		r.Post("/feedback/{hash}", feedbackHandler.Submit)
 		r.Get("/feedback/{hash}", feedbackHandler.Verify)
 
-		// Public Pre-Cadastro and Anamnese endpoints
 		r.Post("/pre-cadastro", preCadastroHandler.Create)
 		r.Get("/anamnese/submit/{token}", anamneseHandler.GetMetadata)
 		r.Post("/anamnese/submit/{token}", anamneseHandler.Submit)
 
-		// Public student-facing periodizacao endpoints (without authentication)
 		r.Get("/corrida/publica/{hash}", periodizacaoCorridaHandler.GetPublicPlano)
 		r.Post("/corrida/publica/{hash}/concluir", periodizacaoCorridaHandler.ConcluirTreinoPublico)
 
-		// Public student-facing workout tracking endpoints (optional auth handled in controller)
 		r.With(authHandler.OptionalAuthMiddleware).Post("/treinos/marcar", historicoHandler.MarkTreino)
 		r.With(authHandler.OptionalAuthMiddleware).Post("/treinos/desmarcar", historicoHandler.UnmarkTreino)
 
@@ -155,14 +136,12 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 			r.Get("/auth/me", authHandler.Me)
 			r.Post("/auth/alterar-senha", authHandler.ChangePassword)
 
-			// Protected ficha management endpoints
 			r.Post("/criar-ficha", fichaWebHandler.Create)
 			r.Get("/stats/{hash}", fichaWebHandler.GetStats)
 			r.Post("/renovar/{hash}", fichaWebHandler.Renew)
 			r.Post("/desativar/{hash}", fichaWebHandler.Deactivate)
 			r.Get("/aluno/{aluno_id}/fichas", fichaWebHandler.ListByAluno)
 
-			// New Ficha Treino (Fase 2) management endpoints
 			fichaTreinoHandler := NewFichaTreinoHandler(
 				deps.FichaTreino,
 				deps.Alunos,
@@ -182,7 +161,6 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 			})
 			r.Get("/metodos/{metodo}", fichaTreinoHandler.GetMetodoInfo)
 
-			// SVED (Fase 3) endpoints
 			svedHandler := NewSVEDHandler(deps.SVED)
 			r.Route("/sved", func(r chi.Router) {
 				r.Post("/calcular", svedHandler.Calcular)
@@ -192,10 +170,8 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 				r.Get("/dashboard/{aluno_id}", svedHandler.GetDashboard)
 			})
 
-			// Protected historico details
 			r.Get("/historico/fichas/{id}/detalhes", historicoHandler.GetHistoricoDetalhes)
 
-			// Protected feedback & notifications endpoints
 			r.Get("/feedback/pendentes", feedbackHandler.ListPending)
 			r.Post("/feedback/notificacao/{notificacao_id}/marcar-lido", feedbackHandler.MarkRead)
 
@@ -213,19 +189,16 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 					r.Get("/frequencia", historicoHandler.GetFrequencia)
 					r.Get("/treinos", historicoHandler.GetTreinos)
 
-					// Nested VDOT tests for this student
 					r.Post("/vdot", vdotHandler.Create)
 					r.Get("/vdot", vdotHandler.List)
 					r.Delete("/vdot/{teste_id}", vdotHandler.Delete)
 
-					// Nested corrida periodizacao for this student
 					r.Get("/corrida", periodizacaoCorridaHandler.ListByAluno)
 					r.Get("/corrida/treinos-dia", periodizacaoCorridaHandler.GetCorridaTreinosDia)
 					r.Get("/corrida/historico-stats", periodizacaoCorridaHandler.HistoricoStats)
 				})
 			})
 
-			// Protected Periodização Corrida management endpoints (without AdminOnly)
 			r.Route("/corrida", func(r chi.Router) {
 				r.Post("/gerar", periodizacaoCorridaHandler.Gerar)
 				r.Post("/gerar-blocos", periodizacaoCorridaHandler.GerarBlocos)
@@ -241,7 +214,6 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 				r.Put("/{id}/semana/{semana}/dia/{dia}/blocos", periodizacaoCorridaHandler.SaveBlocosDia)
 			})
 
-			// Protected Anamnese and Pre-Cadastro management endpoints
 			r.Route("/admin/pre-cadastros", func(r chi.Router) {
 				r.Get("/", preCadastroHandler.List)
 				r.Get("/{id}", preCadastroHandler.GetByID)
@@ -259,7 +231,6 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 			r.Post("/admin/alunos/{id}/gerar-anamnese-link", anamneseHandler.GenerateLink)
 			r.Post("/admin/alunos/{id}/anamnese/reenviar-email", anamneseHandler.ReenviarEmail)
 
-			// Protected Exercícios and Reabilitação endpoints (without AdminOnly restriction)
 			r.Get("/exercicios/biblioteca", exercicioHandler.ListBiblioteca)
 			r.Get("/exercicios/grupos", exercicioHandler.Grupos)
 			r.Get("/exercicios/tipos", exercicioHandler.Tipos)
@@ -293,13 +264,11 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 				r.Put("/planos/{id}", planoHandler.Update)
 				r.Delete("/planos/{id}", planoHandler.Delete)
 
-				// Configurations and Dashboard Stats
 				r.Get("/configuracoes", adminConfigHandler.List)
 				r.Put("/configuracoes", adminConfigHandler.Update)
 				r.Post("/configuracoes/testar-smtp", adminConfigHandler.TestSMTP)
 				r.Get("/dashboard/stats", adminConfigHandler.DashboardStats)
 
-				// Specialised reports (Fase 4)
 				relatoriosHandler := NewRelatoriosHandler(deps.Relatorios)
 				r.Route("/relatorios", func(r chi.Router) {
 					r.Get("/dashboard", relatoriosHandler.GetDashboardResumo)
@@ -308,7 +277,6 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 					r.Get("/aprovacao", relatoriosHandler.GetAprovacao)
 				})
 
-				// Base de Conhecimento / RAG (Fase 5)
 				embedProvider := options.embedProvider
 				vectorStore := options.vectorStore
 
