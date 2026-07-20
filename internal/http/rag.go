@@ -45,7 +45,7 @@ func (h *RAGHandler) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Validation
+	// 1. Validação.
 	req.Query = strings.TrimSpace(req.Query)
 	if req.Query == "" || len(req.Query) < 3 || len(req.Query) > 500 {
 		writeJSONError(w, "Query must be between 3 and 500 characters", http.StatusBadRequest)
@@ -69,7 +69,7 @@ func (h *RAGHandler) Search(w http.ResponseWriter, r *http.Request) {
 
 	queryNorm := normalizeQuery(req.Query)
 
-	// Fetch current user ID from request context (set by AuthMiddleware)
+	// Obtém o ID do usuário no contexto da requisição, definido pelo AuthMiddleware.
 	var userID *int64
 	if userVal := r.Context().Value(userContextKey{}); userVal != nil {
 		if u, ok := userVal.(*domain.User); ok {
@@ -77,7 +77,7 @@ func (h *RAGHandler) Search(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 2. Check Cache
+	// 2. Consulta o cache.
 	cached, err := h.repo.GetCachedQuery(r.Context(), queryNorm, req.Modalidade, req.Objetivo, req.Perfil, req.K)
 	if err != nil {
 		writeJSONError(w, "Database error checking cache: "+err.Error(), http.StatusInternalServerError)
@@ -96,7 +96,7 @@ func (h *RAGHandler) Search(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cached != nil {
-		// Increment Cache hits
+		// Incrementa os acertos do cache.
 		if err := h.repo.IncrementCacheHits(r.Context(), cached.ID); err != nil {
 			logger.Error("Failed to increment cache hits", err)
 		}
@@ -118,7 +118,7 @@ func (h *RAGHandler) Search(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 3. Query External Vector Database (RAG)
+	// 3. Consulta o banco vetorial externo (RAG).
 	var docs []domain.KnowledgeDocument
 	var queryErr error
 	if h.embeddingProvider != nil && h.vectorStore != nil {
@@ -131,7 +131,7 @@ func (h *RAGHandler) Search(w http.ResponseWriter, r *http.Request) {
 		queryErr = errors.New("external RAG provider is not configured")
 	}
 
-	// 4. Fallback to Local SQLite Document Search
+	// 4. Usa a busca local em SQLite como alternativa.
 	if queryErr != nil {
 		logger.Info("External RAG query failed or not configured, falling back to local document search", "error", queryErr.Error())
 		docs, err = h.repo.SearchLocalDocuments(r.Context(), req.Query, req.Modalidade, req.K)
@@ -141,13 +141,13 @@ func (h *RAGHandler) Search(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 5. If both external and local search yield no active documents, return HTTP 503
+	// 5. Se nenhuma busca encontrar documentos ativos, retorna HTTP 503.
 	if len(docs) == 0 {
 		writeJSONError(w, services.ErrNoServiceAvailable.Error(), http.StatusServiceUnavailable)
 		return
 	}
 
-	// 6. Cache new result
+	// 6. Armazena o novo resultado no cache.
 	resultadosBytes, err := json.Marshal(docs)
 	if err == nil {
 		if err := h.repo.SaveCachedQuery(r.Context(), req.Query, queryNorm, req.Modalidade, req.Objetivo, req.Perfil, req.K, len(docs), string(resultadosBytes), userID); err != nil {

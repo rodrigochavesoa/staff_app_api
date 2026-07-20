@@ -48,7 +48,7 @@ func NewPeriodizacaoCorridaHandler(
 		anamneseRepo:  anamnese,
 		cfg:           cfg,
 		templatesPath: resolveStaffDataPath("json", "templates_daniels_blocos.json"),
-		// Default assistive path: local enricher only (no remote API keys).
+		// No modo assistivo, usa apenas o enriquecedor local quando não há chaves remotas.
 		blocksAI: services.LocalBlocksAIProvider{},
 	}
 }
@@ -62,7 +62,7 @@ func (h *PeriodizacaoCorridaHandler) hasBlocksAIProvider() bool {
 	return h.blocksAI != nil && h.blocksAI.Available()
 }
 
-// GenerateRequest matches the payload of POST /api/v1/corrida/gerar
+// GenerateRequest representa o payload de POST /api/v1/corrida/gerar.
 type GenerateRequest struct {
 	AlunoID        int64   `json:"aluno_id"`
 	DistanciaProva string  `json:"distancia_prova"` // "5K", "10K", "21K", "42K"
@@ -76,7 +76,7 @@ type GenerateRequest struct {
 	ModoGeracao    string  `json:"modo_geracao"`
 }
 
-// EditTreinoRequest matches the payload of PUT /api/v1/corrida/{id}/editar-treino
+// EditTreinoRequest representa o payload de PUT /api/v1/corrida/{id}/editar-treino.
 type EditTreinoRequest struct {
 	Semana    int     `json:"semana"`
 	Dia       int     `json:"dia"`
@@ -87,12 +87,12 @@ type EditTreinoRequest struct {
 	Descricao string  `json:"descricao"`
 }
 
-// UpdateSemanaRequest matches the payload of PUT /api/v1/corrida/{id}/semana-atual
+// UpdateSemanaRequest representa o payload de PUT /api/v1/corrida/{id}/semana-atual.
 type UpdateSemanaRequest struct {
 	SemanaAtual int `json:"semana_atual"`
 }
 
-// ConcluirTreinoRequest matches the payload of POST /api/v1/corrida/publica/{hash}/concluir
+// ConcluirTreinoRequest representa o payload de POST /api/v1/corrida/publica/{hash}/concluir.
 type ConcluirTreinoRequest struct {
 	Semana    int  `json:"semana"`
 	Dia       int  `json:"dia"`
@@ -106,7 +106,7 @@ func (h *PeriodizacaoCorridaHandler) Gerar(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// 1. Input validations
+	// 1. Validações de entrada.
 	if req.AlunoID <= 0 {
 		returnError(w, http.StatusBadRequest, "Aluno ID deve ser maior que zero")
 		return
@@ -169,7 +169,7 @@ func (h *PeriodizacaoCorridaHandler) Gerar(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// 2. Duration calculation with Monday alignment
+	// 2. Cálculo da duração com alinhamento na segunda-feira.
 	segundaInicio := mondayOfWeek(dtInicio)
 	segundaProva := mondayOfWeek(dtProva)
 	duracaoSemanas := int(segundaProva.Sub(segundaInicio).Hours()/(24*7)) + 1
@@ -179,7 +179,7 @@ func (h *PeriodizacaoCorridaHandler) Gerar(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// 3. Check Aluno exists and is active
+	// 3. Verifica se o aluno existe e está ativo.
 	aluno, err := h.alunoRepo.GetByID(r.Context(), req.AlunoID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -194,10 +194,10 @@ func (h *PeriodizacaoCorridaHandler) Gerar(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// 4. Prepare timestamps for archiving/generation
+	// 4. Prepara os horários para arquivamento e geração.
 	nowTimeStr := time.Now().Format("2006-01-02 15:04:05")
 
-	// 5. Estimate VDOT from race distance + pace (sec/km), then target zones
+	// 5. Estima o VDOT pela distância e ritmo da prova, depois calcula as zonas-alvo.
 	distKM, ok := raceDistanceKM(req.DistanciaProva)
 	if !ok {
 		returnError(w, http.StatusBadRequest, "Distância de prova inválida")
@@ -245,7 +245,7 @@ func (h *PeriodizacaoCorridaHandler) Gerar(w http.ResponseWriter, r *http.Reques
 			return
 		}
 	} else {
-		// Flat mode: generate detailed training weeks deterministically.
+		// No modo completo, gera as semanas detalhadas de forma determinística.
 		semanas := make([]domain.SemanaJSON, duracaoSemanas)
 		for i := 1; i <= duracaoSemanas; i++ {
 			fase := GetFaseForWeek(i, duracaoSemanas)
@@ -552,7 +552,7 @@ func (h *PeriodizacaoCorridaHandler) GetByID(w http.ResponseWriter, r *http.Requ
 	var pd domain.PlanoDetalhado
 	if pc.PlanoJSON != "" {
 		if err := json.Unmarshal([]byte(pc.PlanoJSON), &pd); err == nil {
-			// Nest detailed content inside response
+			// Inclui o conteúdo detalhado dentro da resposta.
 			type detailResp struct {
 				domain.PeriodizacaoCorrida
 				PlanoDetalhado domain.PlanoDetalhado `json:"plano_detalhado"`
@@ -635,7 +635,7 @@ func (h *PeriodizacaoCorridaHandler) EditarTreino(w http.ResponseWriter, r *http
 			return
 		}
 
-		// Find and update the training session
+		// Localiza e atualiza a sessão de treino.
 		found := false
 		for sIdx := range pd.Semanas {
 			if pd.Semanas[sIdx].Numero == req.Semana {
@@ -677,7 +677,7 @@ func (h *PeriodizacaoCorridaHandler) EditarTreino(w http.ResponseWriter, r *http
 			break // unexpected database error
 		}
 
-		// Backoff before retry
+		// Aguarda progressivamente antes de tentar novamente.
 		time.Sleep(time.Duration(10+i*20) * time.Millisecond)
 	}
 
@@ -773,7 +773,7 @@ func (h *PeriodizacaoCorridaHandler) GerarLink(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Deactivate any existing active public links for this periodization
+	// Desativa links públicos ativos existentes para esta periodização.
 	existing, err := h.repo.GetPublicLinkByPeriodizacaoID(r.Context(), id)
 	if err == nil && existing != nil {
 		existing.Ativo = 0
@@ -838,7 +838,7 @@ func (h *PeriodizacaoCorridaHandler) RenovarLink(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// Extend validity by 30 days
+	// Estende a validade por 30 dias.
 	link.ExpiraEm = link.ExpiraEm.AddDate(0, 0, 30)
 	if err := h.repo.UpdatePublicLink(r.Context(), link); err != nil {
 		returnError(w, http.StatusInternalServerError, "Failed to renew public link")
@@ -897,7 +897,7 @@ func (h *PeriodizacaoCorridaHandler) GetPublicPlano(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Increment access count
+	// Incrementa o contador de acessos.
 	_ = h.repo.IncrementPublicLinkAccess(r.Context(), hash)
 
 	pc, err := h.repo.GetByID(r.Context(), link.PeriodizacaoID)
@@ -916,7 +916,7 @@ func (h *PeriodizacaoCorridaHandler) GetPublicPlano(w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Resumed/Structured public payload
+	// Payload público resumido e estruturado.
 	type publicPlanoResp struct {
 		ID             int64                 `json:"id"`
 		AlunoNome      string                `json:"aluno_nome"`
@@ -1039,7 +1039,6 @@ func (h *PeriodizacaoCorridaHandler) ConcluirTreinoPublico(w http.ResponseWriter
 	returnSuccess(w, http.StatusOK, nil, "Status do treino atualizado com sucesso")
 }
 
-// Helper functions for parsing and calculations
 func ParsePace(s string) (int, error) {
 	var m, sec int
 	_, err := fmt.Sscanf(s, "%d:%d", &m, &sec)
@@ -1098,7 +1097,7 @@ func generateHexHash() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-// raceDistanceKM maps distancia_prova labels to kilometers for Daniels VDOT.
+// raceDistanceKM converte rótulos de distância da prova em quilômetros para o VDOT de Daniels.
 func raceDistanceKM(distanciaProva string) (float64, bool) {
 	switch strings.TrimSpace(distanciaProva) {
 	case "5K":
@@ -1203,7 +1202,6 @@ func returnSuccess(w http.ResponseWriter, status int, data any, msg string) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// GetCorridaTreinosDia handles authenticated GET /api/v1/alunos/{id}/corrida/treinos-dia
 func (h *PeriodizacaoCorridaHandler) GetCorridaTreinosDia(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	alunoID, err := strconv.ParseInt(idStr, 10, 64)
@@ -1212,7 +1210,6 @@ func (h *PeriodizacaoCorridaHandler) GetCorridaTreinosDia(w http.ResponseWriter,
 		return
 	}
 
-	// Verify student exists
 	_, err = h.alunoRepo.GetByID(r.Context(), alunoID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -1223,7 +1220,6 @@ func (h *PeriodizacaoCorridaHandler) GetCorridaTreinosDia(w http.ResponseWriter,
 		return
 	}
 
-	// Parse mes and ano query parameters
 	now := time.Now()
 	mesStr := r.URL.Query().Get("mes")
 	mes := int(now.Month())
@@ -1247,7 +1243,6 @@ func (h *PeriodizacaoCorridaHandler) GetCorridaTreinosDia(w http.ResponseWriter,
 		}
 	}
 
-	// Query periodization plans for this student
 	plans, err := h.repo.ListByAlunoID(r.Context(), alunoID)
 	if err != nil {
 		returnError(w, http.StatusInternalServerError, "Internal server error fetching plans")

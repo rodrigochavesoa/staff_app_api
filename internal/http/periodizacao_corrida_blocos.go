@@ -304,7 +304,7 @@ func (h *PeriodizacaoCorridaHandler) SaveBlocosDia(w http.ResponseWriter, r *htt
 				break
 			}
 			if !found {
-				// Create training day if week exists but day missing.
+				// Cria o dia de treino quando a semana existe, mas o dia ainda não.
 				pd.Semanas[sIdx].Treinos = append(pd.Semanas[sIdx].Treinos, domain.TreinoJSON{
 					Dia:            int(dia),
 					Tipo:           firstNonEmpty(req.Tipo, req.Nome, "Treino"),
@@ -469,7 +469,7 @@ func (h *PeriodizacaoCorridaHandler) GerarBlocos(w http.ResponseWriter, r *http.
 		}
 	}
 
-	// Hard clinical safety before any enrichment: never keep I/R under high cardio risk.
+	// Segurança clínica antes de qualquer enriquecimento: não mantém I/R sob alto risco cardiovascular.
 	if highRisk {
 		for i := range days {
 			days[i].Blocos = blocos.ApplyPaces(blocos.DowngradeHardIntensities(days[i].Blocos), req.VDOT)
@@ -505,8 +505,8 @@ func (h *PeriodizacaoCorridaHandler) GerarBlocos(w http.ResponseWriter, r *http.
 		meta["fallback_used"] = true
 		meta["fallback_reason"] = "ai_training_mode_off"
 	case services.AITrainingModeRequired:
-		// required rejects the default local enricher — needs an approved non-local provider
-		// (fake in tests or real key only when staging is authorized).
+		// O modo obrigatório rejeita o enriquecedor local padrão e exige um provedor não local aprovado.
+		// Nos testes, o provedor pode ser falso; em staging, depende de chave real autorizada.
 		if !h.hasBlocksAIProvider() || h.blocksAI.Name() == "local" {
 			returnError(w, http.StatusServiceUnavailable, "Nenhum provedor de IA de blocos disponível para AI_TRAINING_MODE=required")
 			return

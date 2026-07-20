@@ -17,12 +17,12 @@ func NewHealthHandler(db repositories.DatabaseHealth) *HealthHandler {
 	return &HealthHandler{db: db}
 }
 
-// Health checks the service and database status
+// Health verifica o estado do serviço e da conexão com o banco.
 func (h *HealthHandler) Health(w http.ResponseWriter, r *http.Request) {
 	status := "ok"
 	dbStatus := "connected"
 
-	// Check DB connection
+	// Verifica a conexão com o banco.
 	if h.db != nil {
 		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 		defer cancel()
@@ -48,14 +48,14 @@ func (h *HealthHandler) Health(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(response)
 }
 
-// Ping is a simple health endpoint without database check
+// Ping responde sem consultar o banco.
 func (h *HealthHandler) Ping(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(`{"message":"pong"}`))
 }
 
-// Index serves API index details
+// Index retorna informações básicas da API.
 func (h *HealthHandler) Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
