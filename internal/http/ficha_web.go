@@ -18,13 +18,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// FichaWebHandler handles API endpoints for public training link management.
 type FichaWebHandler struct {
 	repo      repositories.FichaRepository
 	alunoRepo repositories.AlunoRepository
 }
 
-// NewFichaWebHandler creates a new FichaWebHandler instance.
 func NewFichaWebHandler(repo repositories.FichaRepository, aluno repositories.AlunoRepository) *FichaWebHandler {
 	return &FichaWebHandler{
 		repo:      repo,
@@ -32,7 +30,6 @@ func NewFichaWebHandler(repo repositories.FichaRepository, aluno repositories.Al
 	}
 }
 
-// generateURLSafeHash generates a random URL-safe hash (32 bytes).
 func generateURLSafeHash() (string, error) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
@@ -41,7 +38,6 @@ func generateURLSafeHash() (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 
-// CreateFichaRequest payload for POST /api/v1/criar-ficha.
 type CreateFichaRequest struct {
 	FichaID  int64           `json:"ficha_id"`
 	AlunoID  int64           `json:"aluno_id"`
@@ -49,7 +45,6 @@ type CreateFichaRequest struct {
 	Conteudo json.RawMessage `json:"conteudo,omitempty"`
 }
 
-// CreateFichaResponse represents response returned on creation.
 type CreateFichaResponse struct {
 	Hash         string `json:"hash"`
 	Url          string `json:"url"`
@@ -59,7 +54,6 @@ type CreateFichaResponse struct {
 	DiasValidade int    `json:"dias_validade"`
 }
 
-// FichaAlunoSummary represents basic student info nested in metadata.
 type FichaAlunoSummary struct {
 	ID    int64  `json:"id"`
 	Nome  string `json:"nome"`
@@ -67,14 +61,12 @@ type FichaAlunoSummary struct {
 	Sexo  string `json:"sexo"`
 }
 
-// AlunoFichasResponse represents list of links returned for a student.
 type AlunoFichasResponse struct {
 	AlunoID int64              `json:"aluno_id"`
 	Total   int                `json:"total"`
 	Fichas  []*domain.FichaWeb `json:"fichas"`
 }
 
-// FichaMetadata nested metadata details for retrieval.
 type FichaMetadata struct {
 	CriadoEm      string            `json:"criado_em"`
 	ExpiraEm      string            `json:"expira_em"`
@@ -83,32 +75,27 @@ type FichaMetadata struct {
 	Aluno         FichaAlunoSummary `json:"aluno"`
 }
 
-// FichaPublicaResponse represents retrieved public link response structure.
 type FichaPublicaResponse struct {
 	Hash     string          `json:"hash"`
 	Conteudo json.RawMessage `json:"conteudo"`
 	Metadata FichaMetadata   `json:"metadata"`
 }
 
-// RenewFichaRequest payload for POST /api/v1/renovar/{hash}.
 type RenewFichaRequest struct {
 	Dias int `json:"dias"`
 }
 
-// RenewFichaResponse represents response returned on renewal.
 type RenewFichaResponse struct {
 	Hash            string `json:"hash"`
 	ExpiraEm        string `json:"expira_em"`
 	DiasAdicionados int    `json:"dias_adicionados"`
 }
 
-// DeactivateFichaResponse represents response returned on deactivation.
 type DeactivateFichaResponse struct {
 	Message string `json:"message"`
 	Hash    string `json:"hash"`
 }
 
-// Create handles POST /api/v1/criar-ficha
 func (h *FichaWebHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateFichaRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -121,7 +108,6 @@ func (h *FichaWebHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Verify student exists
 	_, err := h.alunoRepo.GetByID(r.Context(), req.AlunoID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -132,12 +118,11 @@ func (h *FichaWebHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Load or define content
 	var conteudoStr string
 	if len(req.Conteudo) > 0 {
 		conteudoStr = string(req.Conteudo)
 	} else {
-		// Fetch latest snapshot content from legacy table
+		// Conteúdo: snapshot legado se o cliente não enviou ficha_json.
 		var err error
 		conteudoStr, err = h.repo.GetFichaJSON(r.Context(), req.FichaID)
 		if err != nil {
@@ -150,21 +135,19 @@ func (h *FichaWebHandler) Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Validate content is a valid JSON object map
 	var temp map[string]any
 	if err := json.Unmarshal([]byte(conteudoStr), &temp); err != nil {
 		writeJSONError(w, "Content must be a valid JSON object structure", http.StatusBadRequest)
 		return
 	}
 
-	// 3. Generate unique URL-safe hash
 	hash, err := generateURLSafeHash()
 	if err != nil {
 		writeJSONError(w, "Internal server error generating hash", http.StatusInternalServerError)
 		return
 	}
 
-	// 4. Set expiration to 30 days
+	// Validade do link público: 30 dias.
 	now := time.Now()
 	validDays := 30
 	expiration := now.Add(time.Duration(validDays) * 24 * time.Hour)
@@ -205,7 +188,6 @@ func (h *FichaWebHandler) Create(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// GetByHashJSON handles GET /api/v1/ficha/{hash}/json
 func (h *FichaWebHandler) GetByHashJSON(w http.ResponseWriter, r *http.Request) {
 	hash := chi.URLParam(r, "hash")
 	if hash == "" {
@@ -223,26 +205,22 @@ func (h *FichaWebHandler) GetByHashJSON(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Validate status
 	if !fw.Ativo {
 		writeJSONError(w, "This public link has been deactivated", http.StatusGone)
 		return
 	}
 
-	// Validate expiration
 	if fw.ExpiraEm.Before(time.Now()) {
 		writeJSONError(w, "This public link has expired", http.StatusGone)
 		return
 	}
 
-	// Fetch student details for metadata
 	aluno, err := h.alunoRepo.GetByID(r.Context(), fw.AlunoID)
 	if err != nil {
 		writeJSONError(w, "Failed to retrieve student details", http.StatusInternalServerError)
 		return
 	}
 
-	// Log access statistics
 	userAgent := r.Header.Get("User-Agent")
 	if userAgent == "" {
 		userAgent = "Unknown"
@@ -254,7 +232,7 @@ func (h *FichaWebHandler) GetByHashJSON(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err := h.repo.IncrementAccessCount(r.Context(), hash, userAgent, ipAddress); err != nil {
-		// Log but do not block response
+		// Falha no log de acesso não bloqueia a resposta.
 	}
 
 	diasRestantes := int(time.Until(fw.ExpiraEm).Hours() / 24)
@@ -269,7 +247,7 @@ func (h *FichaWebHandler) GetByHashJSON(w http.ResponseWriter, r *http.Request) 
 			CriadoEm:      fw.CriadoEm.Format(time.RFC3339),
 			ExpiraEm:      fw.ExpiraEm.Format(time.RFC3339),
 			DiasRestantes: diasRestantes,
-			Acessos:       fw.Acessos + 1, // Include the current logged access
+			Acessos:       fw.Acessos + 1, // inclui o acesso desta requisição
 			Aluno: FichaAlunoSummary{
 				ID:    aluno.ID,
 				Nome:  aluno.Nome,
@@ -284,7 +262,6 @@ func (h *FichaWebHandler) GetByHashJSON(w http.ResponseWriter, r *http.Request) 
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// GetStats handles GET /api/v1/stats/{hash}
 func (h *FichaWebHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	hash := chi.URLParam(r, "hash")
 	if hash == "" {
@@ -307,7 +284,6 @@ func (h *FichaWebHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(stats)
 }
 
-// Renew handles POST /api/v1/renovar/{hash}
 func (h *FichaWebHandler) Renew(w http.ResponseWriter, r *http.Request) {
 	hash := chi.URLParam(r, "hash")
 	if hash == "" {
@@ -315,7 +291,6 @@ func (h *FichaWebHandler) Renew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch current record to get ficha_id
 	fw, err := h.repo.GetByHash(r.Context(), hash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -332,7 +307,6 @@ func (h *FichaWebHandler) Renew(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req RenewFichaRequest
-	// Decode request body if provided (it is optional)
 	dias := 30
 	if r.ContentLength > 0 {
 		if err := json.NewDecoder(r.Body).Decode(&req); err == nil && req.Dias > 0 {
@@ -340,14 +314,14 @@ func (h *FichaWebHandler) Renew(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Fetch latest snapshot content from legacy table to synchronize
+	// Renovação sincroniza conteúdo com o snapshot legado.
 	newContent, err := h.repo.GetFichaJSON(r.Context(), fw.FichaID)
 	var newContentPtr *string
 	if err == nil && newContent != "" {
 		newContentPtr = &newContent
 	}
 
-	// Renew expiration days (if current expiration is in the future, add to it; if in the past, add from now)
+	// Se ainda válido, estende a partir de ExpiraEm; senão, a partir de agora.
 	var newExpiration time.Time
 	now := time.Now()
 	if fw.ExpiraEm.After(now) {
@@ -372,7 +346,6 @@ func (h *FichaWebHandler) Renew(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// Deactivate handles POST /api/v1/desativar/{hash}
 func (h *FichaWebHandler) Deactivate(w http.ResponseWriter, r *http.Request) {
 	hash := chi.URLParam(r, "hash")
 	if hash == "" {
@@ -399,7 +372,6 @@ func (h *FichaWebHandler) Deactivate(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// ListByAluno handles GET /api/v1/aluno/{aluno_id}/fichas
 func (h *FichaWebHandler) ListByAluno(w http.ResponseWriter, r *http.Request) {
 	alunoIDStr := chi.URLParam(r, "aluno_id")
 	alunoID, err := strconv.ParseInt(alunoIDStr, 10, 64)
@@ -408,7 +380,6 @@ func (h *FichaWebHandler) ListByAluno(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify student exists
 	_, err = h.alunoRepo.GetByID(r.Context(), alunoID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -442,7 +413,6 @@ func (h *FichaWebHandler) ListByAluno(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// GetFichaTreinoLetra handles public GET /api/v1/ficha/{hash}/treino/{letra}
 func (h *FichaWebHandler) GetFichaTreinoLetra(w http.ResponseWriter, r *http.Request) {
 	hash := chi.URLParam(r, "hash")
 	letra := strings.ToUpper(strings.TrimSpace(chi.URLParam(r, "letra")))
@@ -462,19 +432,16 @@ func (h *FichaWebHandler) GetFichaTreinoLetra(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Validate status
 	if !fw.Ativo {
 		writeJSONError(w, "Este link público está desativado", http.StatusGone)
 		return
 	}
 
-	// Validate expiration
 	if fw.ExpiraEm.Before(time.Now()) {
 		writeJSONError(w, "Este link público expirou", http.StatusGone)
 		return
 	}
 
-	// Parse content json
 	var content map[string]any
 	if err := json.Unmarshal([]byte(fw.ConteudoJSON), &content); err != nil {
 		writeJSONError(w, "Internal server error parsing workout structure", http.StatusInternalServerError)
@@ -495,9 +462,7 @@ func (h *FichaWebHandler) GetFichaTreinoLetra(w http.ResponseWriter, r *http.Req
 	})
 }
 
-// findTreinoByLetra resolves a workout letter from either:
-//   - map form: {"A": {...}, "B": {...}}
-//   - array form used by fichas periodizadas: [{"letra":"A",...}, {"letra":"B",...}]
+// findTreinoByLetra resolve letra em mapa {"A":...} ou array periodizado [{"letra":"A",...}].
 func findTreinoByLetra(raw any, letra string) (any, bool) {
 	letra = strings.ToUpper(strings.TrimSpace(letra))
 	if letra == "" || raw == nil {
@@ -507,7 +472,7 @@ func findTreinoByLetra(raw any, letra string) (any, bool) {
 		if treino, ok := treinosMap[letra]; ok {
 			return treino, true
 		}
-		// tolerate lowercase keys in snapshots
+		// Aceita chaves de letra em minúsculas no snapshot.
 		if treino, ok := treinosMap[strings.ToLower(letra)]; ok {
 			return treino, true
 		}
@@ -529,4 +494,3 @@ func findTreinoByLetra(raw any, letra string) (any, bool) {
 	}
 	return nil, false
 }
-

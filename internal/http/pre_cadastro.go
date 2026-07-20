@@ -72,7 +72,6 @@ func (h *PreCadastroHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate duplicate email in pre_registros and active alunos
 	existingPre, err := h.preRepo.FindByEmail(r.Context(), req.Email)
 	if err != nil {
 		writeJSONError(w, "Internal server error", http.StatusInternalServerError)
@@ -93,19 +92,17 @@ func (h *PreCadastroHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate Plan exists and is active
 	plano, err := h.planoRepo.GetByID(r.Context(), req.PlanoID)
 	if err != nil || plano == nil || !plano.Ativo {
 		writeJSONError(w, "Plano inválido ou inativo", http.StatusBadRequest)
 		return
 	}
 
-	// Default expiration is 72 hours
+	// Expiração padrão do pré-registro: 72h.
 	expHrs := 72
 	now := time.Now()
 	expiraEm := now.Add(time.Duration(expHrs) * time.Hour)
 
-	// Get IP and UserAgent
 	ip := r.RemoteAddr
 	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
 		ip = strings.Split(fwd, ",")[0]
@@ -133,7 +130,6 @@ func (h *PreCadastroHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add audit trail
 	audit := &domain.PreRegistroAudit{
 		PreRegistroID: p.ID,
 		Evento:        "CRIADO",
@@ -262,7 +258,7 @@ func (h *PreCadastroHandler) Approve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Calculate age based on birth date (format: YYYY-MM-DD)
+	// Idade a partir de data_nascimento (YYYY-MM-DD).
 	idade := 0
 	if birthTime, err := time.Parse("2006-01-02", p.DataNascimento); err == nil {
 		idade = time.Now().Year() - birthTime.Year()
@@ -271,7 +267,6 @@ func (h *PreCadastroHandler) Approve(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Retrieve authenticated user from context using userContextKey
 	var authUserID int64
 	var authUsername string = "admin"
 	if u, ok := r.Context().Value(userContextKey{}).(*domain.User); ok && u != nil {
@@ -279,7 +274,6 @@ func (h *PreCadastroHandler) Approve(w http.ResponseWriter, r *http.Request) {
 		authUsername = u.Username
 	}
 
-	// Start Aluno creation and PreRegistro status update
 	now := time.Now()
 	aluno := &domain.Aluno{
 		Nome:                p.Nome,
@@ -305,7 +299,6 @@ func (h *PreCadastroHandler) Approve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update pre-registration status
 	p.Status = "aprovado"
 	p.AprovadoPor = &authUserID
 	p.AprovadoEm = &now
@@ -317,7 +310,6 @@ func (h *PreCadastroHandler) Approve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add pre-registration audit trail
 	audit := &domain.PreRegistroAudit{
 		PreRegistroID: p.ID,
 		Evento:        "APROVADO",
@@ -329,7 +321,6 @@ func (h *PreCadastroHandler) Approve(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = h.preRepo.AddAudit(r.Context(), audit)
 
-	// Check configurations for generation and email sending
 	configs, _ := h.configRepo.List(r.Context())
 	autoGenerate := true
 	autoSend := false
@@ -350,7 +341,7 @@ func (h *PreCadastroHandler) Approve(w http.ResponseWriter, r *http.Request) {
 		anamToken := &domain.AnamneseToken{
 			Token:         tokenStr,
 			PreRegistroID: &p.ID,
-			ExpiraEm:      now.Add(168 * time.Hour), // 7 days (168 hours)
+			ExpiraEm:      now.Add(168 * time.Hour), // 7 dias
 			Usado:         false,
 			AlunoID:       &aluno.ID,
 			AlunoNome:     aluno.Nome,
@@ -365,7 +356,6 @@ func (h *PreCadastroHandler) Approve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Add anamnese token audit
 		anamAudit := &domain.AnamneseTokenAudit{
 			Token:         tokenStr,
 			AlunoID:       &aluno.ID,
@@ -378,14 +368,12 @@ func (h *PreCadastroHandler) Approve(w http.ResponseWriter, r *http.Request) {
 		}
 		_ = h.anamRepo.AddTokenAudit(r.Context(), anamAudit)
 
-		// Determine host link from request
 		scheme := "http"
 		if r.TLS != nil {
 			scheme = "https"
 		}
 		hostLink = fmt.Sprintf("%s://%s/anamnese/submit/%s", scheme, r.Host, tokenStr)
 
-		// Auto send email if configured
 		if autoSend {
 			errSend := sendAnamneseEmail(r.Context(), h.configRepo, h.anamRepo, anamToken, r.Host, scheme)
 			sentVal := errSend == nil
@@ -469,7 +457,6 @@ func (h *PreCadastroHandler) Reject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add audit log
 	audit := &domain.PreRegistroAudit{
 		PreRegistroID: p.ID,
 		Evento:        "REJEITADO",
