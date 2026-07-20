@@ -11,28 +11,34 @@ import (
 	"time"
 
 	"staff_app/internal/domain"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type HistoricoHandler struct {
-	repo                    *sqlite.HistoricoRepository
-	alunoRepo               *sqlite.AlunoRepository
-	fichaWebRepo            *sqlite.FichaWebRepository
-	periodizacaoCorridaRepo *sqlite.PeriodizacaoCorridaRepository
+	repo                    repositories.HistoricoRepository
+	alunoRepo               repositories.AlunoRepository
+	fichaWebRepo            repositories.FichaRepository
+	periodizacaoCorridaRepo repositories.PeriodizacaoCorridaRepository
 	secretKey               string
 }
 
-func NewHistoricoHandler(db *sqlite.DB, secretKey string) *HistoricoHandler {
+func NewHistoricoHandler(
+	repo repositories.HistoricoRepository,
+	aluno repositories.AlunoRepository,
+	fichaWeb repositories.FichaRepository,
+	periodizacao repositories.PeriodizacaoCorridaRepository,
+	secretKey string,
+) *HistoricoHandler {
 	if secretKey == "" {
 		secretKey = defaultSecretKey
 	}
 	return &HistoricoHandler{
-		repo:                    sqlite.NewHistoricoRepository(db),
-		alunoRepo:               sqlite.NewAlunoRepository(db),
-		fichaWebRepo:            sqlite.NewFichaWebRepository(db),
-		periodizacaoCorridaRepo: sqlite.NewPeriodizacaoCorridaRepository(db),
+		repo:                    repo,
+		alunoRepo:               aluno,
+		fichaWebRepo:            fichaWeb,
+		periodizacaoCorridaRepo: periodizacao,
 		secretKey:               secretKey,
 	}
 }
@@ -381,9 +387,7 @@ func (h *HistoricoHandler) MarkTreino(w http.ResponseWriter, r *http.Request) {
 			resolvedAlunoID = req.AlunoID
 		} else {
 			// Infer student ID from the ficha itself (or allow fallback)
-			// Let's check if the ficha exists in fichas_treino_web
-			var studentName string
-			err := h.repo.GetDB().QueryRowContext(r.Context(), "SELECT aluno FROM fichas_treino_web WHERE id = ?", req.FichaID).Scan(&studentName)
+			studentName, err := h.repo.GetFichaTreinoAlunoNomeByID(r.Context(), req.FichaID)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) {
 					writeJSONError(w, "Ficha de musculação não encontrada", http.StatusNotFound)
@@ -393,7 +397,7 @@ func (h *HistoricoHandler) MarkTreino(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// Find student ID by name matching
-			err = h.repo.GetDB().QueryRowContext(r.Context(), "SELECT id FROM alunos WHERE nome = ? LIMIT 1", studentName).Scan(&resolvedAlunoID)
+			resolvedAlunoID, err = h.repo.GetAlunoIDByNome(r.Context(), studentName)
 			if err != nil {
 				// Create no-op or fallback to first student
 				resolvedAlunoID = 0
@@ -784,10 +788,5 @@ func (h *HistoricoHandler) GetTreinosMes(w http.ResponseWriter, r *http.Request)
 		"dias_com_dor":     diasComDor,
 		"frequencia":       diasFrequencia,
 	})
-}
-
-// Helper method to get underlying DB for internal queries if needed
-func (h *HistoricoHandler) GetDB() *sqlite.DB {
-	return h.repo.GetDB()
 }
 

@@ -19,8 +19,22 @@ func NewHistoricoRepository(db *DB) *HistoricoRepository {
 	return &HistoricoRepository{db: db}
 }
 
-func (r *HistoricoRepository) GetDB() *DB {
-	return r.db
+func (r *HistoricoRepository) GetFichaTreinoAlunoNomeByID(ctx context.Context, fichaID int64) (string, error) {
+	var nome string
+	err := r.db.QueryRowContext(ctx, "SELECT aluno FROM fichas_treino_web WHERE id = ?", fichaID).Scan(&nome)
+	if err != nil {
+		return "", err
+	}
+	return nome, nil
+}
+
+func (r *HistoricoRepository) GetAlunoIDByNome(ctx context.Context, nome string) (int64, error) {
+	var id int64
+	err := r.db.QueryRowContext(ctx, "SELECT id FROM alunos WHERE nome = ? LIMIT 1", nome).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 // SearchAlunos searches for active or inactive students by name, email, or group (turma) with a limit.

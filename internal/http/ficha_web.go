@@ -13,22 +13,22 @@ import (
 	"time"
 
 	"staff_app/internal/domain"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 
 	"github.com/go-chi/chi/v5"
 )
 
 // FichaWebHandler handles API endpoints for public training link management.
 type FichaWebHandler struct {
-	repo      *sqlite.FichaWebRepository
-	alunoRepo *sqlite.AlunoRepository
+	repo      repositories.FichaRepository
+	alunoRepo repositories.AlunoRepository
 }
 
 // NewFichaWebHandler creates a new FichaWebHandler instance.
-func NewFichaWebHandler(db *sqlite.DB) *FichaWebHandler {
+func NewFichaWebHandler(repo repositories.FichaRepository, aluno repositories.AlunoRepository) *FichaWebHandler {
 	return &FichaWebHandler{
-		repo:      sqlite.NewFichaWebRepository(db),
-		alunoRepo: sqlite.NewAlunoRepository(db),
+		repo:      repo,
+		alunoRepo: aluno,
 	}
 }
 
