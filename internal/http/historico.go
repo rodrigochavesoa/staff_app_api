@@ -43,14 +43,12 @@ func NewHistoricoHandler(
 	}
 }
 
-// SearchAlunosRequest represents any query options for search
 type AlunoSearchQuery struct {
 	Query  string `json:"q"`
 	Limit  int    `json:"limit"`
 	Ativo  string `json:"ativo"`
 }
 
-// SearchAlunos handles GET /api/v1/alunos/search
 func (h *HistoricoHandler) SearchAlunos(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if len(q) < 2 {
@@ -91,7 +89,6 @@ func (h *HistoricoHandler) SearchAlunos(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
-// GetFrequencia handles GET /api/v1/alunos/{id}/frequencia
 func (h *HistoricoHandler) GetFrequencia(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	alunoID, err := strconv.ParseInt(idStr, 10, 64)
@@ -100,7 +97,6 @@ func (h *HistoricoHandler) GetFrequencia(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Verify student exists
 	_, err = h.alunoRepo.GetByID(r.Context(), alunoID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -134,14 +130,12 @@ func (h *HistoricoHandler) GetFrequencia(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	// 1. Fetch completed musculação sessions
 	treinosList, err := h.repo.GetTreinosRealizadosByAluno(r.Context(), alunoID, mes, ano)
 	if err != nil {
 		writeJSONError(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	// 2. Fetch running plans and compute completed runs deterministically
 	corridas, err := h.periodizacaoCorridaRepo.ListByAlunoID(r.Context(), alunoID)
 	if err != nil {
 		writeJSONError(w, "Internal server error", http.StatusInternalServerError)
@@ -161,13 +155,12 @@ func (h *HistoricoHandler) GetFrequencia(w http.ResponseWriter, r *http.Request)
 			continue
 		}
 
-		// Calculate dates for completed and planned runs
 		startDate, err := time.Parse("2006-01-02", pc.DataInicio)
 		if err != nil {
 			continue
 		}
 
-		// Align to Monday
+		// Alinha a semana ao Monday (calendário de frequência).
 		segundaInicio := mondayOfWeek(startDate)
 
 		for _, semana := range pd.Semanas {
@@ -177,7 +170,6 @@ func (h *HistoricoHandler) GetFrequencia(w http.ResponseWriter, r *http.Request)
 				treinoDate := semanaStart.AddDate(0, 0, treino.Dia-1)
 				tYear, tMonth, _ := treinoDate.Date()
 
-				// If it falls within the requested month/year
 				if tYear == ano && int(tMonth) == mes {
 					if pc.Status == "ativo" {
 						activeRunningPlanned++
@@ -197,11 +189,9 @@ func (h *HistoricoHandler) GetFrequencia(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	// 3. Compile unified calendar entries
 	var diasFrequencia []domain.DiaFrequencia
 	diasComDor := 0
 
-	// Add musculação completed
 	for _, tr := range treinosList {
 		tipoTreino := "Musculação"
 		if tr.TipoTreino != nil {
@@ -223,7 +213,6 @@ func (h *HistoricoHandler) GetFrequencia(w http.ResponseWriter, r *http.Request)
 		})
 	}
 
-	// Add running completed
 	for _, run := range completedRuns {
 		if strings.Contains(strings.ToLower(run.Observacao), "dor") || strings.Contains(strings.ToLower(run.Observacao), "lesão") || strings.Contains(strings.ToLower(run.Observacao), "desconforto") {
 			diasComDor++
@@ -231,12 +220,11 @@ func (h *HistoricoHandler) GetFrequencia(w http.ResponseWriter, r *http.Request)
 		diasFrequencia = append(diasFrequencia, run)
 	}
 
-	// 4. Estimate total planned workouts
-	// For Musculação: find student's active sheet or default to 12
+	// Estimativa de treinos planejados no mês.
+	// Musculação: frequência da ficha ativa ou padrão 12/mês.
 	musculacaoPlanned := 12
 	fichasLinks, err := h.fichaWebRepo.ListByAlunoID(r.Context(), alunoID, false)
 	if err == nil && len(fichasLinks) > 0 {
-		// Try to find frequency from the first active link
 		var content map[string]any
 		if err := json.Unmarshal([]byte(fichasLinks[0].ConteudoJSON), &content); err == nil {
 			if freqVal, ok := content["frequencia_semanal"].(float64); ok {
@@ -252,7 +240,7 @@ func (h *HistoricoHandler) GetFrequencia(w http.ResponseWriter, r *http.Request)
 	if totalPlanejados > 0 {
 		taxaCompletude = (float64(totalRealizados) / float64(totalPlanejados)) * 100
 		if taxaCompletude > 100.0 {
-			taxaCompletude = 100.0 // capped at 100%
+			taxaCompletude = 100.0 // teto 100%
 		}
 	}
 
@@ -278,7 +266,6 @@ func (h *HistoricoHandler) GetFrequencia(w http.ResponseWriter, r *http.Request)
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// GetTreinos handles GET /api/v1/alunos/{id}/treinos
 func (h *HistoricoHandler) GetTreinos(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	alunoID, err := strconv.ParseInt(idStr, 10, 64)
@@ -287,7 +274,6 @@ func (h *HistoricoHandler) GetTreinos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify student exists
 	_, err = h.alunoRepo.GetByID(r.Context(), alunoID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -314,7 +300,6 @@ func (h *HistoricoHandler) GetTreinos(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Fetch musculação treinos
 	treinos, err := h.repo.GetTreinosRealizadosByAluno(r.Context(), alunoID, mes, ano)
 	if err != nil {
 		writeJSONError(w, "Internal server error", http.StatusInternalServerError)
@@ -339,11 +324,10 @@ type MarkTreinoRequest struct {
 	AlunoID    int64   `json:"aluno_id,omitempty"`
 	DataTreino string  `json:"data_treino"` // YYYY-MM-DD
 	TipoTreino string  `json:"tipo_treino,omitempty"`
-	TipoFicha  string  `json:"tipo_ficha"`   // Must be 'musculacao'
+	TipoFicha  string  `json:"tipo_ficha"`   // obrigatório: musculacao
 	Observacao string  `json:"observacao,omitempty"`
 }
 
-// MarkTreino handles POST /api/v1/treinos/marcar
 func (h *HistoricoHandler) MarkTreino(w http.ResponseWriter, r *http.Request) {
 	var req MarkTreinoRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -379,14 +363,12 @@ func (h *HistoricoHandler) MarkTreino(w http.ResponseWriter, r *http.Request) {
 	var resolvedAlunoID int64
 	var resolvedHashFicha *string
 
-	// Authentication resolution
+	// Resolve aluno_id: autenticado, via hash da ficha, ou por nome.
 	user, authenticated := UserFromContext(r.Context())
 	if authenticated {
-		// Logged in trainer/admin
 		if req.AlunoID > 0 {
 			resolvedAlunoID = req.AlunoID
 		} else {
-			// Infer student ID from the ficha itself (or allow fallback)
 			studentName, err := h.repo.GetFichaTreinoAlunoNomeByID(r.Context(), req.FichaID)
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) {
@@ -396,10 +378,8 @@ func (h *HistoricoHandler) MarkTreino(w http.ResponseWriter, r *http.Request) {
 				writeJSONError(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
-			// Find student ID by name matching
 			resolvedAlunoID, err = h.repo.GetAlunoIDByNome(r.Context(), studentName)
 			if err != nil {
-				// Create no-op or fallback to first student
 				resolvedAlunoID = 0
 			}
 		}
@@ -408,7 +388,7 @@ func (h *HistoricoHandler) MarkTreino(w http.ResponseWriter, r *http.Request) {
 			resolvedHashFicha = &val
 		}
 	} else {
-		// Anonymous student, hash is strictly required
+		// Anônimo: hash_ficha é obrigatório.
 		req.HashFicha = strings.TrimSpace(req.HashFicha)
 		if req.HashFicha == "" {
 			writeJSONError(w, "Hash da ficha é obrigatório para marcação anônima", http.StatusUnauthorized)
@@ -440,13 +420,11 @@ func (h *HistoricoHandler) MarkTreino(w http.ResponseWriter, r *http.Request) {
 		resolvedHashFicha = &val
 	}
 
-	// Auto-detection of training letter (A, B, C, D) if omitted
+	// Se letra omitida, sugere a próxima na sequência A→B→C→D→A.
 	tipoTreino := strings.TrimSpace(req.TipoTreino)
 	if tipoTreino == "" {
-		// Fetch previous sessions for this sheet
 		sessions, err := h.repo.GetTreinosRealizadosByAluno(r.Context(), resolvedAlunoID, 0, 0)
 		if err == nil {
-			// Find the last session for this exact ficha
 			var lastLetter string
 			for _, s := range sessions {
 				if s.FichaID == req.FichaID && s.TipoTreino != nil && *s.TipoTreino != "" {
@@ -455,7 +433,6 @@ func (h *HistoricoHandler) MarkTreino(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
-			// Sequence: A -> B -> C -> D -> A
 			switch lastLetter {
 			case "A":
 				tipoTreino = "B"
@@ -485,7 +462,6 @@ func (h *HistoricoHandler) MarkTreino(w http.ResponseWriter, r *http.Request) {
 		tr.Observacao = &val
 	}
 
-	// Set Auditor ID / logged-in ID context if exists
 	if authenticated {
 		_ = user.ID
 	}
@@ -509,7 +485,6 @@ type UnmarkTreinoRequest struct {
 	DataTreino string `json:"data_treino"` // YYYY-MM-DD
 }
 
-// UnmarkTreino handles POST /api/v1/treinos/desmarcar
 func (h *HistoricoHandler) UnmarkTreino(w http.ResponseWriter, r *http.Request) {
 	var req UnmarkTreinoRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -530,7 +505,7 @@ func (h *HistoricoHandler) UnmarkTreino(w http.ResponseWriter, r *http.Request) 
 
 	_, authenticated := UserFromContext(r.Context())
 	if !authenticated {
-		// Anonymous student, hash validation is strictly required
+		// Anônimo: hash_ficha é obrigatório para desmarcar.
 		req.HashFicha = strings.TrimSpace(req.HashFicha)
 		if req.HashFicha == "" {
 			writeJSONError(w, "Hash da ficha é obrigatório para desmarcação anônima", http.StatusUnauthorized)
@@ -582,7 +557,6 @@ type HistoricoFichaResponse struct {
 	PlanoJSON json.RawMessage `json:"plano_json,omitempty"`
 }
 
-// GetHistoricoDetalhes handles GET /api/v1/historico/fichas/{id}/detalhes
 func (h *HistoricoHandler) GetHistoricoDetalhes(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -618,7 +592,6 @@ func (h *HistoricoHandler) GetHistoricoDetalhes(w http.ResponseWriter, r *http.R
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// GetTreinosMes handles public GET /api/v1/treinos/mes?hash_ficha=...&mes=...&ano=...
 func (h *HistoricoHandler) GetTreinosMes(w http.ResponseWriter, r *http.Request) {
 	hash := r.URL.Query().Get("hash_ficha")
 	if hash == "" {
@@ -629,7 +602,6 @@ func (h *HistoricoHandler) GetTreinosMes(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 1. Fetch FichaWeb
 	fw, err := h.fichaWebRepo.GetByHash(r.Context(), hash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -640,7 +612,6 @@ func (h *HistoricoHandler) GetTreinosMes(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 2. Validate status and expiration
 	if !fw.Ativo {
 		writeJSONError(w, "Este link público está desativado", http.StatusGone)
 		return
@@ -650,7 +621,6 @@ func (h *HistoricoHandler) GetTreinosMes(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 3. Resolve month/year
 	now := time.Now()
 	mesStr := r.URL.Query().Get("mes")
 	mes := int(now.Month())
@@ -674,14 +644,12 @@ func (h *HistoricoHandler) GetTreinosMes(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	// 4. Fetch completed musculação sessions for the student
 	treinosList, err := h.repo.GetTreinosRealizadosByAluno(r.Context(), fw.AlunoID, mes, ano)
 	if err != nil {
 		writeJSONError(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	// 5. Fetch completed runs from periodizacao
 	corridas, err := h.periodizacaoCorridaRepo.ListByAlunoID(r.Context(), fw.AlunoID)
 	if err != nil {
 		writeJSONError(w, "Internal server error", http.StatusInternalServerError)

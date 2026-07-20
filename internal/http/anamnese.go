@@ -81,7 +81,7 @@ func (h *AnamneseHandler) GenerateLink(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 	tokenStr := generateSecureToken()
-	expiraEm := now.Add(168 * time.Hour) // 7 days
+	expiraEm := now.Add(168 * time.Hour) // 7 dias
 
 	t := &domain.AnamneseToken{
 		Token:         tokenStr,
@@ -101,7 +101,6 @@ func (h *AnamneseHandler) GenerateLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add audit
 	audit := &domain.AnamneseTokenAudit{
 		Token:         tokenStr,
 		AlunoID:       &aluno.ID,
@@ -147,7 +146,6 @@ func (h *AnamneseHandler) GetMetadata(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 	if t.ExpiraEm.Before(now) {
-		// Log audit
 		audit := &domain.AnamneseTokenAudit{
 			Token:         t.Token,
 			AlunoID:       t.AlunoID,
@@ -179,7 +177,6 @@ func (h *AnamneseHandler) GetMetadata(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add audit - VISUALIZADO
 	audit := &domain.AnamneseTokenAudit{
 		Token:         t.Token,
 		AlunoID:       t.AlunoID,
@@ -242,18 +239,17 @@ func (h *AnamneseHandler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Calculate PAR-Q legando score (soma simples do PAR-Q, de 0 a 6)
+	// RiskScoreCached: soma simples do PAR-Q (0–6).
 	parqScore := req.ParqDoencaCardiaca + req.ParqDorPeito + req.ParqTontura + req.ParqProblemaOsseo + req.ParqMedicamentoPressao + req.ParqImpedimentoActivity
 
-	// Create Anamnese
 	a := &domain.Anamnese{
 		AlunoID:                   t.AlunoID,
-		DataNascimento:            "", // updated from aluno if exists
+		DataNascimento:            "",
 		Idade:                     0,
 		Sexo:                      "",
 		Altura:                    req.Altura,
 		Peso:                      req.Peso,
-		Telefone:                  t.AlunoEmail, // Default fallback
+		Telefone:                  t.AlunoEmail, // placeholder até o aluno informar telefone
 		Email:                     t.AlunoEmail,
 		Patologias:                req.Patologias,
 		Medicamentos:              req.Medicamentos,
@@ -269,16 +265,15 @@ func (h *AnamneseHandler) Submit(w http.ResponseWriter, r *http.Request) {
 		ObjetivoPrincipal:         req.ObjetivoPrincipal,
 		ContatoEmergenciaNome:     req.ContatoEmergenciaNome,
 		ContatoEmergenciaTelefone: req.ContatoEmergenciaTelefone,
-		RiskScoreCached:           float64(parqScore), // Persist legando PAR-Q sum score
+		RiskScoreCached:           float64(parqScore),
 		PreenchidoPor:             "aluno",
-		Ativa:                     false, // starts inactive until approved
+		Ativa:                     false, // inativa até aprovação admin
 		CriadoEm:                  now,
 		PreRegistroID:             t.PreRegistroID,
 		StatusAprovacao:           "pendente",
 		TokenOrigem:               &t.Token,
 	}
 
-	// Fill data from official Aluno if exists
 	if t.AlunoID != nil {
 		aluno, err := h.alunoRepo.GetByID(r.Context(), *t.AlunoID)
 		if err == nil && aluno != nil {
@@ -293,7 +288,6 @@ func (h *AnamneseHandler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mark token as used
 	t.Usado = true
 	t.UsadoEm = &now
 	t.IpSubmissao = r.RemoteAddr
@@ -304,7 +298,6 @@ func (h *AnamneseHandler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add token audit - SUBMETIDO
 	audit := &domain.AnamneseTokenAudit{
 		Token:         t.Token,
 		AlunoID:       t.AlunoID,
@@ -377,7 +370,7 @@ func (h *AnamneseHandler) ListPending(w http.ResponseWriter, r *http.Request) {
 			ID:        a.ID,
 			AlunoID:   a.AlunoID,
 			AlunoNome: alNome,
-			RiskScore: a.RiskScoreCached, // soma simples do par-q
+			RiskScore: a.RiskScoreCached,
 			ParqScore: a.ParqDoencaCardiaca + a.ParqDorPeito + a.ParqTontura + a.ParqProblemaOsseo + a.ParqMedicamentoPressao + a.ParqImpedimentoActivity,
 			CriadoEm:  a.CriadoEm,
 		})
@@ -416,7 +409,7 @@ func (h *AnamneseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Calculate IMC = peso / (altura * altura)
+	// IMC = peso / (altura²).
 	imc := 0.0
 	if a.Altura > 0 {
 		imc = a.Peso / (a.Altura * a.Altura)
@@ -483,7 +476,7 @@ func (h *AnamneseHandler) Approve(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 
-	// Deactivate previous active anamneses for this aluno
+	// Aprova e desativa anamneses ativas anteriores do mesmo aluno.
 	if a.AlunoID != nil {
 		if err := h.anamRepo.DeactivateAllPreviousForAluno(r.Context(), *a.AlunoID, a.ID); err != nil {
 			writeJSONError(w, "Failed to deactivate old records: "+err.Error(), http.StatusInternalServerError)
@@ -491,7 +484,6 @@ func (h *AnamneseHandler) Approve(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Update status to approved and set as active
 	a.StatusAprovacao = "aprovada"
 	a.Ativa = true
 	a.AprovadoPor = &authUsername
@@ -502,7 +494,6 @@ func (h *AnamneseHandler) Approve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add audit trail to token if token exists
 	if a.TokenOrigem != nil {
 		audit := &domain.AnamneseTokenAudit{
 			Token:         *a.TokenOrigem,
@@ -566,7 +557,6 @@ func (h *AnamneseHandler) Reject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add audit trail to token if token exists
 	if a.TokenOrigem != nil {
 		audit := &domain.AnamneseTokenAudit{
 			Token:         *a.TokenOrigem,
@@ -615,7 +605,6 @@ func (h *AnamneseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// ReenviarEmail handles POST /api/v1/admin/alunos/{id}/anamnese/reenviar-email
 func (h *AnamneseHandler) ReenviarEmail(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	var id int64
@@ -641,7 +630,7 @@ func (h *AnamneseHandler) ReenviarEmail(w http.ResponseWriter, r *http.Request) 
 
 	now := time.Now()
 	tokenStr := generateSecureToken()
-	expiraEm := now.Add(168 * time.Hour) // 7 days
+	expiraEm := now.Add(168 * time.Hour) // 7 dias
 
 	t := &domain.AnamneseToken{
 		Token:         tokenStr,
@@ -661,7 +650,6 @@ func (h *AnamneseHandler) ReenviarEmail(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Add audit - GERADO
 	auditGerado := &domain.AnamneseTokenAudit{
 		Token:         tokenStr,
 		AlunoID:       &aluno.ID,
@@ -674,7 +662,6 @@ func (h *AnamneseHandler) ReenviarEmail(w http.ResponseWriter, r *http.Request) 
 	}
 	_ = h.anamRepo.AddTokenAudit(r.Context(), auditGerado)
 
-	// Send SMTP Email
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"
@@ -694,7 +681,6 @@ func (h *AnamneseHandler) ReenviarEmail(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
-// sendAnamneseEmail sends an email to the student with their health questionnaire link using configured SMTP parameters
 func sendAnamneseEmail(ctx context.Context, configRepo repositories.ConfiguracaoRepository, anamRepo repositories.AnamneseRepository, token *domain.AnamneseToken, host string, scheme string) error {
 	configs, err := configRepo.List(ctx)
 	if err != nil {

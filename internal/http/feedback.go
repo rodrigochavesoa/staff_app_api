@@ -15,13 +15,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// FeedbackHandler handles HTTP routes for training plan feedback and notifications.
 type FeedbackHandler struct {
 	repo     repositories.FeedbackRepository
 	linkRepo repositories.FichaRepository
 }
 
-// NewFeedbackHandler creates a new FeedbackHandler instance.
 func NewFeedbackHandler(repo repositories.FeedbackRepository, links repositories.FichaRepository) *FeedbackHandler {
 	return &FeedbackHandler{
 		repo:     repo,
@@ -29,20 +27,17 @@ func NewFeedbackHandler(repo repositories.FeedbackRepository, links repositories
 	}
 }
 
-// SubmitFeedbackRequest represents payload for POST /api/v1/feedback/{hash}.
 type SubmitFeedbackRequest struct {
 	Rating     *int    `json:"rating"`
 	Comentario *string `json:"comentario"`
 }
 
-// SubmitFeedbackResponse represents response returned on feedback submission.
 type SubmitFeedbackResponse struct {
 	Message    string `json:"message"`
 	FeedbackID int64  `json:"feedback_id"`
 	Rating     int    `json:"rating"`
 }
 
-// Submit handles POST /api/v1/feedback/{hash}
 func (h *FeedbackHandler) Submit(w http.ResponseWriter, r *http.Request) {
 	hash := chi.URLParam(r, "hash")
 	if hash == "" {
@@ -71,7 +66,6 @@ func (h *FeedbackHandler) Submit(w http.ResponseWriter, r *http.Request) {
 		commentStr = strings.TrimSpace(*req.Comentario)
 	}
 
-	// 1. Check if public link exists and is active before trying to write feedback
 	link, err := h.linkRepo.GetByHash(r.Context(), hash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -96,7 +90,7 @@ func (h *FeedbackHandler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Check if feedback was already sent (returns 409 Conflict with previous rating)
+	// 409 se já houver feedback para este hash.
 	existing, err := h.repo.GetFeedbackByHash(r.Context(), hash)
 	if err == nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -109,7 +103,6 @@ func (h *FeedbackHandler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Create feedback
 	fb := &domain.FeedbackFicha{
 		HashFicha:  hash,
 		Rating:     *req.Rating,
@@ -142,7 +135,6 @@ func (h *FeedbackHandler) Submit(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// VerifyResponse represents response returned on checking feedback status.
 type VerifyResponse struct {
 	HasFeedback bool   `json:"has_feedback"`
 	Rating      int    `json:"rating,omitempty"`
@@ -150,7 +142,6 @@ type VerifyResponse struct {
 	CreatedAt   string `json:"created_at,omitempty"`
 }
 
-// Verify handles GET /api/v1/feedback/{hash}
 func (h *FeedbackHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	hash := chi.URLParam(r, "hash")
 	if hash == "" {
@@ -189,13 +180,11 @@ func (h *FeedbackHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// PendingFeedbacksResponse represents list of pending feedbacks.
 type PendingFeedbacksResponse struct {
 	Total     int                     `json:"total"`
 	Feedbacks []*domain.FeedbackFicha `json:"feedbacks"`
 }
 
-// ListPending handles GET /api/v1/feedback/pendentes
 func (h *FeedbackHandler) ListPending(w http.ResponseWriter, r *http.Request) {
 	userIDStr := r.URL.Query().Get("user_id")
 	var userID *int64
@@ -226,12 +215,10 @@ func (h *FeedbackHandler) ListPending(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// MarkReadResponse represents response returned on marking notification read.
 type MarkReadResponse struct {
 	Message string `json:"message"`
 }
 
-// MarkRead handles POST /api/v1/feedback/notificacao/{notificacao_id}/marcar-lido
 func (h *FeedbackHandler) MarkRead(w http.ResponseWriter, r *http.Request) {
 	notifIDStr := chi.URLParam(r, "notificacao_id")
 	notifID, err := strconv.ParseInt(notifIDStr, 10, 64)

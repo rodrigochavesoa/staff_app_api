@@ -16,17 +16,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// AlunoHandler handles REST HTTP requests for students (alunos).
 type AlunoHandler struct {
 	repo repositories.AlunoRepository
 }
 
-// NewAlunoHandler creates a new AlunoHandler instance.
 func NewAlunoHandler(repo repositories.AlunoRepository) *AlunoHandler {
 	return &AlunoHandler{repo: repo}
 }
 
-// AlunoRequest represents the payload for POST/PUT requests.
 type AlunoRequest struct {
 	Nome                 string   `json:"nome"`
 	Idade                int      `json:"idade"`
@@ -49,7 +46,7 @@ type AlunoRequest struct {
 	Ativo                *bool    `json:"ativo,omitempty"`
 }
 
-// safeRuneSlice slices a string safely by runes to prevent UTF-8 corruption.
+// safeRuneSlice corta por runes (não bytes) para não corromper UTF-8.
 func safeRuneSlice(s string, maxRunes int) string {
 	if utf8.RuneCountInString(s) <= maxRunes {
 		return s
@@ -58,7 +55,6 @@ func safeRuneSlice(s string, maxRunes int) string {
 	return string(runes[:maxRunes])
 }
 
-// validate verifies request input validation rules.
 func (req *AlunoRequest) validate() error {
 	req.Nome = strings.TrimSpace(req.Nome)
 	if req.Nome == "" {
@@ -85,7 +81,6 @@ func (req *AlunoRequest) validate() error {
 		return errors.New("email cannot exceed 100 characters")
 	}
 
-	// Apply safe rune slicing for optional fields
 	req.Telefone = safeRuneSlice(strings.TrimSpace(req.Telefone), 20)
 	req.Objetivo = safeRuneSlice(strings.TrimSpace(req.Objetivo), 250)
 	req.ExclusoesPermanentes = safeRuneSlice(strings.TrimSpace(req.ExclusoesPermanentes), 1000)
@@ -94,7 +89,6 @@ func (req *AlunoRequest) validate() error {
 	return nil
 }
 
-// Create handles POST /api/v1/alunos
 func (h *AlunoHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req AlunoRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -155,7 +149,6 @@ func (h *AlunoHandler) Create(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(aluno)
 }
 
-// GetByID handles GET /api/v1/alunos/{id}
 func (h *AlunoHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -179,7 +172,6 @@ func (h *AlunoHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(aluno)
 }
 
-// List handles GET /api/v1/alunos
 func (h *AlunoHandler) List(w http.ResponseWriter, r *http.Request) {
 	busca := r.URL.Query().Get("busca")
 	inativos := r.URL.Query().Get("inativos") == "1"
@@ -199,7 +191,6 @@ func (h *AlunoHandler) List(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(alunos)
 }
 
-// Update handles PUT /api/v1/alunos/{id}
 func (h *AlunoHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -208,7 +199,6 @@ func (h *AlunoHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Make sure the student exists
 	existing, err := h.repo.GetByID(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -230,7 +220,6 @@ func (h *AlunoHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Map updated fields
 	existing.Nome = req.Nome
 	existing.Idade = req.Idade
 	existing.Sexo = req.Sexo
@@ -247,7 +236,7 @@ func (h *AlunoHandler) Update(w http.ResponseWriter, r *http.Request) {
 	existing.PlanoInicio = req.PlanoInicio
 	existing.PlanoFim = req.PlanoFim
 
-	// Handle approval transitions
+	// Só registra CadastroAprovadoEm na transição para aprovado.
 	if req.CadastroAprovado && !existing.CadastroAprovado {
 		t := time.Now()
 		existing.CadastroAprovadoEm = &t
@@ -274,7 +263,7 @@ func (h *AlunoHandler) Update(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(existing)
 }
 
-// Delete handles DELETE /api/v1/alunos/{id} (soft delete)
+// Delete desativa o aluno (soft delete).
 func (h *AlunoHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -295,7 +284,6 @@ func (h *AlunoHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Reactivate handles POST /api/v1/alunos/{id}/reativar
 func (h *AlunoHandler) Reactivate(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
