@@ -8,6 +8,7 @@ import (
 
 	"staff_app/internal/config"
 	"staff_app/internal/domain"
+	"staff_app/internal/exercicios/csvsync"
 	"staff_app/internal/http"
 	"staff_app/internal/platform/logger"
 	"staff_app/internal/sqlite"
@@ -49,10 +50,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 5. Initialize HTTP Server
+	// 5. Materialize exercise catalog CSV → SQLite (degraded startup on failure).
+	syncExerciseCatalog(db)
+
+	// 6. Initialize HTTP Server
 	server := http.NewServer(cfg, db)
 
-	// 6. Start HTTP Server with graceful shutdown
+	// 7. Start HTTP Server with graceful shutdown
 	if err := server.Start(); err != nil {
 		logger.Error("HTTP Server runtime error", err)
 		os.Exit(1)
@@ -60,6 +64,37 @@ func main() {
 
 	logger.Info("STAFF API shutdown complete.")
 	fmt.Println("Goodbye!")
+}
+
+func syncExerciseCatalog(db *sqlite.DB) {
+	csvPath := csvsync.DefaultCSVPath()
+	records, err := csvsync.ParseFile(csvPath)
+	if err != nil {
+		logger.Error("Failed to parse exercise catalog CSV", err, "path", csvPath)
+		return
+	}
+	if records == nil {
+		logger.Info("Exercise catalog CSV not found; skipping sync", "path", csvPath)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	repo := sqlite.NewExercicioRepository(db)
+	res, err := csvsync.Sync(ctx, repo, records)
+	if err != nil {
+		logger.Error("Failed to sync exercise catalog", err, "path", csvPath)
+		return
+	}
+	skipped := res.SkippedEmptyName + res.SkippedInvalidCode + res.SkippedReservedRange +
+		res.SkippedDBOwnerConflict + res.SkippedNameConflict
+	logger.Info("Exercise catalog synced",
+		"path", csvPath,
+		"inserted", res.Inserted,
+		"updated", res.Updated,
+		"skipped", skipped,
+	)
 }
 
 func bootstrapAdmin(ctx context.Context, db *sqlite.DB, cfg *config.Config) error {
