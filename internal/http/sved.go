@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"staff_app/internal/repositories"
 	"staff_app/internal/services"
 	"staff_app/internal/sqlite"
 
@@ -17,11 +18,11 @@ import (
 )
 
 type SVEDHandler struct {
-	db *sqlite.DB
+	repo *sqlite.SVEDRepository
 }
 
-func NewSVEDHandler(db *sqlite.DB) *SVEDHandler {
-	return &SVEDHandler{db: db}
+func NewSVEDHandler(repo *sqlite.SVEDRepository) *SVEDHandler {
+	return &SVEDHandler{repo: repo}
 }
 
 type CalcularSVEDRequest struct {
@@ -30,12 +31,6 @@ type CalcularSVEDRequest struct {
 	Descanso any    `json:"descanso"` // string or int
 	Rir      int    `json:"rir"`
 	Series   int    `json:"series"`
-}
-
-type svedSheet struct {
-	ID          int64
-	DataCriacao string
-	FichaJSON   string
 }
 
 func extrairExerciciosDeFichaJSON(fichaJSON string) []services.ExercicioJSON {
@@ -111,7 +106,7 @@ func svedMetricsFromExercise(fichaID int64, dataCriacao string, ex services.Exer
 	}, warnings
 }
 
-func svedHistoryForExercise(exercicioNome string, sheets []svedSheet) []services.SVEDHistoricoItem {
+func svedHistoryForExercise(exercicioNome string, sheets []repositories.SVEDSheet) []services.SVEDHistoricoItem {
 	historico := make([]services.SVEDHistoricoItem, 0, len(sheets))
 	needle := strings.ToLower(strings.TrimSpace(exercicioNome))
 	if needle == "" {
@@ -169,8 +164,7 @@ func (h *SVEDHandler) GetHistorico(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var alunoNome string
-	err = h.db.QueryRowContext(r.Context(), "SELECT nome FROM alunos WHERE id = ?", alunoID).Scan(&alunoNome)
+	alunoNome, err := h.repo.GetAlunoNomeByID(r.Context(), alunoID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			writeJSONError(w, "Aluno não encontrado", http.StatusNotFound)
@@ -180,72 +174,13 @@ func (h *SVEDHandler) GetHistorico(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := h.db.QueryContext(r.Context(), `
-		SELECT id, data_criacao, ficha_json 
-		FROM fichas_treino_web 
-		WHERE aluno = ? 
-		ORDER BY data_criacao DESC LIMIT 20
-	`, alunoNome)
+	sheets, err := h.repo.ListFichaSheetsByAlunoNome(r.Context(), alunoNome, 20)
 	if err != nil {
 		writeJSONError(w, "Failed to query history", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
 
-	var historico []services.SVEDHistoricoItem
-	for rows.Next() {
-		var fichaID int64
-		var dataCriacao string
-		var fichaJSON string
-		if err := rows.Scan(&fichaID, &dataCriacao, &fichaJSON); err != nil {
-			continue
-		}
-
-		exercicios := extrairExerciciosDeFichaJSON(fichaJSON)
-
-		for _, ex := range exercicios {
-			if strings.Contains(strings.ToLower(ex.Nome), strings.ToLower(exercicioNome)) {
-				series := services.ParseInt(ex.Series, 1)
-				reps := services.ParseInt(ex.Repeticoes, 10)
-				cadencia := ex.Cadencia
-				if cadencia == "" {
-					cadencia = "4010"
-				}
-				restSeconds := services.ParseDescanso(ex.Descanso)
-				rir := services.ParseInt(ex.RIR, 2)
-
-				var tutTotalEx int
-				if len(cadencia) == 4 {
-					cadVals := services.ParseCadencia(cadencia)
-					tempoPorRep := cadVals["excentrica"] + cadVals["pausa"] + cadVals["concentrica"] + cadVals["pico"]
-					tutTotalEx = reps * tempoPorRep * series
-				} else {
-					tutTotalEx = reps * series * 4
-				}
-
-				densidade := services.CalcularDensidade(float64(tutTotalEx), restSeconds)
-				ies := services.CalcularIES(series, reps, cadencia, restSeconds, rir)
-
-				historico = append(historico, services.SVEDHistoricoItem{
-					FichaID:     fichaID,
-					Data:        dataCriacao,
-					Series:      series,
-					Reps:        reps,
-					RIR:         rir,
-					Cadencia:    cadencia,
-					RestSeconds: restSeconds,
-					TutTotal:    tutTotalEx,
-					Densidade:   densidade,
-					IesScore:    ies,
-				})
-				break
-			}
-		}
-	}
-	if err := rows.Err(); err != nil {
-		writeJSONError(w, "Failed to iterate history", http.StatusInternalServerError)
-		return
-	}
+	historico := svedHistoryForExercise(exercicioNome, sheets)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
@@ -270,8 +205,7 @@ func (h *SVEDHandler) GetSugestao(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var studentName string
-	err = h.db.QueryRowContext(r.Context(), "SELECT aluno FROM fichas_treino_web WHERE id = ?", fichaID).Scan(&studentName)
+	studentName, err := h.repo.GetFichaAlunoByID(r.Context(), fichaID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			writeJSONError(w, "Ficha não encontrada", http.StatusNotFound)
@@ -281,73 +215,13 @@ func (h *SVEDHandler) GetSugestao(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := h.db.QueryContext(r.Context(), `
-		SELECT id, data_criacao, ficha_json 
-		FROM fichas_treino_web 
-		WHERE aluno = ? 
-		ORDER BY data_criacao DESC LIMIT 5
-	`, studentName)
+	sheets, err := h.repo.ListFichaSheetsByAlunoNome(r.Context(), studentName, 5)
 	if err != nil {
 		writeJSONError(w, "Failed to query history", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
 
-	var historico []services.SVEDHistoricoItem
-	for rows.Next() {
-		var fID int64
-		var dataCriacao string
-		var fichaJSON string
-		if err := rows.Scan(&fID, &dataCriacao, &fichaJSON); err != nil {
-			continue
-		}
-
-		exercicios := extrairExerciciosDeFichaJSON(fichaJSON)
-
-		for _, ex := range exercicios {
-			if strings.Contains(strings.ToLower(ex.Nome), strings.ToLower(exercicioNome)) {
-				series := services.ParseInt(ex.Series, 1)
-				reps := services.ParseInt(ex.Repeticoes, 10)
-				cadencia := ex.Cadencia
-				if cadencia == "" {
-					cadencia = "4010"
-				}
-				restSeconds := services.ParseDescanso(ex.Descanso)
-				rir := services.ParseInt(ex.RIR, 2)
-
-				var tutTotalEx int
-				if len(cadencia) == 4 {
-					cadVals := services.ParseCadencia(cadencia)
-					tempoPorRep := cadVals["excentrica"] + cadVals["pausa"] + cadVals["concentrica"] + cadVals["pico"]
-					tutTotalEx = reps * tempoPorRep * series
-				} else {
-					tutTotalEx = reps * series * 4
-				}
-
-				densidade := services.CalcularDensidade(float64(tutTotalEx), restSeconds)
-				ies := services.CalcularIES(series, reps, cadencia, restSeconds, rir)
-
-				historico = append(historico, services.SVEDHistoricoItem{
-					FichaID:     fID,
-					Data:        dataCriacao,
-					Series:      series,
-					Reps:        reps,
-					RIR:         rir,
-					Cadencia:    cadencia,
-					RestSeconds: restSeconds,
-					TutTotal:    tutTotalEx,
-					Densidade:   densidade,
-					IesScore:    ies,
-				})
-				break
-			}
-		}
-	}
-	if err := rows.Err(); err != nil {
-		writeJSONError(w, "Failed to iterate history", http.StatusInternalServerError)
-		return
-	}
-
+	historico := svedHistoryForExercise(exercicioNome, sheets)
 	sugestao := services.SugerirProgressaoSVED(exercicioNome, historico)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -366,14 +240,7 @@ func (h *SVEDHandler) GetSugestoesFicha(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var alunoNome string
-	var titulo string
-	var fichaJSON string
-	err = h.db.QueryRowContext(r.Context(), `
-		SELECT aluno, COALESCE(turma, 'Ficha'), ficha_json
-		FROM fichas_treino_web
-		WHERE id = ?
-	`, fichaID).Scan(&alunoNome, &titulo, &fichaJSON)
+	detail, err := h.repo.GetFichaDetailByID(r.Context(), fichaID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			writeJSONError(w, "Ficha não encontrada", http.StatusNotFound)
@@ -383,42 +250,21 @@ func (h *SVEDHandler) GetSugestoesFicha(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var alunoID sql.NullInt64
-	if err := h.db.QueryRowContext(r.Context(), "SELECT id FROM alunos WHERE nome = ? ORDER BY id DESC LIMIT 1", alunoNome).Scan(&alunoID); err != nil && !errors.Is(err, sql.ErrNoRows) {
+	alunoID, alunoIDOK, err := h.repo.GetAlunoIDByNomeLatest(r.Context(), detail.AlunoNome)
+	if err != nil {
 		writeJSONError(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	exercicios := extrairExerciciosDeFichaJSON(fichaJSON)
+	exercicios := extrairExerciciosDeFichaJSON(detail.FichaJSON)
 	responseWarnings := make([]string, 0)
 	if len(exercicios) == 0 {
 		responseWarnings = append(responseWarnings, "ficha sem exercícios parseáveis para SVED")
 	}
 
-	rows, err := h.db.QueryContext(r.Context(), `
-		SELECT id, COALESCE(data_criacao, ''), ficha_json
-		FROM fichas_treino_web
-		WHERE aluno = ?
-		ORDER BY data_criacao DESC
-		LIMIT 20
-	`, alunoNome)
+	sheets, err := h.repo.ListFichaSheetsByAlunoNome(r.Context(), detail.AlunoNome, 20)
 	if err != nil {
 		writeJSONError(w, "Failed to query history", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	sheets := make([]svedSheet, 0, 20)
-	for rows.Next() {
-		var sheet svedSheet
-		if err := rows.Scan(&sheet.ID, &sheet.DataCriacao, &sheet.FichaJSON); err != nil {
-			writeJSONError(w, "Failed to scan history", http.StatusInternalServerError)
-			return
-		}
-		sheets = append(sheets, sheet)
-	}
-	if err := rows.Err(); err != nil {
-		writeJSONError(w, "Failed to iterate history", http.StatusInternalServerError)
 		return
 	}
 
@@ -452,14 +298,14 @@ func (h *SVEDHandler) GetSugestoesFicha(w http.ResponseWriter, r *http.Request) 
 	resp := map[string]any{
 		"success":          true,
 		"ficha_id":         fichaID,
-		"aluno":            alunoNome,
-		"titulo":           titulo,
+		"aluno":            detail.AlunoNome,
+		"titulo":           detail.Titulo,
 		"total_exercicios": len(sugestoes),
 		"sugestoes":        sugestoes,
 		"warnings":         responseWarnings,
 	}
-	if alunoID.Valid {
-		resp["aluno_id"] = alunoID.Int64
+	if alunoIDOK {
+		resp["aluno_id"] = alunoID
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -480,8 +326,7 @@ func (h *SVEDHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var alunoNome string
-	err = h.db.QueryRowContext(r.Context(), "SELECT nome FROM alunos WHERE id = ?", alunoID).Scan(&alunoNome)
+	alunoNome, err := h.repo.GetAlunoNomeByID(r.Context(), alunoID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			writeJSONError(w, "Aluno não encontrado", http.StatusNotFound)
@@ -491,63 +336,35 @@ func (h *SVEDHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var statsGerais struct {
-		IesMedioGeral       float64 `json:"ies_medio_geral"`
-		DensidadeMediaGeral float64 `json:"densidade_media_geral"`
-		VolumeEfetivoGeral  float64 `json:"volume_efetivo_geral"`
-	}
-
-	err = h.db.QueryRowContext(r.Context(), `
-		SELECT COALESCE(AVG(ies_score), 0.0), COALESCE(AVG(densidade), 0.0), COALESCE(AVG(volume_sved), 0.0) 
-		FROM fichas_treino_web 
-		WHERE aluno = ?
-	`, alunoNome).Scan(&statsGerais.IesMedioGeral, &statsGerais.DensidadeMediaGeral, &statsGerais.VolumeEfetivoGeral)
+	agg, err := h.repo.GetAggregatedStatsByAluno(r.Context(), alunoNome)
 	if err != nil {
 		writeJSONError(w, "Failed to query stats gerais", http.StatusInternalServerError)
 		return
 	}
 
-	statsGerais.IesMedioGeral = math.Round(statsGerais.IesMedioGeral*10) / 10
-	statsGerais.DensidadeMediaGeral = math.Round(statsGerais.DensidadeMediaGeral*100) / 100
-	statsGerais.VolumeEfetivoGeral = math.Round(statsGerais.VolumeEfetivoGeral*10) / 10
+	statsGerais := map[string]float64{
+		"ies_medio_geral":       math.Round(agg.IesMedio*10) / 10,
+		"densidade_media_geral": math.Round(agg.DensidadeMedia*100) / 100,
+		"volume_efetivo_geral":  math.Round(agg.VolumeEfetivo*10) / 10,
+	}
 
-	rows, err := h.db.QueryContext(r.Context(), `
-		SELECT id, COALESCE(turma, 'Ficha'), data_criacao, ies_score, tut_total, densidade, volume_sved, ficha_json 
-		FROM fichas_treino_web 
-		WHERE aluno = ? 
-		ORDER BY data_criacao DESC LIMIT 20
-	`, alunoNome)
+	sheets, err := h.repo.ListDashboardSheetsByAluno(r.Context(), alunoNome, 20)
 	if err != nil {
 		writeJSONError(w, "Failed to query sheets history", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
 
 	var evolucaoTemporal []map[string]any
 	var historicoSved []map[string]any
 	exerciseGrouping := make(map[string]*ExerciseDashboardStats)
 
-	for rows.Next() {
-		var id int64
-		var turma string
-		var dataCriacao string
-		var iesScore float64
-		var tutTotal int
-		var densidade float64
-		var volumeSved int
-		var fichaJSON string
-
-		if err := rows.Scan(&id, &turma, &dataCriacao, &iesScore, &tutTotal, &densidade, &volumeSved, &fichaJSON); err != nil {
-			continue
-		}
-
-		exercicios := extrairExerciciosDeFichaJSON(fichaJSON)
+	for _, sheet := range sheets {
+		exercicios := extrairExerciciosDeFichaJSON(sheet.FichaJSON)
 		totalEx := 1
 		if len(exercicios) > 0 {
 			totalEx = len(exercicios)
 		}
 
-		// Group exercises for densidade_por_exercicio
 		for _, ex := range exercicios {
 			bloco := "principal"
 			if ex.Bloco != "" {
@@ -592,26 +409,22 @@ func (h *SVEDHandler) GetDashboard(w http.ResponseWriter, r *http.Request) {
 		}
 
 		evolucaoTemporal = append(evolucaoTemporal, map[string]any{
-			"ficha_id":         id,
-			"titulo":           turma,
-			"data":             dataCriacao,
-			"ies_medio":        iesScore,
-			"tut_medio":        float64(tutTotal),
-			"densidade_media":  densidade,
-			"volume_efetivo":   float64(volumeSved),
+			"ficha_id":         sheet.ID,
+			"titulo":           sheet.Turma,
+			"data":             sheet.DataCriacao,
+			"ies_medio":        sheet.IesScore,
+			"tut_medio":        float64(sheet.TutTotal),
+			"densidade_media":  sheet.Densidade,
+			"volume_efetivo":   float64(sheet.VolumeSved),
 			"total_exercicios": totalEx,
 		})
 
 		historicoSved = append(historicoSved, map[string]any{
-			"ficha_id":  id,
-			"data":      dataCriacao,
-			"ies_score": iesScore,
-			"densidade": densidade,
+			"ficha_id":  sheet.ID,
+			"data":      sheet.DataCriacao,
+			"ies_score": sheet.IesScore,
+			"densidade": sheet.Densidade,
 		})
-	}
-	if err := rows.Err(); err != nil {
-		writeJSONError(w, "Failed to iterate sheets history", http.StatusInternalServerError)
-		return
 	}
 
 	var densidadePorExercicio []map[string]any
