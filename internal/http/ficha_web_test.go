@@ -48,7 +48,7 @@ func TestFichaWebEndpointsLegacyContracts(t *testing.T) {
 	}
 
 	cfg := &config.Config{CorsOrigins: []string{"*"}}
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 	authHeader := testAuthHeader(t, db, cfg)
 
 	// 0. POST /api/v1/criar-ficha - Failure (providing invalid array "conteudo" payload)

@@ -63,7 +63,7 @@ func TestAuthUsersPlansFlow(t *testing.T) {
 
 	cfg := &config.Config{CorsOrigins: []string{"*"}}
 	adminHeader := testAuthHeader(t, db, cfg)
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 
 	registerPayload := `{
 		"username": "coach1",

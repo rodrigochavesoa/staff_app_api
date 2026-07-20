@@ -48,7 +48,7 @@ func TestGerarPeriodizadaSimpleCaseEvidenceMetadata(t *testing.T) {
 		CorsOrigins:    []string{"*"},
 		AITrainingMode: services.AITrainingModeAssistive,
 	}
-	router := NewRouter(cfg, db, WithTrainingProviders(stubTrainingProvider{
+	router := NewRouter(cfg, depsForTestDB(db), WithTrainingProviders(stubTrainingProvider{
 		name: "gemini",
 		raw:  periodizedTrainingJSON("Supino Maquina"),
 	}))

@@ -44,7 +44,7 @@ func TestBlocosDinamicosCorridaFlow(t *testing.T) {
 		AITrainingMode: "off",
 	}
 	authHeader := testAuthHeader(t, db, cfg)
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 
 	alunoRepo := sqlite.NewAlunoRepository(db)
 	aluno := &domain.Aluno{Nome: "Runner Blocos", Idade: 30, Sexo: "M", Email: "blocos@example.com", Ativo: true}
@@ -145,8 +145,8 @@ func TestBlocosDinamicosCorridaFlow(t *testing.T) {
 		}
 		var nextResp struct {
 			Data struct {
-				SemanaNumero         int `json:"semana_numero"`
-				TotalSemanasGeradas  int `json:"total_semanas_geradas"`
+				SemanaNumero        int `json:"semana_numero"`
+				TotalSemanasGeradas int `json:"total_semanas_geradas"`
 			} `json:"data"`
 		}
 		if err := json.Unmarshal(w2.Body.Bytes(), &nextResp); err != nil {
@@ -298,7 +298,7 @@ func TestBlocosDinamicosCorridaFlow(t *testing.T) {
 			SecretKey:      "super-secret-key-change-me",
 			AITrainingMode: "assistive",
 		}
-		routerAssistive := NewRouter(cfgAssistive, db)
+		routerAssistive := NewRouter(cfgAssistive, depsForTestDB(db))
 		payload := `{
 			"vdot": 45,
 			"distancia_prova": "10K",
@@ -332,7 +332,7 @@ func TestBlocosDinamicosCorridaFlow(t *testing.T) {
 			SecretKey:      "super-secret-key-change-me",
 			AITrainingMode: "assistive",
 		}
-		routerAssistive := NewRouter(cfgAssistive, db)
+		routerAssistive := NewRouter(cfgAssistive, depsForTestDB(db))
 		payload := `{
 			"vdot": 50,
 			"distancia_prova": "5K",
@@ -364,7 +364,7 @@ func TestBlocosDinamicosCorridaFlow(t *testing.T) {
 			SecretKey:      "super-secret-key-change-me",
 			AITrainingMode: "required",
 		}
-		routerRequired := NewRouter(cfgRequired, db)
+		routerRequired := NewRouter(cfgRequired, depsForTestDB(db))
 		payload := `{
 			"vdot": 45,
 			"distancia_prova": "10K",

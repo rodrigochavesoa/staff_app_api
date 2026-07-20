@@ -12,18 +12,17 @@ import (
 
 	"staff_app/internal/config"
 	"staff_app/internal/platform/logger"
-	"staff_app/internal/sqlite"
 )
 
 // Server wraps the http.Server and handles startup and shutdown
 type Server struct {
 	httpServer *http.Server
-	db         *sqlite.DB
+	shutdown   func() error
 }
 
 // NewServer creates a new configured Server instance
-func NewServer(cfg *config.Config, db *sqlite.DB) *Server {
-	router := NewRouter(cfg, db)
+func NewServer(cfg *config.Config, deps Deps) *Server {
+	router := NewRouter(cfg, deps)
 
 	httpServer := &http.Server{
 		Addr:         ":" + cfg.Port,
@@ -35,7 +34,7 @@ func NewServer(cfg *config.Config, db *sqlite.DB) *Server {
 
 	return &Server{
 		httpServer: httpServer,
-		db:         db,
+		shutdown:   deps.Shutdown,
 	}
 }
 
@@ -75,9 +74,9 @@ func (s *Server) Start() error {
 		}
 
 		// Close DB connection pool
-		if s.db != nil {
+		if s.shutdown != nil {
 			logger.Info("Closing database connection pool...")
-			if err := s.db.Close(); err != nil {
+			if err := s.shutdown(); err != nil {
 				logger.Error("Error closing database connection", err)
 			}
 		}

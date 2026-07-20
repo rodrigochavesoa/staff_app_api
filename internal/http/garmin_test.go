@@ -45,7 +45,7 @@ func TestGarminCSVUploadFlow(t *testing.T) {
 		GarminUploadDir: filepath.Join(tempDir, "uploads"),
 		MaxUploadBytes:  50 * 1024 * 1024,
 	}
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 	authHeader := testAuthHeader(t, db, cfg)
 
 	body := &bytes.Buffer{}
@@ -223,7 +223,7 @@ func TestGarminFITUploadFixture(t *testing.T) {
 		GarminUploadDir: filepath.Join(tempDir, "uploads"),
 		MaxUploadBytes:  50 * 1024 * 1024,
 	}
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 	authHeader := testAuthHeader(t, db, cfg)
 
 	body := &bytes.Buffer{}
@@ -299,7 +299,7 @@ func TestGarminUploadSecurity(t *testing.T) {
 		GarminUploadDir: uploadDir,
 		MaxUploadBytes:  1024 * 1024,
 	}
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 	authHeader := testAuthHeader(t, db, cfg)
 
 	// Test cases with malicious filenames

@@ -74,7 +74,7 @@ func TestFeedbackHTTPHandler(t *testing.T) {
 	}
 
 	cfg := &config.Config{CorsOrigins: []string{"*"}}
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 	authHeader := testAuthHeader(t, db, cfg)
 
 	// 1. GET /api/v1/feedback/{hash} - Verification (no feedback submitted yet)

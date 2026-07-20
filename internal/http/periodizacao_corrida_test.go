@@ -42,7 +42,7 @@ func TestPeriodizacaoCorridaFlow(t *testing.T) {
 	}
 
 	authHeader := testAuthHeader(t, db, cfg)
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 
 	// Create test student (aluno)
 	alunoRepo := sqlite.NewAlunoRepository(db)

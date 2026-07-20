@@ -39,7 +39,7 @@ func TestExerciciosReabilitacaoFlow(t *testing.T) {
 	}
 
 	authHeader := testAuthHeader(t, db, cfg)
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 
 	// 1. Create a therapeutic exercise (POST /api/v1/exercicios/personalizados)
 	exTerapPayload := `{
@@ -283,7 +283,7 @@ func TestExerciciosBibliotecaUnificada(t *testing.T) {
 	}
 
 	authHeader := testAuthHeader(t, db, cfg)
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 
 	// Create a database exercise
 	exPayload := `{
@@ -420,7 +420,7 @@ func TestExerciciosSugestoesModeration(t *testing.T) {
 	}
 
 	authHeader := testAuthHeader(t, db, cfg)
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 
 	// Seed 2 pending suggestions manually in the database
 	ctx := t.Context()

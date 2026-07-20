@@ -43,7 +43,7 @@ func TestFichaTreinoFlow(t *testing.T) {
 	}
 
 	// Create a new router
-	router := NewRouter(cfg, db)
+	router := NewRouter(cfg, depsForTestDB(db))
 
 	// Seed Alunos and Planos
 	_, err = db.ExecContext(ctx, "INSERT INTO planos (id, nome, preco_default, ativo) VALUES (1, 'Plano Premium', 299.00, 1)")
