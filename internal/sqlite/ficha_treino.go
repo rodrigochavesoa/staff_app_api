@@ -162,13 +162,36 @@ func (r *FichaTreinoRepository) Delete(ctx context.Context, id int64) error {
 	}
 	defer tx.Rollback()
 
-	// 1. Delete matching public links in fichas_web
-	_, err = tx.ExecContext(ctx, "DELETE FROM fichas_web WHERE ficha_id = ?", id)
-	if err != nil {
-		return fmt.Errorf("failed to delete related public links: %w", err)
+	// Child rows that FK-reference fichas_web.hash / fichas_treino_web.id must go first
+	// (PRAGMA foreign_keys=ON). Order mirrors hard-delete after an E2E-like journey
+	// (public link accesses, treinos marcados, feedback SVED, then links + sheet).
+	for _, step := range []struct {
+		label string
+		query string
+	}{
+		{
+			"public link accesses",
+			`DELETE FROM fichas_web_acessos
+			 WHERE hash IN (SELECT hash FROM fichas_web WHERE ficha_id = ?)`,
+		},
+		{
+			"fichas_web_feedback",
+			`DELETE FROM fichas_web_feedback WHERE ficha_id = ?`,
+		},
+		{
+			"treinos_realizados",
+			`DELETE FROM treinos_realizados WHERE ficha_id = ?`,
+		},
+		{
+			"public links",
+			`DELETE FROM fichas_web WHERE ficha_id = ?`,
+		},
+	} {
+		if _, err = tx.ExecContext(ctx, step.query, id); err != nil {
+			return fmt.Errorf("failed to delete related %s: %w", step.label, err)
+		}
 	}
 
-	// 2. Delete the sheet itself
 	res, err := tx.ExecContext(ctx, "DELETE FROM fichas_treino_web WHERE id = ?", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete fichas_treino_web: %w", err)
