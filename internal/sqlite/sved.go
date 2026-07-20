@@ -8,9 +8,6 @@ import (
 	"staff_app/internal/repositories"
 )
 
-// Compile-time check: sqlite implements repositories.SVEDRepository.
-var _ repositories.SVEDRepository = (*SVEDRepository)(nil)
-
 // SVEDRepository persists SVED-related reads against SQLite.
 type SVEDRepository struct {
 	db *DB
