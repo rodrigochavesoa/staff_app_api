@@ -12,16 +12,15 @@ import (
 
 	"staff_app/internal/repositories"
 	"staff_app/internal/services"
-	"staff_app/internal/sqlite"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type SVEDHandler struct {
-	repo *sqlite.SVEDRepository
+	repo repositories.SVEDRepository
 }
 
-func NewSVEDHandler(repo *sqlite.SVEDRepository) *SVEDHandler {
+func NewSVEDHandler(repo repositories.SVEDRepository) *SVEDHandler {
 	return &SVEDHandler{repo: repo}
 }
 

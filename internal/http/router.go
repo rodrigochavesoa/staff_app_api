@@ -59,7 +59,7 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 	r.Get("/ping", healthHandler.Ping)
 
 	// VDOT Handler
-	vdotHandler := NewVDOTHandler(db)
+	vdotHandler := NewVDOTHandler(sqlite.NewTeste3kmRepository(db))
 
 	// Aluno Handler
 	alunoHandler := NewAlunoHandler(sqlite.NewAlunoRepository(db))
@@ -71,7 +71,7 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 	feedbackHandler := NewFeedbackHandler(sqlite.NewFeedbackRepository(db), sqlite.NewFichaWebRepository(db))
 
 	// Garmin Handler
-	garminHandler := NewGarminHandler(cfg, db)
+	garminHandler := NewGarminHandler(cfg, sqlite.NewGarminRepository(db), sqlite.NewAlunoRepository(db))
 
 	// Auth & Plans Handlers
 	authHandler := NewAuthHandler(sqlite.NewUserRepository(db), cfg.SecretKey)
@@ -99,7 +99,10 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 		sqlite.NewAnamneseRepository(db),
 		cfg,
 	)
-	adminConfigHandler := NewAdminConfigHandler(db)
+	adminConfigHandler := NewAdminConfigHandler(
+		sqlite.NewConfiguracaoRepository(db),
+		sqlite.NewDashboardRepository(db),
+	)
 	historicoHandler := NewHistoricoHandler(
 		sqlite.NewHistoricoRepository(db),
 		sqlite.NewAlunoRepository(db),
@@ -300,7 +303,7 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 				r.Get("/dashboard/stats", adminConfigHandler.DashboardStats)
 
 				// Specialised reports (Fase 4)
-				relatoriosHandler := NewRelatoriosHandler(db)
+				relatoriosHandler := NewRelatoriosHandler(sqlite.NewRelatoriosRepository(db))
 				r.Route("/relatorios", func(r chi.Router) {
 					r.Get("/dashboard", relatoriosHandler.GetDashboardResumo)
 					r.Get("/patologias", relatoriosHandler.GetPatologias)
@@ -325,7 +328,7 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 					}
 				}
 
-				ragHandler := NewRAGHandler(db, embedProvider, vectorStore)
+				ragHandler := NewRAGHandler(sqlite.NewRAGRepository(db), embedProvider, vectorStore)
 				r.Route("/consulta-base", func(r chi.Router) {
 					r.Post("/", ragHandler.Search)
 					r.Get("/historico", ragHandler.GetHistorico)
