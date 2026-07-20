@@ -12,41 +12,46 @@ import (
 	"time"
 
 	"staff_app/internal/domain"
+	"staff_app/internal/repositories"
 	"staff_app/internal/services"
-	"staff_app/internal/sqlite"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type FichaTreinoHandler struct {
-	repo              *sqlite.FichaTreinoRepository
-	db                *sqlite.DB
-	alunoRepo         *sqlite.AlunoRepository
-	fichaWebRepo      *sqlite.FichaWebRepository
-	anamRepo          *sqlite.AnamneseRepository
-	ragRepo           *sqlite.RAGRepository
+	repo              repositories.FichaTreinoRepository
+	alunoRepo         repositories.AlunoRepository
+	fichaRepo         repositories.FichaRepository
+	anamRepo          repositories.AnamneseRepository
+	ragRepo           repositories.RAGRepository
 	trainingAI        *services.TrainingProviderChain
 	evidencePipeline  *services.EvidencePipeline
 	evidenceTelemetry services.EvidencePipelineTelemetryRecorder
 }
 
-func NewFichaTreinoHandler(db *sqlite.DB, trainingAI ...*services.TrainingProviderChain) *FichaTreinoHandler {
+func NewFichaTreinoHandler(
+	repo repositories.FichaTreinoRepository,
+	aluno repositories.AlunoRepository,
+	ficha repositories.FichaRepository,
+	anam repositories.AnamneseRepository,
+	rag repositories.RAGRepository,
+	evidence *services.EvidencePipeline,
+	telemetry services.EvidencePipelineTelemetryRecorder,
+	trainingAI ...*services.TrainingProviderChain,
+) *FichaTreinoHandler {
 	var chain *services.TrainingProviderChain
 	if len(trainingAI) > 0 {
 		chain = trainingAI[0]
 	}
-	anamRepo := sqlite.NewAnamneseRepository(db)
-	ragRepo := sqlite.NewRAGRepository(db)
 	return &FichaTreinoHandler{
-		repo:              sqlite.NewFichaTreinoRepository(db),
-		db:                db,
-		alunoRepo:         sqlite.NewAlunoRepository(db),
-		fichaWebRepo:      sqlite.NewFichaWebRepository(db),
-		anamRepo:          anamRepo,
-		ragRepo:           ragRepo,
+		repo:              repo,
+		alunoRepo:         aluno,
+		fichaRepo:         ficha,
+		anamRepo:          anam,
+		ragRepo:           rag,
 		trainingAI:        chain,
-		evidencePipeline:  services.NewEvidencePipeline(db, anamRepo, ragRepo),
-		evidenceTelemetry: sqlite.NewEvidencePipelineTelemetryRecorder(db),
+		evidencePipeline:  evidence,
+		evidenceTelemetry: telemetry,
 	}
 }
 

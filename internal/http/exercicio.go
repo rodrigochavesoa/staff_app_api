@@ -11,19 +11,17 @@ import (
 
 	"staff_app/internal/domain"
 	"staff_app/internal/exercicios/csvsync"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type ExercicioHandler struct {
-	repo *sqlite.ExercicioRepository
+	repo repositories.ExercicioRepository
 }
 
-func NewExercicioHandler(db *sqlite.DB) *ExercicioHandler {
-	return &ExercicioHandler{
-		repo: sqlite.NewExercicioRepository(db),
-	}
+func NewExercicioHandler(repo repositories.ExercicioRepository) *ExercicioHandler {
+	return &ExercicioHandler{repo: repo}
 }
 
 type combinedExercise struct {

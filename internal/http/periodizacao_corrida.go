@@ -18,28 +18,34 @@ import (
 	"staff_app/internal/corrida/blocos"
 	"staff_app/internal/daniels"
 	"staff_app/internal/domain"
+	"staff_app/internal/repositories"
 	"staff_app/internal/services"
-	"staff_app/internal/sqlite"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type PeriodizacaoCorridaHandler struct {
-	repo          *sqlite.PeriodizacaoCorridaRepository
-	alunoRepo     *sqlite.AlunoRepository
-	garminRepo    *sqlite.GarminRepository
-	anamneseRepo  *sqlite.AnamneseRepository
-	cfg           *config.Config
+	repo         repositories.PeriodizacaoCorridaRepository
+	alunoRepo    repositories.AlunoRepository
+	garminRepo   repositories.GarminRepository
+	anamneseRepo repositories.AnamneseRepository
+	cfg          *config.Config
 	templatesPath string
 	blocksAI      services.BlocksAIProvider
 }
 
-func NewPeriodizacaoCorridaHandler(db *sqlite.DB, cfg *config.Config) *PeriodizacaoCorridaHandler {
+func NewPeriodizacaoCorridaHandler(
+	repo repositories.PeriodizacaoCorridaRepository,
+	aluno repositories.AlunoRepository,
+	garmin repositories.GarminRepository,
+	anamnese repositories.AnamneseRepository,
+	cfg *config.Config,
+) *PeriodizacaoCorridaHandler {
 	return &PeriodizacaoCorridaHandler{
-		repo:          sqlite.NewPeriodizacaoCorridaRepository(db),
-		alunoRepo:     sqlite.NewAlunoRepository(db),
-		garminRepo:    sqlite.NewGarminRepository(db),
-		anamneseRepo:  sqlite.NewAnamneseRepository(db),
+		repo:          repo,
+		alunoRepo:     aluno,
+		garminRepo:    garmin,
+		anamneseRepo:  anamnese,
 		cfg:           cfg,
 		templatesPath: resolveStaffDataPath("json", "templates_daniels_blocos.json"),
 		// Default assistive path: local enricher only (no remote API keys).

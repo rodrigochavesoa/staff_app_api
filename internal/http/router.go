@@ -91,8 +91,14 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 		sqlite.NewUserRepository(db),
 		sqlite.NewConfiguracaoRepository(db),
 	)
-	exercicioHandler := NewExercicioHandler(db)
-	periodizacaoCorridaHandler := NewPeriodizacaoCorridaHandler(db, cfg)
+	exercicioHandler := NewExercicioHandler(sqlite.NewExercicioRepository(db))
+	periodizacaoCorridaHandler := NewPeriodizacaoCorridaHandler(
+		sqlite.NewPeriodizacaoCorridaRepository(db),
+		sqlite.NewAlunoRepository(db),
+		sqlite.NewGarminRepository(db),
+		sqlite.NewAnamneseRepository(db),
+		cfg,
+	)
 	adminConfigHandler := NewAdminConfigHandler(db)
 	historicoHandler := NewHistoricoHandler(
 		sqlite.NewHistoricoRepository(db),
@@ -155,7 +161,18 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 			r.Get("/aluno/{aluno_id}/fichas", fichaWebHandler.ListByAluno)
 
 			// New Ficha Treino (Fase 2) management endpoints
-			fichaTreinoHandler := NewFichaTreinoHandler(db, trainingChain)
+			anamRepo := sqlite.NewAnamneseRepository(db)
+			ragRepo := sqlite.NewRAGRepository(db)
+			fichaTreinoHandler := NewFichaTreinoHandler(
+				sqlite.NewFichaTreinoRepository(db),
+				sqlite.NewAlunoRepository(db),
+				sqlite.NewFichaWebRepository(db),
+				anamRepo,
+				ragRepo,
+				services.NewEvidencePipeline(db, anamRepo, ragRepo),
+				sqlite.NewEvidencePipelineTelemetryRecorder(db),
+				trainingChain,
+			)
 			r.Route("/fichas", func(r chi.Router) {
 				r.Post("/manual/criar", fichaTreinoHandler.CreateManual)
 				r.Get("/{id}", fichaTreinoHandler.GetByID)
