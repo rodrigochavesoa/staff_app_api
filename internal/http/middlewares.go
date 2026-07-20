@@ -10,7 +10,6 @@ import (
 	"staff_app/internal/platform/logger"
 )
 
-// responseWriter is a wrapper around http.ResponseWriter to capture status code
 type responseWriter struct {
 	http.ResponseWriter
 	statusCode int
@@ -25,7 +24,7 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-// LoggerMiddleware logs each HTTP request and flags slow ones (>2s)
+// LoggerMiddleware registra cada request; >2s vira SLOW_REQUEST.
 func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -45,17 +44,14 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// RecoveryMiddleware handles panics and returns a generic 500 error
 func RecoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				// Get stack trace
 				stack := debug.Stack()
 				logger.Error(fmt.Sprintf("UNHANDLED_EXCEPTION method=%s path=%s panic=%v", r.Method, r.URL.Path, err), nil)
 				logger.Error("Traceback:\n"+string(stack), nil)
 
-				// Respond generically
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte(`{"error":"Internal Server Error"}`))
@@ -66,13 +62,11 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// CorsMiddleware injects CORS headers based on configured origins
 func CorsMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			origin := r.Header.Get("Origin")
 
-			// Check if origin is allowed
 			isAllowed := false
 			if origin != "" {
 				for _, o := range allowedOrigins {
@@ -90,7 +84,7 @@ func CorsMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {
 				w.Header().Set("Access-Control-Allow-Credentials", "true")
 			}
 
-			// Handle preflight requests
+			// Preflight CORS (OPTIONS) → 204.
 			if r.Method == "OPTIONS" {
 				w.WriteHeader(http.StatusNoContent)
 				return

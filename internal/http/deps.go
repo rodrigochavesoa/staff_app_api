@@ -6,7 +6,6 @@ import (
 	"staff_app/internal/sqlite"
 )
 
-// Deps contains the application dependencies used by the HTTP composition root.
 type Deps struct {
 	Health repositories.DatabaseHealth
 
@@ -32,7 +31,7 @@ type Deps struct {
 	EvidencePipeline  *services.EvidencePipeline
 	EvidenceTelemetry services.EvidencePipelineTelemetryRecorder
 
-	// Shutdown closes the SQLite connection pool during graceful shutdown.
+	// Shutdown fecha o pool SQLite no graceful shutdown.
 	Shutdown func() error
 }
 
