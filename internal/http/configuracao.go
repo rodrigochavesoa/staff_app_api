@@ -13,20 +13,20 @@ import (
 
 	"staff_app/internal/domain"
 	"staff_app/internal/platform/logger"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 )
 
 // AdminConfigHandler handles HTTP requests for system configurations and administrative dashboard stats.
 type AdminConfigHandler struct {
-	configRepo    *sqlite.ConfiguracaoRepository
-	dashboardRepo *sqlite.DashboardRepository
+	configRepo    repositories.ConfiguracaoRepository
+	dashboardRepo repositories.DashboardRepository
 }
 
 // NewAdminConfigHandler creates a new AdminConfigHandler instance.
-func NewAdminConfigHandler(db *sqlite.DB) *AdminConfigHandler {
+func NewAdminConfigHandler(configRepo repositories.ConfiguracaoRepository, dashboardRepo repositories.DashboardRepository) *AdminConfigHandler {
 	return &AdminConfigHandler{
-		configRepo:    sqlite.NewConfiguracaoRepository(db),
-		dashboardRepo: sqlite.NewDashboardRepository(db),
+		configRepo:    configRepo,
+		dashboardRepo: dashboardRepo,
 	}
 }
 

@@ -9,19 +9,19 @@ import (
 
 	"staff_app/internal/domain"
 	"staff_app/internal/platform/logger"
+	"staff_app/internal/repositories"
 	"staff_app/internal/services"
-	"staff_app/internal/sqlite"
 )
 
 type RAGHandler struct {
-	repo              *sqlite.RAGRepository
+	repo              repositories.RAGRepository
 	embeddingProvider services.EmbeddingProvider
 	vectorStore       services.VectorStore
 }
 
-func NewRAGHandler(db *sqlite.DB, embed services.EmbeddingProvider, store services.VectorStore) *RAGHandler {
+func NewRAGHandler(repo repositories.RAGRepository, embed services.EmbeddingProvider, store services.VectorStore) *RAGHandler {
 	return &RAGHandler{
-		repo:              sqlite.NewRAGRepository(db),
+		repo:              repo,
 		embeddingProvider: embed,
 		vectorStore:       store,
 	}

@@ -16,22 +16,22 @@ import (
 	"staff_app/internal/config"
 	"staff_app/internal/domain"
 	garminpkg "staff_app/internal/garmin"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type GarminHandler struct {
 	cfg       *config.Config
-	repo      *sqlite.GarminRepository
-	alunoRepo *sqlite.AlunoRepository
+	repo      repositories.GarminRepository
+	alunoRepo repositories.AlunoRepository
 }
 
-func NewGarminHandler(cfg *config.Config, db *sqlite.DB) *GarminHandler {
+func NewGarminHandler(cfg *config.Config, repo repositories.GarminRepository, aluno repositories.AlunoRepository) *GarminHandler {
 	return &GarminHandler{
 		cfg:       cfg,
-		repo:      sqlite.NewGarminRepository(db),
-		alunoRepo: sqlite.NewAlunoRepository(db),
+		repo:      repo,
+		alunoRepo: aluno,
 	}
 }
 

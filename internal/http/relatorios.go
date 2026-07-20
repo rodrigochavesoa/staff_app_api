@@ -5,17 +5,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 )
 
 type RelatoriosHandler struct {
-	repo *sqlite.RelatoriosRepository
+	repo repositories.RelatoriosRepository
 }
 
-func NewRelatoriosHandler(db *sqlite.DB) *RelatoriosHandler {
-	return &RelatoriosHandler{
-		repo: sqlite.NewRelatoriosRepository(db),
-	}
+func NewRelatoriosHandler(repo repositories.RelatoriosRepository) *RelatoriosHandler {
+	return &RelatoriosHandler{repo: repo}
 }
 
 func (h *RelatoriosHandler) GetDashboardResumo(w http.ResponseWriter, r *http.Request) {

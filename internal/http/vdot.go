@@ -11,21 +11,19 @@ import (
 
 	"staff_app/internal/daniels"
 	"staff_app/internal/domain"
-	"staff_app/internal/sqlite"
+	"staff_app/internal/repositories"
 
 	"github.com/go-chi/chi/v5"
 )
 
 // VDOTHandler handles HTTP requests for VDOT calculations and test management.
 type VDOTHandler struct {
-	repo *sqlite.Teste3kmRepository
+	repo repositories.Teste3kmRepository
 }
 
 // NewVDOTHandler creates a new VDOTHandler instance.
-func NewVDOTHandler(db *sqlite.DB) *VDOTHandler {
-	return &VDOTHandler{
-		repo: sqlite.NewTeste3kmRepository(db),
-	}
+func NewVDOTHandler(repo repositories.Teste3kmRepository) *VDOTHandler {
+	return &VDOTHandler{repo: repo}
 }
 
 // CreateRequest defines the request body for creating a new 3k test record.
