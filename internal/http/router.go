@@ -149,7 +149,7 @@ func NewRouter(cfg *config.Config, db *sqlite.DB, opts ...RouterOption) http.Han
 			r.Get("/metodos/{metodo}", fichaTreinoHandler.GetMetodoInfo)
 
 			// SVED (Fase 3) endpoints
-			svedHandler := NewSVEDHandler(db)
+			svedHandler := NewSVEDHandler(sqlite.NewSVEDRepository(db))
 			r.Route("/sved", func(r chi.Router) {
 				r.Post("/calcular", svedHandler.Calcular)
 				r.Get("/historico/{aluno_id}/{exercicio_nome}", svedHandler.GetHistorico)
