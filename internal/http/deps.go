@@ -31,7 +31,7 @@ type Deps struct {
 	EvidencePipeline  *services.EvidencePipeline
 	EvidenceTelemetry services.EvidencePipelineTelemetryRecorder
 
-	// Shutdown fecha o pool SQLite no graceful shutdown.
+	// Shutdown fecha o pool SQLite no encerramento gracioso.
 	Shutdown func() error
 }
 

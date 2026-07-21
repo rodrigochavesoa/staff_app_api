@@ -17,16 +17,13 @@ import (
 )
 
 func main() {
-	// 1. Load Configurations
 	cfg := config.Load()
 
-	// 2. Setup Structured Logger
-	// Write logs to file in production mode
+	// Em produção, o logger também grava em arquivo.
 	writeToFile := cfg.Environment == "production"
 	cleanupLogger := logger.Setup(cfg.Environment, writeToFile)
 	defer cleanupLogger()
 
-	// Validate Configurations
 	if err := cfg.Validate(); err != nil {
 		logger.Error("Configuration validation failed", err)
 		os.Exit(1)
@@ -37,7 +34,6 @@ func main() {
 		"db_path", cfg.DatabasePath,
 	)
 
-	// 3. Connect to SQLite Database and apply migrations
 	db, err := sqlite.Connect(cfg.DatabasePath)
 	if err != nil {
 		logger.Error("Failed to initialize database", err)
@@ -45,19 +41,17 @@ func main() {
 	}
 	deps := http.NewSQLiteDeps(db)
 
-	// 4. Ensure a first admin exists on fresh databases.
+	// Garante um admin inicial quando o banco está vazio.
 	if err := bootstrapAdmin(context.Background(), db, cfg); err != nil {
 		logger.Error("Failed to bootstrap admin user", err)
 		os.Exit(1)
 	}
 
-	// 5. Materialize exercise catalog CSV → SQLite (degraded startup on failure).
+	// Catálogo CSV → SQLite; falha não impede o startup.
 	syncExerciseCatalog(db)
 
-	// 6. Initialize HTTP Server
 	server := http.NewServer(cfg, deps)
 
-	// 7. Start HTTP Server with graceful shutdown
 	if err := server.Start(); err != nil {
 		logger.Error("HTTP Server runtime error", err)
 		os.Exit(1)
