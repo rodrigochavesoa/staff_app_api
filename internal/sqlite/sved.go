@@ -8,12 +8,10 @@ import (
 	"staff_app/internal/repositories"
 )
 
-// SVEDRepository persists SVED-related reads against SQLite.
 type SVEDRepository struct {
 	db *DB
 }
 
-// NewSVEDRepository constructs a SVEDRepository.
 func NewSVEDRepository(db *DB) *SVEDRepository {
 	return &SVEDRepository{db: db}
 }

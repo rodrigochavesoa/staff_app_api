@@ -42,26 +42,22 @@ func (r *RelatoriosRepository) GetDashboardResumo(ctx context.Context) (*domain.
 	var resumo domain.RelatoriosDashboardResumo
 	resumo.DataAtualizacao = time.Now().Format("2006-01-02 15:04:05")
 
-	// 1. Total de exercícios ativos
 	err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM exercicios_reabilitacao WHERE status = 'ativo'").Scan(&resumo.TotalExerciciosAtivos)
 	if err != nil {
 		return nil, err
 	}
 
-	// 2. Total de sugestões pendentes
 	err = r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM sugestoes_exercicios_rehab WHERE status = 'pendente'").Scan(&resumo.SugestoesPendentes)
 	if err != nil {
 		return nil, err
 	}
 
-	// 3. Sugestões nos últimos 30 dias
 	time30dAgo := time.Now().AddDate(0, 0, -30).Format("2006-01-02 15:04:05")
 	err = r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM sugestoes_exercicios_rehab WHERE data_sugestao >= ?", time30dAgo).Scan(&resumo.SugestoesUltimos30d)
 	if err != nil {
 		return nil, err
 	}
 
-	// 4. Taxa de aprovação nos últimos 30 dias
 	var aprovados30d, total30d int
 	err = r.db.QueryRowContext(ctx, `
 		SELECT 
@@ -74,14 +70,12 @@ func (r *RelatoriosRepository) GetDashboardResumo(ctx context.Context) (*domain.
 		resumo.TaxaAprovacao30dPct = math.Round((float64(aprovados30d)/float64(total30d))*1000) / 10
 	}
 
-	// 5. Total de recomendações (soma de frequencia_sugestao das sugestões + utilizações reais)
 	var freqSugSoma int
 	err = r.db.QueryRowContext(ctx, "SELECT COALESCE(SUM(frequencia_sugestao), 0) FROM sugestoes_exercicios_rehab").Scan(&freqSugSoma)
 	if err != nil {
 		return nil, err
 	}
 
-	// 6. Processar utilizações a partir de fichas_treino_web
 	rows, err := r.db.QueryContext(ctx, "SELECT ficha_json FROM fichas_treino_web")
 	if err != nil {
 		return nil, err
@@ -112,7 +106,6 @@ func (r *RelatoriosRepository) GetDashboardResumo(ctx context.Context) (*domain.
 		resumo.TaxaUsoGlobalPct = math.Round((float64(totalUtilizacoes)/float64(resumo.TotalRecomendacoes))*1000) / 10
 	}
 
-	// 7. Exercícios ativos nunca usados
 	exRows, err := r.db.QueryContext(ctx, "SELECT nome FROM exercicios_reabilitacao WHERE status = 'ativo'")
 	if err == nil {
 		defer exRows.Close()
@@ -133,7 +126,6 @@ func (r *RelatoriosRepository) GetDashboardResumo(ctx context.Context) (*domain.
 }
 
 func (r *RelatoriosRepository) GetPatologiasCobertura(ctx context.Context) ([]domain.RelatorioPatologiaItem, error) {
-	// Obter todas as anamneses aprovadas com patologias
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT a.nome, an.patologias 
 		FROM alunos a 
@@ -145,7 +137,6 @@ func (r *RelatoriosRepository) GetPatologiasCobertura(ctx context.Context) ([]do
 	}
 	defer rows.Close()
 
-	// Mapear patologias para alunos
 	patologyStudents := make(map[string][]string)
 	for rows.Next() {
 		var alunoNome, patologiasStr string
@@ -175,7 +166,6 @@ func (r *RelatoriosRepository) GetPatologiasCobertura(ctx context.Context) ([]do
 	var list []domain.RelatorioPatologiaItem
 
 	for pat, students := range patologyStudents {
-		// Encontrar quantidade de exercícios na tabela de exercícios que targetam essa patologia
 		var totalExerciciosDisponiveis int
 		patSearch := "%" + strings.ToLower(pat) + "%"
 		err = r.db.QueryRowContext(ctx, `
@@ -193,7 +183,6 @@ func (r *RelatoriosRepository) GetPatologiasCobertura(ctx context.Context) ([]do
 			totalExerciciosDisponiveis = 1
 		}
 
-		// Encontrar total de utilizações reais nas fichas de treino desses alunos
 		totalUtilizacoes := 0
 		uniqueExerciciosPrescritos := make(map[string]bool)
 
@@ -233,7 +222,6 @@ func (r *RelatoriosRepository) GetPatologiasCobertura(ctx context.Context) ([]do
 }
 
 func (r *RelatoriosRepository) GetExerciciosSubutilizados(ctx context.Context, minRecomendacoes int) ([]domain.ExercicioSubutilizadoItem, error) {
-	// 1. Contar utilizações de exercícios reais nas fichas_treino_web
 	rows, err := r.db.QueryContext(ctx, "SELECT ficha_json FROM fichas_treino_web")
 	if err != nil {
 		return nil, err
@@ -256,7 +244,6 @@ func (r *RelatoriosRepository) GetExerciciosSubutilizados(ctx context.Context, m
 	}
 	rows.Close() // #nosec G104
 
-	// 2. Contar sugestões acumuladas da IA
 	sugRows, err := r.db.QueryContext(ctx, `
 		SELECT LOWER(TRIM(nome_exercicio)), COALESCE(SUM(frequencia_sugestao), 0)
 		FROM sugestoes_exercicios_rehab
@@ -275,7 +262,6 @@ func (r *RelatoriosRepository) GetExerciciosSubutilizados(ctx context.Context, m
 		sugRows.Close() // #nosec G104
 	}
 
-	// 3. Obter todos os exercícios ativos
 	exRows, err := r.db.QueryContext(ctx, `
 		SELECT codigo, nome, COALESCE(grupo_muscular, 'Geral'), COALESCE(indicacoes, 'N/A')
 		FROM exercicios_reabilitacao

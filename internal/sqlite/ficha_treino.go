@@ -137,7 +137,6 @@ func (r *FichaTreinoRepository) Update(ctx context.Context, f *domain.FichaTrein
 		return sql.ErrNoRows
 	}
 
-	// Sychronize with active public link if exists
 	_, err = tx.ExecContext(ctx, `
 		UPDATE fichas_web
 		SET conteudo_json = ?
@@ -162,9 +161,8 @@ func (r *FichaTreinoRepository) Delete(ctx context.Context, id int64) error {
 	}
 	defer tx.Rollback()
 
-	// Child rows that FK-reference fichas_web.hash / fichas_treino_web.id must go first
-	// (PRAGMA foreign_keys=ON). Order mirrors hard-delete after an E2E-like journey
-	// (public link accesses, treinos marcados, feedback SVED, then links + sheet).
+	// Filhos com FK para fichas_web.hash / fichas_treino_web.id primeiro
+	// (PRAGMA foreign_keys=ON): acessos, treinos marcados, feedback SVED, links e ficha.
 	for _, step := range []struct {
 		label string
 		query string
@@ -227,7 +225,6 @@ func (r *FichaTreinoRepository) CreatePeriodizadaWithArchiveAndLink(ctx context.
 	now := time.Now()
 	nowStr := now.Format("2006-01-02 15:04:05")
 
-	// 0. Query the ID of the previous active sheet for this student
 	var previousActiveID sql.NullInt64
 	err = tx.QueryRowContext(ctx, `
 		SELECT id FROM fichas_treino_web 
@@ -245,7 +242,6 @@ func (r *FichaTreinoRepository) CreatePeriodizadaWithArchiveAndLink(ctx context.
 		f.FichaAnteriorID = fichaAnteriorID
 	}
 
-	// 1. Archive previous active sheets for this student name
 	_, err = tx.ExecContext(ctx, `
 		UPDATE fichas_treino_web
 		SET data_arquivamento = ?, versao = versao + 1
@@ -255,7 +251,6 @@ func (r *FichaTreinoRepository) CreatePeriodizadaWithArchiveAndLink(ctx context.
 		return "", fmt.Errorf("failed to archive active sheets: %w", err)
 	}
 
-	// 2. Deactivate previous active links for this student ID
 	_, err = tx.ExecContext(ctx, `
 		UPDATE fichas_web
 		SET ativo = 0
@@ -265,7 +260,6 @@ func (r *FichaTreinoRepository) CreatePeriodizadaWithArchiveAndLink(ctx context.
 		return "", fmt.Errorf("failed to deactivate active links: %w", err)
 	}
 
-	// 3. Insert new sheet
 	queryInsertSheet := `
 		INSERT INTO fichas_treino_web (
 			aluno, idade, sexo, objetivo, modalidade, nivel, frequencia_semanal,
@@ -290,7 +284,6 @@ func (r *FichaTreinoRepository) CreatePeriodizadaWithArchiveAndLink(ctx context.
 	}
 	f.ID = fichaID
 
-	// 4. Generate public link with 90 days validity
 	expiration := now.Add(time.Duration(validDays) * 24 * time.Hour)
 	expiraEmStr := expiration.Format(time.RFC3339)
 

@@ -17,50 +17,39 @@ import (
 	_ "modernc.org/sqlite" // SQLite CGO-free driver
 )
 
-// DB represents the database connection pool
 type DB struct {
 	*sql.DB
 }
 
-// Connect opens a connection to the SQLite database and executes migrations safely
 func Connect(dbPath string) (*DB, error) {
-	// Check if database file existed and was not empty BEFORE opening it
 	dbExisted := false
 	if info, err := os.Stat(dbPath); err == nil && info.Size() > 0 {
 		dbExisted = true
 	}
 
-	// 1. Open the connection
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open sqlite database: %w", err)
 	}
 
-	// Set connection pool limits
 	db.SetMaxOpenConns(1) // SQLite supports only 1 writer at a time
 	db.SetMaxIdleConns(1)
 
-	// Ping database to verify connection
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	if err := db.PingContext(ctx); err != nil {
-		// Discard Close error as we are returning the original connection error (G104)
 		_ = db.Close()
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	// Enable foreign keys
 	if _, err := db.ExecContext(ctx, "PRAGMA foreign_keys = ON;"); err != nil {
-		// Discard Close error as we are returning the original connection error (G104)
 		_ = db.Close()
 		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
 
 	wrappedDB := &DB{db}
 
-	// 2. Run migrations
 	if err := wrappedDB.runMigrations(ctx, dbPath, dbExisted); err != nil {
-		// Discard Close error as we are returning the original connection error (G104)
 		_ = db.Close()
 		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
@@ -69,9 +58,7 @@ func Connect(dbPath string) (*DB, error) {
 	return wrappedDB, nil
 }
 
-// runMigrations applies database migrations safely using version control
 func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) error {
-	// Create schema_migrations table if not exists
 	_, err := db.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS schema_migrations (
 			version INTEGER PRIMARY KEY,
@@ -82,13 +69,11 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 		return fmt.Errorf("failed to create schema_migrations table: %w", err)
 	}
 
-	// Get list of all available migrations
 	allMigrations, err := migrations.GetMigrations()
 	if err != nil {
 		return fmt.Errorf("failed to load migrations list: %w", err)
 	}
 
-	// Fetch already applied versions from schema_migrations
 	appliedVersions := make(map[int]bool)
 	rows, err := db.QueryContext(ctx, "SELECT version FROM schema_migrations")
 	if err == nil {
@@ -101,7 +86,6 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 		}
 	}
 
-	// Identify pending migrations
 	var pending []migrations.Migration
 	for _, m := range allMigrations {
 		if !appliedVersions[m.Version] {
@@ -109,13 +93,13 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 		}
 	}
 
-	// If no pending migrations, return immediately (fast startup, no backup)
+	// Sem migrações pendentes: retorna já (startup rápido, sem backup).
 	if len(pending) == 0 {
 		logger.Debug("Database schema is already up to date")
 		return nil
 	}
 
-	// Trigger backup before applying migrations (only if database existed with content previously)
+	// Backup antes de migrar, só se o arquivo já existia com conteúdo.
 	if dbExisted {
 		logger.Info("New database migrations found. Initiating backup before migrating...", "pending_count", len(pending))
 		if err := backupDatabase(dbPath); err != nil {
@@ -125,7 +109,6 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 		logger.Info("Creating a fresh database schema with migrations", "pending_count", len(pending))
 	}
 
-	// Apply migrations sequentially inside a transaction
 	for _, m := range pending {
 		tx, err := db.BeginTx(ctx, nil)
 		if err != nil {
@@ -142,7 +125,7 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 				skipMigration = true
 			}
 		} else if m.Version == 5 {
-			// Idempotently add nome_completo column if missing
+			// Adiciona nome_completo se a coluna ainda não existir.
 			hasNomeCompleto, err := hasColumn(ctx, tx, "users", "nome_completo")
 			if err == nil && !hasNomeCompleto {
 				if _, err := tx.ExecContext(ctx, "ALTER TABLE users ADD COLUMN nome_completo TEXT;"); err != nil {
@@ -150,7 +133,7 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 					return fmt.Errorf("failed to add column nome_completo to users: %w", err)
 				}
 			}
-			// Idempotently add aprovado column if missing
+			// Adiciona aprovado se a coluna ainda não existir.
 			hasAprovado, err := hasColumn(ctx, tx, "users", "aprovado")
 			if err == nil && !hasAprovado {
 				if _, err := tx.ExecContext(ctx, "ALTER TABLE users ADD COLUMN aprovado INTEGER DEFAULT 0;"); err != nil {
@@ -159,18 +142,16 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 				}
 			}
 		} else if m.Version == 6 {
-			// 1. Check if pre_registro_id in anamnese_tokens is NOT NULL
+			// Se pre_registro_id ainda for NOT NULL, reconstrói anamnese_tokens (nullable + colunas extras).
 			isNotNull, err := isColumnNotNull(ctx, tx, "anamnese_tokens", "pre_registro_id")
 			if err == nil && isNotNull {
 				logger.Info("Reconstructing table 'anamnese_tokens' to make 'pre_registro_id' nullable.", "version", 6)
 
-				// Rename old table
 				if _, err := tx.ExecContext(ctx, "ALTER TABLE anamnese_tokens RENAME TO temp_anamnese_tokens;"); err != nil {
 					_ = tx.Rollback()
 					return fmt.Errorf("failed to rename anamnese_tokens to temp_anamnese_tokens: %w", err)
 				}
 
-				// Create new table with updated nullable fields and extra columns
 				newTableSQL := `
 				CREATE TABLE IF NOT EXISTS anamnese_tokens (
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -195,7 +176,6 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 					return fmt.Errorf("failed to create new anamnese_tokens table: %w", err)
 				}
 
-				// Copy old records if any
 				copySQL := `
 				INSERT INTO anamnese_tokens (id, token, pre_registro_id, expira_em, usado)
 				SELECT id, token, pre_registro_id, expira_em, usado FROM temp_anamnese_tokens;`
@@ -204,13 +184,12 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 					return fmt.Errorf("failed to copy records to reconstructed anamnese_tokens table: %w", err)
 				}
 
-				// Drop old table
 				if _, err := tx.ExecContext(ctx, "DROP TABLE temp_anamnese_tokens;"); err != nil {
 					_ = tx.Rollback()
 					return fmt.Errorf("failed to drop temp_anamnese_tokens table: %w", err)
 				}
 			} else {
-				// If not reconstructed, add extra columns to anamnese_tokens idempotently
+				// Sem reconstrução: só adiciona colunas extras em anamnese_tokens se faltarem.
 				extraCols := map[string]string{
 					"aluno_id":     "INTEGER NULL REFERENCES alunos(id) ON DELETE SET NULL",
 					"aluno_nome":   "TEXT",
@@ -233,7 +212,7 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 				}
 			}
 
-			// 2. Idempotently add extra columns to anamneses
+			// Colunas extras em anamneses (idempotente).
 			anamnesesCols := map[string]string{
 				"status_aprovacao": "TEXT DEFAULT 'pendente'",
 				"aprovado_por":     "TEXT",
@@ -251,7 +230,7 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 				}
 			}
 
-			// 3. Idempotently add extra columns to pre_registros
+			// Colunas extras em pre_registros (idempotente).
 			preRegistrosCols := map[string]string{
 				"status":          "TEXT DEFAULT 'aguardando_aprovacao'",
 				"aprovado_por":    "INTEGER NULL REFERENCES users(id)",
@@ -269,7 +248,7 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 				}
 			}
 		} else if m.Version == 7 {
-			// Check if exercicios_reabilitacao exists and has old schema (lacks 'categoria')
+			// Schema antigo de exercicios_reabilitacao (sem categoria): reconstrói a tabela.
 			hasCategoria, err := hasColumn(ctx, tx, "exercicios_reabilitacao", "categoria")
 			if err == nil {
 				var tableExists int
@@ -278,13 +257,11 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 				if tableExists > 0 && !hasCategoria {
 					logger.Info("Reconstructing table 'exercicios_reabilitacao' to match legacy monólito schema.", "version", 7)
 
-					// Rename old table
 					if _, err := tx.ExecContext(ctx, "ALTER TABLE exercicios_reabilitacao RENAME TO temp_exercicios_reabilitacao;"); err != nil {
 						_ = tx.Rollback()
 						return fmt.Errorf("failed to rename exercicios_reabilitacao to temp_exercicios_reabilitacao: %w", err)
 					}
 
-					// Create new table
 					newTableSQL := `
 					CREATE TABLE IF NOT EXISTS exercicios_reabilitacao (
 						codigo INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -316,7 +293,6 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 						return fmt.Errorf("failed to create new exercicios_reabilitacao table: %w", err)
 					}
 
-					// Copy data
 					copySQL := `
 					INSERT INTO exercicios_reabilitacao (
 						codigo, nome, descricao_terapeutica, descricao, grupo_muscular,
@@ -331,7 +307,6 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 						return fmt.Errorf("failed to copy records to reconstructed exercicios_reabilitacao: %w", err)
 					}
 
-					// Drop temp table
 					if _, err := tx.ExecContext(ctx, "DROP TABLE temp_exercicios_reabilitacao;"); err != nil {
 						_ = tx.Rollback()
 						return fmt.Errorf("failed to drop temp_exercicios_reabilitacao table: %w", err)
@@ -339,7 +314,7 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 				}
 			}
 		} else if m.Version == 11 {
-			// Idempotently add extra columns to fichas_treino_web
+			// Colunas extras em fichas_treino_web (idempotente).
 			extraColsFichas := map[string]string{
 				"tipo_ficha":        "TEXT DEFAULT 'manual'",
 				"num_treinos":       "INTEGER DEFAULT 1",
@@ -358,7 +333,7 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 			}
 			skipMigration = true
 		} else if m.Version == 12 {
-			// Idempotently add extra SVED columns to fichas_treino_web
+			// Colunas SVED em fichas_treino_web (idempotente).
 			extraColsSved := map[string]string{
 				"ies_score":    "REAL DEFAULT 0.0",
 				"volume_sved":  "INTEGER DEFAULT 0",
@@ -383,14 +358,12 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 
 		if !skipMigration {
 			if _, err := tx.ExecContext(ctx, m.UpSQL); err != nil {
-				// Rollback unhandled error is safe to ignore here as we are returning the original error (G104)
 				_ = tx.Rollback()
 				return fmt.Errorf("failed to execute migration %d (%s): %w", m.Version, m.Name, err)
 			}
 		}
 
 		if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations (version) VALUES (?)", m.Version); err != nil {
-			// Rollback unhandled error is safe to ignore here as we are returning the original error (G104)
 			_ = tx.Rollback()
 			return fmt.Errorf("failed to record migration status for version %d: %w", m.Version, err)
 		}
@@ -404,7 +377,6 @@ func (db *DB) runMigrations(ctx context.Context, dbPath string, dbExisted bool) 
 	return nil
 }
 
-// hasColumn checks if a column exists in a given table using PRAGMA table_info
 func hasColumn(ctx context.Context, tx *sql.Tx, tableName, columnName string) (bool, error) {
 	rows, err := tx.QueryContext(ctx, fmt.Sprintf("PRAGMA table_info(%s)", tableName))
 	if err != nil {
@@ -427,7 +399,6 @@ func hasColumn(ctx context.Context, tx *sql.Tx, tableName, columnName string) (b
 	return false, nil
 }
 
-// isColumnNotNull checks if a column is NOT NULL in a given table using PRAGMA table_info
 func isColumnNotNull(ctx context.Context, tx *sql.Tx, tableName, columnName string) (bool, error) {
 	rows, err := tx.QueryContext(ctx, fmt.Sprintf("PRAGMA table_info(%s)", tableName))
 	if err != nil {
@@ -450,23 +421,19 @@ func isColumnNotNull(ctx context.Context, tx *sql.Tx, tableName, columnName stri
 	return false, nil
 }
 
-// backupDatabase copies the database file if it exists and has content
 func backupDatabase(dbPath string) error {
 	info, err := os.Stat(dbPath)
 	if os.IsNotExist(err) {
-		// No database file exists yet, no backup needed
 		return nil
 	}
 	if err != nil {
 		return err
 	}
 
-	// If the database is empty, no backup needed
 	if info.Size() == 0 {
 		return nil
 	}
 
-	// Generate backup filename
 	dir := filepath.Dir(dbPath)
 	ext := filepath.Ext(dbPath)
 	name := info.Name()
@@ -478,25 +445,22 @@ func backupDatabase(dbPath string) error {
 
 	logger.Info("Creating database backup before running migrations...", "original", dbPath, "backup", backupPath)
 
-	// Copy the file
-	// #nosec G304 - dbPath is a trusted path defined in application configuration
+	// #nosec G304 - dbPath é caminho confiável definido na configuração da aplicação
 	src, err := os.Open(dbPath)
 	if err != nil {
 		return fmt.Errorf("failed to open source database file for backup: %w", err)
 	}
 	defer func() {
-		// Discard Close error on read-only file (G104)
 		_ = src.Close()
 	}()
 
-	// #nosec G304 - backupPath is constructed internally in trusted db config directory
-	// Use OpenFile with 0600 permissions to restrict read/write access (G302)
+	// #nosec G304 - backupPath é montado internamente no diretório confiável do banco
+	// OpenFile com 0600 restringe leitura/escrita do backup (G302).
 	dst, err := os.OpenFile(backupPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to create backup file: %w", err)
 	}
 	defer func() {
-		// Discard Close error on write-only backup file (G104)
 		_ = dst.Close()
 	}()
 
@@ -509,7 +473,6 @@ func backupDatabase(dbPath string) error {
 	return nil
 }
 
-// parseDateTime parses date/time strings in multiple formats (RFC3339, 2006-01-02 15:04:05, etc.)
 func parseDateTime(s string) (time.Time, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {

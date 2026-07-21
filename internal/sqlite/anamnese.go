@@ -301,8 +301,6 @@ func (r *AnamneseRepository) Delete(ctx context.Context, id int64) error {
 	return err
 }
 
-// Token Methods
-
 func (r *AnamneseRepository) CreateToken(ctx context.Context, t *domain.AnamneseToken) error {
 	query := `
 		INSERT INTO anamnese_tokens (

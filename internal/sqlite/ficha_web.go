@@ -10,17 +10,14 @@ import (
 	"staff_app/internal/domain"
 )
 
-// FichaWebRepository handles persistence for public training links (fichas_web).
 type FichaWebRepository struct {
 	db *DB
 }
 
-// NewFichaWebRepository creates a new FichaWebRepository.
 func NewFichaWebRepository(db *DB) *FichaWebRepository {
 	return &FichaWebRepository{db: db}
 }
 
-// GetFichaJSON retrieves the snapshot content from a legacy fichas_treino_web record.
 func (r *FichaWebRepository) GetFichaJSON(ctx context.Context, id int64) (string, error) {
 	var jsonStr sql.NullString
 	err := r.db.QueryRowContext(ctx, "SELECT ficha_json FROM fichas_treino_web WHERE id = ?", id).Scan(&jsonStr)
@@ -30,7 +27,7 @@ func (r *FichaWebRepository) GetFichaJSON(ctx context.Context, id int64) (string
 	return jsonStr.String, nil
 }
 
-// Create generates a new FichaWeb record and deactivates any existing active links for the same ficha.
+// Create cria o link público e desativa links ativos da mesma ficha.
 func (r *FichaWebRepository) Create(ctx context.Context, fw *domain.FichaWeb) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -38,13 +35,11 @@ func (r *FichaWebRepository) Create(ctx context.Context, fw *domain.FichaWeb) er
 	}
 	defer tx.Rollback()
 
-	// 1. Deactivate previous active links for the same ficha_id
 	_, err = tx.ExecContext(ctx, "UPDATE fichas_web SET ativo = 0 WHERE ficha_id = ? AND ativo = 1", fw.FichaID)
 	if err != nil {
 		return fmt.Errorf("failed to deactivate previous active links: %w", err)
 	}
 
-	// 2. Insert new link
 	query := `
 		INSERT INTO fichas_web (
 			hash, ficha_id, aluno_id, user_id, conteudo_json, criado_em, expira_em, acessos, ativo, renovado_de
@@ -81,7 +76,6 @@ func (r *FichaWebRepository) Create(ctx context.Context, fw *domain.FichaWeb) er
 	return nil
 }
 
-// GetByHash retrieves the FichaWeb record by its unique hash.
 func (r *FichaWebRepository) GetByHash(ctx context.Context, hash string) (*domain.FichaWeb, error) {
 	query := `
 		SELECT 
@@ -131,7 +125,6 @@ func (r *FichaWebRepository) GetByHash(ctx context.Context, hash string) (*domai
 	return &fw, nil
 }
 
-// IncrementAccessCount logs a public access detail and increments the overall access count.
 func (r *FichaWebRepository) IncrementAccessCount(ctx context.Context, hash string, userAgent, ipAddress string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -142,7 +135,6 @@ func (r *FichaWebRepository) IncrementAccessCount(ctx context.Context, hash stri
 	now := time.Now()
 	nowStr := now.Format(time.RFC3339)
 
-	// 1. Insert access details
 	_, err = tx.ExecContext(ctx, `
 		INSERT INTO fichas_web_acessos (hash, data_acesso, user_agent, ip_address)
 		VALUES (?, ?, ?, ?)
@@ -151,7 +143,6 @@ func (r *FichaWebRepository) IncrementAccessCount(ctx context.Context, hash stri
 		return fmt.Errorf("failed to insert access record: %w", err)
 	}
 
-	// 2. Increment access counter and update last access timestamp
 	_, err = tx.ExecContext(ctx, `
 		UPDATE fichas_web 
 		SET acessos = acessos + 1, ultimo_acesso = ?
@@ -168,9 +159,7 @@ func (r *FichaWebRepository) IncrementAccessCount(ctx context.Context, hash stri
 	return nil
 }
 
-// GetStats compiles access statistics and history for a given public link hash.
 func (r *FichaWebRepository) GetStats(ctx context.Context, hash string) (*domain.FichaWebStats, error) {
-	// First retrieve link metadata
 	fw, err := r.GetByHash(ctx, hash)
 	if err != nil {
 		return nil, err
@@ -185,7 +174,6 @@ func (r *FichaWebRepository) GetStats(ctx context.Context, hash string) (*domain
 		HistoricoAcessos: []*domain.FichaWebAcesso{},
 	}
 
-	// Query last 20 access records
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, hash, data_acesso, user_agent, ip_address
 		FROM fichas_web_acessos
@@ -219,7 +207,7 @@ func (r *FichaWebRepository) GetStats(ctx context.Context, hash string) (*domain
 	return stats, nil
 }
 
-// Renew updates expiration timestamp and optionally pushes the latest snapshot content to the public link.
+// Renew atualiza a validade e, se houver, o conteúdo JSON do link público.
 func (r *FichaWebRepository) Renew(ctx context.Context, hash string, newExpiration time.Time, newContent *string) error {
 	newExpirationStr := newExpiration.Format(time.RFC3339)
 
@@ -255,7 +243,7 @@ func (r *FichaWebRepository) Renew(ctx context.Context, hash string, newExpirati
 	return nil
 }
 
-// Deactivate soft-deactivates the public link hash.
+// Deactivate desativa o link público (exclusão lógica).
 func (r *FichaWebRepository) Deactivate(ctx context.Context, hash string) error {
 	res, err := r.db.ExecContext(ctx, "UPDATE fichas_web SET ativo = 0 WHERE hash = ? AND ativo = 1", hash)
 	if err != nil {
@@ -273,7 +261,6 @@ func (r *FichaWebRepository) Deactivate(ctx context.Context, hash string) error 
 	return nil
 }
 
-// ListByAlunoID retrieves all generated public link hashes for a specific student ID.
 func (r *FichaWebRepository) ListByAlunoID(ctx context.Context, alunoID int64, includeExpired bool) ([]*domain.FichaWeb, error) {
 	var query string
 	var args []any
