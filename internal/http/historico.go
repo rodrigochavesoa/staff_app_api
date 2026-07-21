@@ -160,7 +160,7 @@ func (h *HistoricoHandler) GetFrequencia(w http.ResponseWriter, r *http.Request)
 			continue
 		}
 
-		// Alinha a semana ao Monday (calendário de frequência).
+		// Alinha a semana à segunda-feira (calendário de frequência).
 		segundaInicio := mondayOfWeek(startDate)
 
 		for _, semana := range pd.Semanas {

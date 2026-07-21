@@ -24,7 +24,7 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-// LoggerMiddleware registra cada request; >2s vira SLOW_REQUEST.
+// LoggerMiddleware registra cada requisição; >2s gera log SLOW_REQUEST.
 func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -84,7 +84,6 @@ func CorsMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {
 				w.Header().Set("Access-Control-Allow-Credentials", "true")
 			}
 
-			// Preflight CORS (OPTIONS) → 204.
 			if r.Method == "OPTIONS" {
 				w.WriteHeader(http.StatusNoContent)
 				return

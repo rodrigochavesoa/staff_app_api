@@ -263,7 +263,7 @@ func (h *AlunoHandler) Update(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(existing)
 }
 
-// Delete desativa o aluno (soft delete).
+// Delete desativa o aluno (exclusão lógica).
 func (h *AlunoHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)

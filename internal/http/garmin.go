@@ -111,7 +111,7 @@ func (h *GarminHandler) Upload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GarminHandler) processCSV(w http.ResponseWriter, r *http.Request, path, filename string, alunoID int64) {
-	// #nosec G304 - o caminho é gerado no handler e validado para permanecer em GarminUploadDir.
+	// #nosec G304 - o caminho é gerado nesta função e validado para permanecer em GarminUploadDir.
 	f, err := os.Open(path)
 	if err != nil {
 		writeGarminJSON(w, http.StatusInternalServerError, garminUploadResponse{

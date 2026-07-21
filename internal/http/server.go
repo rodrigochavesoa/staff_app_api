@@ -57,7 +57,6 @@ func (s *Server) Start() error {
 	case sig := <-shutdownSignal:
 		logger.Info("Shutdown signal received, stopping HTTP server...", "signal", sig.String())
 
-		// Graceful shutdown com timeout de 15s.
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 
