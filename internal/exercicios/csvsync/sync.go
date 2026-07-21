@@ -16,7 +16,7 @@ var ErrNameConflict = errors.New("csvsync: unique name conflict")
 // SyncRepository is implemented by sqlite.ExercicioRepository (consumer-side interface).
 type SyncRepository interface {
 	GetByCodigo(ctx context.Context, codigo int) (*domain.ExercicioReabilitacao, error)
-	UpsertCatalogExercise(ctx context.Context, ex *domain.ExercicioReabilitacao) (inserted bool, err error)
+	UpsertCatalogExercise(ctx context.Context, ex *domain.ExercicioReabilitacao, existing *domain.ExercicioReabilitacao) (inserted bool, err error)
 	WithTx(ctx context.Context, fn func(ctx context.Context) error) error
 }
 
@@ -69,7 +69,7 @@ func syncOne(ctx context.Context, repo SyncRepository, rec Record, now time.Time
 		return nil
 	}
 
-	inserted, err := repo.UpsertCatalogExercise(ctx, ex)
+	inserted, err := repo.UpsertCatalogExercise(ctx, ex, existing)
 	if errors.Is(err, ErrNameConflict) {
 		result.SkippedNameConflict++
 		return nil

@@ -47,13 +47,16 @@ func (r *ExercicioRepository) WithTx(ctx context.Context, fn func(ctx context.Co
 
 // UpsertCatalogExercise insere ou atualiza linha gerida pelo CSV (spec §5.2).
 // Preferir chamar dentro de WithTx. Retorna inserted=true no INSERT.
-func (r *ExercicioRepository) UpsertCatalogExercise(ctx context.Context, ex *domain.ExercicioReabilitacao) (bool, error) {
+func (r *ExercicioRepository) UpsertCatalogExercise(ctx context.Context, ex *domain.ExercicioReabilitacao, existing *domain.ExercicioReabilitacao) (bool, error) {
 	if ex == nil {
 		return false, errors.New("nil exercise")
 	}
-	existing, err := r.getByCodigoConn(ctx, ex.Codigo)
-	if err != nil {
-		return false, err
+	if existing == nil {
+		var err error
+		existing, err = r.getByCodigoConn(ctx, ex.Codigo)
+		if err != nil {
+			return false, err
+		}
 	}
 	if existing == nil {
 		err := r.insertCatalog(ctx, ex)
@@ -65,7 +68,7 @@ func (r *ExercicioRepository) UpsertCatalogExercise(ctx context.Context, ex *dom
 	if existing.CriadoPor != csvsync.CatalogMarker {
 		return false, fmt.Errorf("codigo %d not csv-managed", ex.Codigo)
 	}
-	err = r.updateCatalog(ctx, ex)
+	err := r.updateCatalog(ctx, ex)
 	if isUniqueConstraint(err) {
 		return false, csvsync.ErrNameConflict
 	}

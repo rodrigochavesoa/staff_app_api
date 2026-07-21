@@ -125,6 +125,83 @@ func (r *RelatoriosRepository) GetDashboardResumo(ctx context.Context) (*domain.
 	return &resumo, nil
 }
 
+type rehabExerciseMeta struct {
+	nome, indicacoes, descricao string
+}
+
+func (r *RelatoriosRepository) loadActiveRehabExercises(ctx context.Context) ([]rehabExerciseMeta, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT nome, COALESCE(indicacoes, ''), COALESCE(descricao_terapeutica, '')
+		FROM exercicios_reabilitacao
+		WHERE status = 'ativo'
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var exercises []rehabExerciseMeta
+	for rows.Next() {
+		var ex rehabExerciseMeta
+		if err := rows.Scan(&ex.nome, &ex.indicacoes, &ex.descricao); err != nil {
+			continue
+		}
+		exercises = append(exercises, ex)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return exercises, nil
+}
+
+func countRehabExercisesMatchingPatology(exercises []rehabExerciseMeta, pat string) int {
+	patLower := strings.ToLower(pat)
+	if patLower == "" {
+		return 0
+	}
+	count := 0
+	for _, ex := range exercises {
+		nome := strings.ToLower(ex.nome)
+		indicacoes := strings.ToLower(ex.indicacoes)
+		descricao := strings.ToLower(ex.descricao)
+		if strings.Contains(nome, patLower) ||
+			strings.Contains(indicacoes, patLower) ||
+			strings.Contains(descricao, patLower) {
+			count++
+		}
+	}
+	return count
+}
+
+func (r *RelatoriosRepository) loadLatestFichaJSONByAluno(ctx context.Context) (map[string]string, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT f.aluno, f.ficha_json
+		FROM fichas_treino_web f
+		INNER JOIN (
+			SELECT aluno, MAX(data_criacao) AS max_dc
+			FROM fichas_treino_web
+			GROUP BY aluno
+		) latest ON f.aluno = latest.aluno AND f.data_criacao = latest.max_dc
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	fichas := make(map[string]string)
+	for rows.Next() {
+		var aluno, fichaJSON string
+		if err := rows.Scan(&aluno, &fichaJSON); err != nil {
+			continue
+		}
+		fichas[aluno] = fichaJSON
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return fichas, nil
+}
+
 func (r *RelatoriosRepository) GetPatologiasCobertura(ctx context.Context) ([]domain.RelatorioPatologiaItem, error) {
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT a.nome, an.patologias 
@@ -163,44 +240,35 @@ func (r *RelatoriosRepository) GetPatologiasCobertura(ctx context.Context) ([]do
 	}
 	rows.Close() // #nosec G104
 
+	activeExercises, err := r.loadActiveRehabExercises(ctx)
+	if err != nil {
+		return nil, err
+	}
+	latestFichas, err := r.loadLatestFichaJSONByAluno(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var list []domain.RelatorioPatologiaItem
 
 	for pat, students := range patologyStudents {
-		var totalExerciciosDisponiveis int
-		patSearch := "%" + strings.ToLower(pat) + "%"
-		err = r.db.QueryRowContext(ctx, `
-			SELECT COUNT(*) FROM exercicios_reabilitacao 
-			WHERE status = 'ativo' AND (
-				LOWER(nome) LIKE ? OR 
-				LOWER(indicacoes) LIKE ? OR 
-				LOWER(descricao_terapeutica) LIKE ?
-			)
-		`, patSearch, patSearch, patSearch).Scan(&totalExerciciosDisponiveis)
-		if err != nil {
-			totalExerciciosDisponiveis = 1
-		}
+		totalExerciciosDisponiveis := countRehabExercisesMatchingPatology(activeExercises, pat)
 		if totalExerciciosDisponiveis == 0 {
 			totalExerciciosDisponiveis = 1
 		}
 
 		totalUtilizacoes := 0
-		uniqueExerciciosPrescritos := make(map[string]bool)
 
 		for _, student := range students {
-			var fichaJSON string
-			err = r.db.QueryRowContext(ctx, `
-				SELECT ficha_json FROM fichas_treino_web 
-				WHERE aluno = ? 
-				ORDER BY data_criacao DESC LIMIT 1
-			`, student).Scan(&fichaJSON)
-			if err == nil {
-				exs := extrairExerciciosDeFichaJSON(fichaJSON)
-				for _, ex := range exs {
-					nameClean := strings.ToLower(strings.TrimSpace(ex.Nome))
-					if nameClean != "" {
-						uniqueExerciciosPrescritos[nameClean] = true
-						totalUtilizacoes++
-					}
+			fichaJSON, ok := latestFichas[student]
+			if !ok {
+				continue
+			}
+			exs := extrairExerciciosDeFichaJSON(fichaJSON)
+			for _, ex := range exs {
+				nameClean := strings.ToLower(strings.TrimSpace(ex.Nome))
+				if nameClean != "" {
+					totalUtilizacoes++
 				}
 			}
 		}
@@ -281,7 +349,7 @@ func (r *RelatoriosRepository) GetExerciciosSubutilizados(ctx context.Context, m
 
 		nameLower := strings.ToLower(strings.TrimSpace(item.Nome))
 		item.VezesUsado = exerciseUsageCount[nameLower]
-		
+
 		sugFreq := sugestionsMap[nameLower]
 		item.VezesRecomendado = sugFreq + item.VezesUsado
 		if item.VezesRecomendado == 0 {

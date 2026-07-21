@@ -145,7 +145,7 @@ type ExercicioRepository interface {
 	RejeitarSugestao(ctx context.Context, id int, motivo string, rejectedBy string) error
 	// Catalog sync (cmd/api + csvsync.SyncRepository).
 	WithTx(ctx context.Context, fn func(ctx context.Context) error) error
-	UpsertCatalogExercise(ctx context.Context, ex *domain.ExercicioReabilitacao) (inserted bool, err error)
+	UpsertCatalogExercise(ctx context.Context, ex *domain.ExercicioReabilitacao, existing *domain.ExercicioReabilitacao) (inserted bool, err error)
 }
 
 type GarminRepository interface {
