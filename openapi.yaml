@@ -222,7 +222,46 @@ paths:
                 - BearerAuth: []
             responses:
                 '200':
-                    description: Retorna dados do usuário atual
+                    description: Retorna dados do usuário atual e, quando vinculado, o perfil de aluno (`aluno`).
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    id:
+                                        type: integer
+                                        format: int64
+                                    username:
+                                        type: string
+                                    email:
+                                        type: string
+                                    nome_completo:
+                                        type: string
+                                    is_admin:
+                                        type: boolean
+                                    ativo:
+                                        type: boolean
+                                    aprovado:
+                                        type: boolean
+                                    aluno:
+                                        nullable: true
+                                        oneOf:
+                                            - type: 'null'
+                                            - type: object
+                                              properties:
+                                                  id:
+                                                      type: integer
+                                                      format: int64
+                                                  nome:
+                                                      type: string
+                                                  idade:
+                                                      type: integer
+                                                  sexo:
+                                                      type: string
+                                                  email:
+                                                      type: string
+                                                  ativo:
+                                                      type: boolean
             description: Dados do usuário autenticado (`GET /api/v1/auth/me`).
     /api/v1/auth/alterar-senha:
         post:

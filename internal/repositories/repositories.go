@@ -29,6 +29,7 @@ type AlunoRepository interface {
 	Create(ctx context.Context, aluno *domain.Aluno) error
 	GetByID(ctx context.Context, id int64) (*domain.Aluno, error)
 	GetByEmail(ctx context.Context, email string) (*domain.Aluno, error)
+	GetByUsuarioID(ctx context.Context, userID int64) (*domain.Aluno, error)
 	List(ctx context.Context, busca string, includeInactives bool) ([]*domain.Aluno, error)
 	Update(ctx context.Context, aluno *domain.Aluno) error
 	Delete(ctx context.Context, id int64) error

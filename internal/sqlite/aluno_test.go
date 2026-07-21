@@ -249,3 +249,65 @@ func TestAlunoRepositoryNullableFields(t *testing.T) {
 		t.Errorf("expected to find Null Aluno in search list, got: %+v", list)
 	}
 }
+
+func TestAlunoRepositoryGetByUsuarioID(t *testing.T) {
+	logger.Setup("development", false)
+
+	tempDir, err := os.MkdirTemp("", "sqlite-aluno-usuario-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	db, err := Connect(filepath.Join(tempDir, "test.db"))
+	if err != nil {
+		t.Fatalf("failed to connect database: %v", err)
+	}
+	defer db.Close()
+
+	ctx := t.Context()
+	repo := NewAlunoRepository(db)
+
+	got, err := repo.GetByUsuarioID(ctx, 999)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != nil {
+		t.Fatalf("expected nil aluno, got %+v", got)
+	}
+
+	userRepo := NewUserRepository(db)
+	user := &domain.User{
+		Username:     "linked-user",
+		Email:        "linked-user@example.com",
+		PasswordHash: "hash",
+		NomeCompleto: "Linked User",
+		IsAdmin:      false,
+		Ativo:        true,
+		Aprovado:     true,
+	}
+	if err := userRepo.Create(ctx, user); err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+
+	userID := user.ID
+	aluno := &domain.Aluno{
+		Nome:      "Linked Student",
+		Idade:     30,
+		Sexo:      "M",
+		Email:     "linked@example.com",
+		UsuarioID: &userID,
+		Ativo:     true,
+	}
+	if err := repo.Create(ctx, aluno); err != nil {
+		t.Fatalf("failed to create aluno: %v", err)
+	}
+
+	got, err = repo.GetByUsuarioID(ctx, userID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got == nil || got.Nome != "Linked Student" || got.UsuarioID == nil || *got.UsuarioID != userID {
+		t.Fatalf("unexpected aluno: %+v", got)
+	}
+}
