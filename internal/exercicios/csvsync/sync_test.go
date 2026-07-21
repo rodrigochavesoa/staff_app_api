@@ -40,17 +40,16 @@ func (f *fakeRepo) UpsertCatalogExercise(_ context.Context, ex *domain.Exercicio
 		return false, errors.New("nil")
 	}
 	if existing == nil {
-		var ok bool
-		existing, ok = f.byCodigo[ex.Codigo]
-		if !ok {
-			existing = nil
+		if row, ok := f.byCodigo[ex.Codigo]; ok {
+			cp := *row
+			existing = &cp
 		}
 	}
 	key := strings.ToLower(ex.Nome)
 	if existingCode, ok := f.byNome[key]; ok && existingCode != ex.Codigo {
 		return false, ErrNameConflict
 	}
-	if _, ok := f.byCodigo[ex.Codigo]; !ok {
+	if existing == nil {
 		cp := *ex
 		f.byCodigo[ex.Codigo] = &cp
 		f.byNome[key] = ex.Codigo
