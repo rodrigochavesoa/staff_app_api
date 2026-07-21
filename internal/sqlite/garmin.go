@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"staff_app/internal/domain"
@@ -83,35 +84,8 @@ func (r *GarminRepository) SaveActivity(ctx context.Context, activity *domain.Ga
 	}
 	activity.ID = activityID
 
-	for _, record := range activity.Records {
-		rawData := record.RawData
-		if rawData == "" {
-			if b, err := json.Marshal(record); err == nil {
-				rawData = string(b)
-			}
-		}
-		_, err := tx.ExecContext(ctx, `
-			INSERT INTO atividades_records (
-				atividade_id, timestamp,
-				latitude, longitude, altitude_m,
-				heart_rate, cadence, speed_kmh,
-				power_watts, raw_data
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`,
-			activityID,
-			formatTime(record.Timestamp),
-			nullFloat(record.Latitude),
-			nullFloat(record.Longitude),
-			nullFloat(record.AltitudeM),
-			nullInt(record.HeartRate),
-			nullInt(record.Cadence),
-			nullFloat(record.SpeedKMH),
-			nullFloat(record.PowerWatts),
-			nullString(rawData),
-		)
-		if err != nil {
-			return 0, fmt.Errorf("inserting garmin record: %w", err)
-		}
+	if err := insertGarminActivityRecords(ctx, tx, activityID, activity.Records); err != nil {
+		return 0, err
 	}
 
 	if activity.AnalyticsSummary != nil {
@@ -557,4 +531,58 @@ func ptrNullFloat(v sql.NullFloat64) *float64 {
 
 func round2(v float64) float64 {
 	return math.Round(v*100) / 100
+}
+
+const garminRecordInsertBatchSize = 100
+
+func insertGarminActivityRecords(ctx context.Context, tx *sql.Tx, activityID int64, records []domain.ActivityRecord) error {
+	if len(records) == 0 {
+		return nil
+	}
+
+	const insertSQL = `
+		INSERT INTO atividades_records (
+			atividade_id, timestamp,
+			latitude, longitude, altitude_m,
+			heart_rate, cadence, speed_kmh,
+			power_watts, raw_data
+		) VALUES `
+
+	for start := 0; start < len(records); start += garminRecordInsertBatchSize {
+		end := start + garminRecordInsertBatchSize
+		if end > len(records) {
+			end = len(records)
+		}
+		chunk := records[start:end]
+
+		placeholders := make([]string, len(chunk))
+		args := make([]any, 0, len(chunk)*10)
+		for i, record := range chunk {
+			rawData := record.RawData
+			if rawData == "" {
+				if b, err := json.Marshal(record); err == nil {
+					rawData = string(b)
+				}
+			}
+			placeholders[i] = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+			args = append(args,
+				activityID,
+				formatTime(record.Timestamp),
+				nullFloat(record.Latitude),
+				nullFloat(record.Longitude),
+				nullFloat(record.AltitudeM),
+				nullInt(record.HeartRate),
+				nullInt(record.Cadence),
+				nullFloat(record.SpeedKMH),
+				nullFloat(record.PowerWatts),
+				nullString(rawData),
+			)
+		}
+
+		query := insertSQL + strings.Join(placeholders, ", ")
+		if _, err := tx.ExecContext(ctx, query, args...); err != nil {
+			return fmt.Errorf("inserting garmin records batch: %w", err)
+		}
+	}
+	return nil
 }

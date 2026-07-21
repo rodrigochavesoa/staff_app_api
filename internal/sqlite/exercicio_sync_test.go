@@ -41,12 +41,12 @@ func TestCatalogSyncSQLite(t *testing.T) {
 		NivelPrioridade: 2, Url: "https://example.com/100", CriadoPor: csvsync.CatalogMarker,
 		CriadoEm: time.Now().UTC(), Status: "ativo",
 	}
-	inserted, err := repo.UpsertCatalogExercise(ctx, ex)
+	inserted, err := repo.UpsertCatalogExercise(ctx, ex, nil)
 	if err != nil || !inserted {
 		t.Fatalf("upsert insert: %v inserted=%v", err, inserted)
 	}
 	ex.GrupoMuscular = "Peitoral"
-	inserted, err = repo.UpsertCatalogExercise(ctx, ex)
+	inserted, err = repo.UpsertCatalogExercise(ctx, ex, nil)
 	if err != nil || inserted {
 		t.Fatalf("upsert update: %v inserted=%v", err, inserted)
 	}
@@ -75,7 +75,7 @@ func TestCatalogSyncSQLite(t *testing.T) {
 
 	if _, err := repo.UpsertCatalogExercise(ctx, &domain.ExercicioReabilitacao{
 		Codigo: 300, Nome: "From CSV", CriadoPor: csvsync.CatalogMarker, CriadoEm: time.Now().UTC(), Status: "ativo",
-	}); err == nil {
+	}, nil); err == nil {
 		t.Fatal("expected owner conflict on upsert")
 	}
 	personalizado, _ := repo.GetByCodigo(ctx, 5000)

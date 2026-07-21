@@ -35,9 +35,16 @@ func (f *fakeRepo) GetByCodigo(_ context.Context, codigo int) (*domain.Exercicio
 	return &cp, nil
 }
 
-func (f *fakeRepo) UpsertCatalogExercise(_ context.Context, ex *domain.ExercicioReabilitacao) (bool, error) {
+func (f *fakeRepo) UpsertCatalogExercise(_ context.Context, ex *domain.ExercicioReabilitacao, existing *domain.ExercicioReabilitacao) (bool, error) {
 	if ex == nil {
 		return false, errors.New("nil")
+	}
+	if existing == nil {
+		var ok bool
+		existing, ok = f.byCodigo[ex.Codigo]
+		if !ok {
+			existing = nil
+		}
 	}
 	key := strings.ToLower(ex.Nome)
 	if existingCode, ok := f.byNome[key]; ok && existingCode != ex.Codigo {
