@@ -33,6 +33,9 @@ jobs:
           go mod tidy
           git diff --exit-code go.mod go.sum
 
+      - name: Module license gate
+        run: ./scripts/check_licenses.sh
+
       - name: Test
         run: go test ./...
 

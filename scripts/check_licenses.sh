@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Module license inventory + allowlist gate (see LICENSE_POLICY.md / docs/license.md).
+# Module license inventory + allowlist gate (see LICENSE_POLICY.md).
 # Uses a small Go helper because google/go-licenses currently fails on Go 1.25 stdlib packages.
 set -euo pipefail
 
