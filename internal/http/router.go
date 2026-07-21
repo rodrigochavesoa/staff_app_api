@@ -62,7 +62,7 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 
 	garminHandler := NewGarminHandler(cfg, deps.Garmin, deps.Alunos)
 
-	authHandler := NewAuthHandler(deps.Users, cfg.SecretKey)
+	authHandler := NewAuthHandler(deps.Users, deps.Alunos, cfg.SecretKey)
 	planoHandler := NewPlanoHandler(deps.Planos)
 
 	preCadastroHandler := NewPreCadastroHandler(

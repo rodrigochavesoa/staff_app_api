@@ -364,6 +364,14 @@ func applyMigration(ctx context.Context, db *DB, m migrations.Migration) error {
 			}
 		}
 		skipMigration = true
+	} else if m.Version == 16 {
+		hasUsuarioID, err := hasColumn(ctx, tx, "alunos", "usuario_id")
+		if err == nil && !hasUsuarioID {
+			if _, err := tx.ExecContext(ctx, "ALTER TABLE alunos ADD COLUMN usuario_id INTEGER REFERENCES users(id);"); err != nil {
+				_ = tx.Rollback()
+				return fmt.Errorf("failed to add column usuario_id to alunos: %w", err)
+			}
+		}
 	}
 
 	if !skipMigration {

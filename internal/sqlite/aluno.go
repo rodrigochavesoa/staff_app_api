@@ -186,6 +186,56 @@ func (r *AlunoRepository) GetByEmail(ctx context.Context, email string) (*domain
 	return &a, nil
 }
 
+// GetByUsuarioID returns the aluno linked to the given user ID, or (nil, nil) if none.
+func (r *AlunoRepository) GetByUsuarioID(ctx context.Context, userID int64) (*domain.Aluno, error) {
+	query := `
+		SELECT 
+			id, nome, idade, sexo, email, telefone, objetivo, exclusoes_permanentes, turma, usuario_id,
+			plano_id, plano_valor, plano_pago, plano_ativo, plano_inicio, plano_fim,
+			cadastro_aprovado, cadastro_aprovado_por, cadastro_aprovado_em, pre_registro_id, ativo
+		FROM alunos
+		WHERE usuario_id = ?
+		LIMIT 1
+	`
+
+	var a domain.Aluno
+	var planoPagoInt, planoAtivoInt, cadastroAprovadoInt, ativoInt int
+	var cadastroAprovadoEmStr sql.NullString
+	var telNull, objNull, exclNull, turmaNull sql.NullString
+
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(
+		&a.ID, &a.Nome, &a.Idade, &a.Sexo, &a.Email, &telNull, &objNull, &exclNull, &turmaNull, &a.UsuarioID,
+		&a.PlanoID, &a.PlanoValor, &planoPagoInt, &planoAtivoInt, &a.PlanoInicio, &a.PlanoFim,
+		&cadastroAprovadoInt, &a.CadastroAprovadoPor, &cadastroAprovadoEmStr, &a.PreRegistroID, &ativoInt,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get aluno by usuario_id: %w", err)
+	}
+
+	a.PlanoPago = planoPagoInt == 1
+	a.PlanoAtivo = planoAtivoInt == 1
+	a.CadastroAprovado = cadastroAprovadoInt == 1
+	a.Ativo = ativoInt == 1
+
+	a.Telefone = telNull.String
+	a.Objetivo = objNull.String
+	a.ExclusoesPermanentes = exclNull.String
+	a.Turma = turmaNull.String
+
+	if cadastroAprovadoEmStr.Valid {
+		if t, err := time.Parse(time.RFC3339, cadastroAprovadoEmStr.String); err == nil {
+			a.CadastroAprovadoEm = &t
+		} else if t, err := time.Parse("2006-01-02 15:04:05", cadastroAprovadoEmStr.String); err == nil {
+			a.CadastroAprovadoEm = &t
+		}
+	}
+
+	return &a, nil
+}
+
 func (r *AlunoRepository) List(ctx context.Context, busca string, includeInactives bool) ([]*domain.Aluno, error) {
 	var queryBuilder strings.Builder
 	queryBuilder.WriteString(`

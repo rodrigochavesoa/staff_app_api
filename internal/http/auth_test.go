@@ -39,7 +39,7 @@ func testAuthHeader(t *testing.T, db *sqlite.DB, cfg *config.Config) string {
 		t.Fatalf("failed to create test admin: %v", err)
 	}
 
-	token, err := NewAuthHandler(sqlite.NewUserRepository(db), cfg.SecretKey).signToken(user, time.Now().UTC())
+	token, err := NewAuthHandler(sqlite.NewUserRepository(db), nil, cfg.SecretKey).signToken(user, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("failed to sign test token: %v", err)
 	}
@@ -148,6 +148,19 @@ func TestAuthUsersPlansFlow(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 me, got %d. Body: %s", w.Code, w.Body.String())
 	}
+	var meResp struct {
+		Username string  `json:"username"`
+		Aluno    *any    `json:"aluno"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &meResp); err != nil {
+		t.Fatalf("failed to decode me response: %v", err)
+	}
+	if meResp.Username != "coach1" {
+		t.Fatalf("unexpected me username: %+v", meResp)
+	}
+	if meResp.Aluno != nil {
+		t.Fatalf("expected null aluno for unlinked user, got %+v", meResp.Aluno)
+	}
 
 	changePayload := `{"password_atual":"secret1","password_nova":"newsecret1"}`
 	req = httptest.NewRequest(http.MethodPost, "/api/v1/auth/alterar-senha", bytes.NewBufferString(changePayload))
@@ -189,5 +202,93 @@ func TestAuthUsersPlansFlow(t *testing.T) {
 	router.ServeHTTP(w, req)
 	if w.Code != http.StatusNoContent {
 		t.Fatalf("expected 204 delete plan, got %d. Body: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAuthMeLinkedAluno(t *testing.T) {
+	logger.Setup("development", false)
+
+	tempDir, err := os.MkdirTemp("", "http-auth-me-aluno-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	db, err := sqlite.Connect(filepath.Join(tempDir, "test.db"))
+	if err != nil {
+		t.Fatalf("failed to connect database: %v", err)
+	}
+	defer db.Close()
+
+	cfg := &config.Config{CorsOrigins: []string{"*"}}
+	userRepo := sqlite.NewUserRepository(db)
+	alunoRepo := sqlite.NewAlunoRepository(db)
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte("student-pass"), bcrypt.DefaultCost)
+	if err != nil {
+		t.Fatalf("failed to hash password: %v", err)
+	}
+	user := &domain.User{
+		Username:     "aluno1",
+		Email:        "aluno1@example.com",
+		PasswordHash: string(passwordHash),
+		NomeCompleto: "Aluno Um",
+		IsAdmin:      false,
+		Ativo:        true,
+		Aprovado:     true,
+	}
+	if err := userRepo.Create(t.Context(), user); err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+
+	usuarioID := user.ID
+	aluno := &domain.Aluno{
+		Nome:      "Maria Aluno",
+		Idade:     25,
+		Sexo:      "F",
+		Email:     "maria@example.com",
+		UsuarioID: &usuarioID,
+		Ativo:     true,
+	}
+	if err := alunoRepo.Create(t.Context(), aluno); err != nil {
+		t.Fatalf("failed to create aluno: %v", err)
+	}
+
+	token, err := NewAuthHandler(userRepo, alunoRepo, cfg.SecretKey).signToken(user, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("failed to sign token: %v", err)
+	}
+
+	router := NewRouter(cfg, depsForTestDB(db))
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 me, got %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	var meResp struct {
+		Username string `json:"username"`
+		Aluno    *struct {
+			ID    int64  `json:"id"`
+			Nome  string `json:"nome"`
+			Idade int    `json:"idade"`
+			Sexo  string `json:"sexo"`
+			Email string `json:"email"`
+			Ativo bool   `json:"ativo"`
+		} `json:"aluno"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &meResp); err != nil {
+		t.Fatalf("failed to decode me response: %v", err)
+	}
+	if meResp.Username != "aluno1" {
+		t.Fatalf("unexpected username: %+v", meResp)
+	}
+	if meResp.Aluno == nil {
+		t.Fatal("expected linked aluno in me response")
+	}
+	if meResp.Aluno.ID != aluno.ID || meResp.Aluno.Nome != "Maria Aluno" || meResp.Aluno.Idade != 25 || !meResp.Aluno.Ativo {
+		t.Fatalf("unexpected aluno payload: %+v", meResp.Aluno)
 	}
 }

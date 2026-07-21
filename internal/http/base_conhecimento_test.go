@@ -96,7 +96,7 @@ func TestBaseConhecimentoFlow(t *testing.T) {
 	if err := sqlite.NewUserRepository(db).Create(ctx, nonAdminUser); err != nil {
 		t.Fatalf("failed to create non-admin user: %v", err)
 	}
-	nonAdminToken, err := NewAuthHandler(sqlite.NewUserRepository(db), cfg.SecretKey).signToken(nonAdminUser, time.Now().UTC())
+	nonAdminToken, err := NewAuthHandler(sqlite.NewUserRepository(db), nil, cfg.SecretKey).signToken(nonAdminUser, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("failed to sign non-admin token: %v", err)
 	}

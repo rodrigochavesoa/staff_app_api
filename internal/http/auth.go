@@ -26,15 +26,17 @@ type userContextKey struct{}
 
 type AuthHandler struct {
 	users     repositories.UserRepository
+	alunos    repositories.AlunoRepository
 	secretKey string
 }
 
-func NewAuthHandler(users repositories.UserRepository, secretKey string) *AuthHandler {
+func NewAuthHandler(users repositories.UserRepository, alunos repositories.AlunoRepository, secretKey string) *AuthHandler {
 	if secretKey == "" {
 		secretKey = defaultSecretKey
 	}
 	return &AuthHandler{
 		users:     users,
+		alunos:    alunos,
 		secretKey: secretKey,
 	}
 }
@@ -73,6 +75,20 @@ type userResponse struct {
 	UltimoLogin  *string `json:"ultimo_login,omitempty"`
 	Ativo        bool    `json:"ativo,omitempty"`
 	Aprovado     bool    `json:"aprovado,omitempty"`
+}
+
+type meAlunoResponse struct {
+	ID    int64  `json:"id"`
+	Nome  string `json:"nome"`
+	Idade int    `json:"idade"`
+	Sexo  string `json:"sexo"`
+	Email string `json:"email"`
+	Ativo bool   `json:"ativo"`
+}
+
+type meResponse struct {
+	userResponse
+	Aluno *meAlunoResponse `json:"aluno"`
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -194,9 +210,24 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+
+	resp := meResponse{userResponse: toUserResponse(user)}
+	if h.alunos != nil {
+		linked, err := LinkedAluno(r.Context(), h.alunos)
+		if err != nil {
+			if errors.Is(err, errUnauthorized) {
+				writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			writeJSONError(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		resp.Aluno = toMeAlunoResponse(linked)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(toUserResponse(user))
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
@@ -433,4 +464,18 @@ func toUserResponse(user *domain.User) userResponse {
 		resp.UltimoLogin = &value
 	}
 	return resp
+}
+
+func toMeAlunoResponse(aluno *domain.Aluno) *meAlunoResponse {
+	if aluno == nil {
+		return nil
+	}
+	return &meAlunoResponse{
+		ID:    aluno.ID,
+		Nome:  aluno.Nome,
+		Idade: aluno.Idade,
+		Sexo:  aluno.Sexo,
+		Email: aluno.Email,
+		Ativo: aluno.Ativo,
+	}
 }
