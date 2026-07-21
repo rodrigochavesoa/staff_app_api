@@ -1,0 +1,227 @@
+# STAFF App API — Cursor Rules (Go)
+
+Backend Go frontend-agnostic para gestão de treinos (musculação, corrida, Garmin, SVED, RAG).
+Módulo: `staff_app` · Go 1.25+ · SQLite · Chi router · contrato em `openapi.yaml`.
+
+Leia também: `CONTRIBUTING.md`, `docs/INDEX.md`, `docs/prompts/prompt.md` (Tech Lead sênior de Go).
+
+---
+
+## Layout do projeto
+
+```
+cmd/api/              entrypoint da API HTTP
+cmd/e2eapi/           journey E2E CLI (fmt.Print permitido)
+internal/domain/      tipos de domínio (sem lógica pesada)
+internal/http/        handlers, router, middlewares, server
+internal/repositories/ interfaces de persistência (ports)
+internal/sqlite/      implementações SQLite (adapters)
+internal/services/    lógica de negócio (ex.: EvidencePipeline, RAG)
+internal/config/      configuração via env
+internal/platform/    infra compartilhada (logger)
+internal/migrations/  SQL versionado (go:embed)
+```
+
+- Use `cmd/` + `internal/` — **não** crie `pkg/` (aplicação, não biblioteca pública).
+- Nomes de domínio em português (`Aluno`, `Ficha`, `Anamnese`) são intencionais.
+- JSON da API usa `snake_case` — não renomeie campos só por estilo.
+
+---
+
+## Princípios de produto (sempre)
+
+- **API first**: rotas, payloads e status codes vivem em `openapi.yaml`.
+- **Frontend agnostic**: zero acoplamento a Flutter, React ou templates HTML.
+- **Core determinístico**: IA pode assistir, mas fallback local deve ser testável.
+- **Segurança**: sem secrets, dados reais ou PII em commits, logs ou fixtures.
+- **PRs pequenos**: uma mudança focada por vez; siga briefs em `docs/briefs/active/`.
+
+---
+
+## Go — padrões obrigatórios
+
+### Erros
+
+- Sempre verifique erros: `if err != nil { ... }`. Nunca ignore silenciosamente.
+- Envolva com contexto: `fmt.Errorf("aluno %d: %w", id, err)`.
+- Handlers HTTP traduzem erro de domínio/DB em status JSON adequado.
+- `_ =` só em cleanup no shutdown (fechar arquivo, pool) — com comentário quando não óbvio.
+
+```go
+// ✅
+if err := repo.Create(ctx, aluno); err != nil {
+    return fmt.Errorf("create aluno: %w", err)
+}
+
+// ❌
+_ = repo.Create(ctx, aluno)
+```
+
+### Logging
+
+- Produção: **`log/slog`** via `internal/platform/logger` (`logger.Info`, `logger.Error`, etc.).
+- **Proibido** em `internal/**`: `fmt.Print*`, `log.Print*`, `println`.
+- **Permitido** `fmt.Print*` apenas em `cmd/e2eapi/`, `scripts/` e `**/testdata/**`.
+
+```go
+// ✅
+logger.Error("failed to connect database", err, "path", cfg.DatabasePath)
+
+// ❌
+fmt.Println("db error:", err)
+```
+
+### Contexto e I/O
+
+- Repositórios e serviços recebem `context.Context` como primeiro argumento.
+- Timeouts em operações externas: `context.WithTimeout`.
+- SQLite: respeite o pool (`MaxOpenConns=1`); não abra conexões paralelas ad hoc.
+
+### Concorrência
+
+- Goroutines devem ter caminho de término (channel, `WaitGroup`, shutdown do server).
+- Testes concorrentes: `sync.WaitGroup` + `context.WithTimeout` (ver `db_pool_test.go`).
+- Prefira `errgroup` quando surgirem várias goroutines com erro agregado.
+- Evite `func init()` — o projeto não usa; não introduza sem necessidade extrema.
+
+### Interfaces e dependências
+
+- **Padrão do projeto**: interfaces de persistência em `internal/repositories/`.
+- Handlers dependem de `repositories.XRepository`, **não** de `*sqlite.XRepository`.
+- Wiring centralizado em `internal/http/deps.go` (`NewSQLiteDeps`).
+- Implementações SQLite retornam structs concretas; satisfação de interface é implícita.
+- Lógica de negócio composta vai em `internal/services/` (ex.: `EvidencePipeline`).
+- **Não** crie novas interfaces em `services.go` sem implementação e consumidor — evite código morto.
+
+### Structs e ponteiros
+
+- Domain structs são mutáveis com ponteiros para campos opcionais — padrão aceito aqui.
+- Prefira passagem por valor para tipos pequenos/imutáveis; ponteiros para entidades grandes ou mutáveis.
+- Globais: evite novos; exceções existentes (`logger.Log`, tabelas lookup, `go:embed`) são aceitas.
+
+### Nomenclatura
+
+- MixedCaps, sem underscores em identificadores Go.
+- Getters sem prefixo `Get` quando idiomático (`UserByID`, não `GetUserByID`).
+- Arquivos: snake_case no nome do arquivo quando reflete domínio (`ficha_web.go`, `periodizacao_corrida.go`).
+
+---
+
+## Testes
+
+### Obrigatório antes de concluir mudança em Go
+
+```bash
+GOCACHE=/tmp/go-build-cache GOWORK=off go test ./...
+GOCACHE=/tmp/go-build-cache GOWORK=off go test -race ./...
+GOCACHE=/tmp/go-build-cache GOWORK=off go vet ./...
+GOCACHE=/tmp/go-build-cache GOWORK=off go build ./...
+go run honnef.co/go/tools/cmd/staticcheck@v0.7.0 ./...
+```
+
+CI também roda `gosec` e `govulncheck` — execute localmente em mudanças sensíveis.
+
+### Estilo de teste
+
+- Lógica pura (`daniels`, `corrida/blocos`, validações, services/evidence_*): **table-driven** (`tests := []struct{...}`).
+- HTTP: testes de integração no pacote `internal/http` com `httptest` + repositórios reais ou fake.
+- SQLite: testes de integração com DB temporário (`t.TempDir()`).
+- Não exige `x_test.go` para cada `x.go` — cobertura por **pacote** é o critério.
+- Todo comportamento novo de negócio ou persistência **deve** ter teste.
+- Fixtures sintéticas/anônimas; fake providers para IA; sem API keys reais.
+- Nomeie subtestes (`t.Run`) descrevendo o cenário de forma clara, preferencialmente em inglês ou português sem acentos (ex.: `t.Run("returns_error_when_aluno_not_found", ...)`).
+
+---
+
+## API e OpenAPI
+
+Atualize `openapi.yaml` quando mudar: rotas, métodos, payloads, status codes, auth, query/path params.
+
+Lint local (quando disponível):
+
+```bash
+vacuum lint -r vacuum-ruleset.yaml openapi.yaml
+```
+
+---
+
+## Banco e migrations
+
+- Schema novo → migration forward em `internal/migrations/sql/`.
+- Migrations idempotentes quando DB legado pode já ter a coluna/tabela.
+- Nunca apague dados de usuário automaticamente.
+- Teste persistência em `internal/sqlite/*_test.go`.
+- **Proibido** usar concatenação de strings ou `fmt.Sprintf` para montar queries SQL. Use sempre prepared statements com parâmetros (`?` no SQLite).
+
+---
+
+## IA / RAG
+
+- Comportamento local determinístico sempre disponível.
+- Falhas de provider tratadas explicitamente (503/ fallback).
+- Validadores de segurança não podem ser bypassados por output de IA.
+- Metadata expõe se IA foi usada.
+
+---
+
+## Qualidade — o que o CI usa (não golangci-lint)
+
+| Ferramenta | Uso |
+|------------|-----|
+| `go test ./...` | suíte completa |
+| `go test -race ./...` | data races |
+| `go vet ./...` | vet |
+| `staticcheck@v0.7.0` | análise estática (substitui golangci-lint neste repo) |
+| `gosec@v2.22.10` | SAST |
+| `govulncheck` | vulnerabilidades |
+| TruffleHog | secrets no filesystem |
+
+Não adicione `golangci-lint` como gate sem alinhar CI e CONTRIBUTING.
+
+---
+
+## Agentes e documentação
+
+| Papel | Prompt |
+|-------|--------|
+| **Tech Lead sênior de Go** | `docs/prompts/prompt.md` + `docs/operations/playbook_coordenacao_agentes.md` + `.cursor/skills/go/SKILL.md` |
+| Discovery | `docs/prompts/prompt_discovery.md` |
+| DevOps | `docs/prompts/prompt_devops.md` |
+| Executor PR | brief em `docs/briefs/active/` |
+| Humanos | `docs/human/` |
+
+- Discovery **não** implementa código nem cria brief/spec/plan.
+- Executor implementa **só** o brief ativo; preenche §2 do brief ao concluir.
+- **Regra operacional:** ao iniciar uma nova tarefa de código, leia **obrigatoriamente** o arquivo correspondente em `docs/briefs/active/` antes de sugerir a primeira linha de código.
+- Não edite `docs/` além do escopo pedido; não crie markdown não solicitado.
+
+---
+
+## Commits
+
+Conventional Commits: `feat(api): ...`, `fix(garmin): ...`, `docs: ...`, `test: ...`, `refactor: ...`, `chore: ...`, `ci: ...`.
+
+Breaking: `feat(api)!: ...` + footer `BREAKING CHANGE:`.
+
+---
+
+## Anti-patterns (não faça)
+
+- Acoplar backend a um frontend específico.
+- Commitar `.env`, credenciais, DBs reais, uploads Garmin reais.
+- Introduzir deps GPL/AGPL sem revisão (`LICENSE_POLICY.md`).
+- Handler chamando SQL direto — use repositório.
+- Concatenar ou `Sprintf` valores em SQL — use placeholders (`?`).
+- Ignorar `openapi.yaml` em mudança de contrato público.
+- `fmt.Print*` em `internal/**`.
+- Interfaces órfãs sem implementação.
+- PRs grandes sem brief ou spec quando a mudança é arquitetural.
+
+---
+
+## Escopo de mudança
+
+- Minimize o diff: só o necessário para a tarefa.
+- Reuse funções e padrões existentes; leia o pacote antes de escrever.
+- Comentários só para lógica não óbvia — código autoexplicativo.
+- Não crie commits nem PRs a menos que o usuário peça explicitamente.
