@@ -6,7 +6,6 @@ import (
 	"strings"
 )
 
-// EvidenceSearchRequest drives gated hybrid evidence retrieval.
 type EvidenceSearchRequest struct {
 	Generation GenerationRequest
 	Anamnese   *AnamneseTrainingHint
@@ -15,12 +14,12 @@ type EvidenceSearchRequest struct {
 	TopK       int
 }
 
-// EvidenceReranker reorders and truncates evidence candidates.
+// EvidenceReranker reordena e corta candidatos de evidência.
 type EvidenceReranker interface {
 	Rerank(ctx context.Context, req EvidenceSearchRequest, candidates []KnowledgeEvidence) []KnowledgeEvidence
 }
 
-// DeterministicEvidenceReranker applies spec §6.3 boosts/penalties without ML.
+// DeterministicEvidenceReranker aplica bônus/penalidades da spec §6.3 sem aprendizado de máquina.
 type DeterministicEvidenceReranker struct{}
 
 func (DeterministicEvidenceReranker) Rerank(_ context.Context, req EvidenceSearchRequest, candidates []KnowledgeEvidence) []KnowledgeEvidence {

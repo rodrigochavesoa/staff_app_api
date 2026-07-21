@@ -10,13 +10,13 @@ import (
 
 const hybridCandidateLimit = 20
 
-// KnowledgeEvidenceSearcher finds knowledge snippets for gated evidence retrieval.
+// KnowledgeEvidenceSearcher encontra trechos da base para busca condicionada de evidências.
 type KnowledgeEvidenceSearcher interface {
 	Search(ctx context.Context, req EvidenceSearchRequest) ([]KnowledgeEvidence, error)
 }
 
-// LocalKnowledgeEvidenceSearcher ports the legacy single-loop local document search.
-// Prefer HybridKnowledgeEvidenceSearcher for the periodized pipeline.
+// LocalKnowledgeEvidenceSearcher porta a busca local legada em loop único.
+// Preferir HybridKnowledgeEvidenceSearcher no pipeline periodizado.
 type LocalKnowledgeEvidenceSearcher struct {
 	Docs LocalDocumentSearcher
 }
@@ -75,8 +75,8 @@ func (s *LocalKnowledgeEvidenceSearcher) Search(ctx context.Context, req Evidenc
 	return evidencias, nil
 }
 
-// HybridKnowledgeEvidenceSearcher combines lexical scoring over SQL candidates with
-// optional vector search and deterministic rerank (spec §6.2–6.3).
+// HybridKnowledgeEvidenceSearcher combina pontuação lexical em candidatos SQL com
+// busca vetorial opcional e reordenação determinística (spec §6.2–6.3).
 type HybridKnowledgeEvidenceSearcher struct {
 	Docs     LocalDocumentSearcher
 	Embed    EmbeddingProvider // optional
@@ -148,7 +148,7 @@ func (s *HybridKnowledgeEvidenceSearcher) Search(ctx context.Context, req Eviden
 				}
 			}
 		}
-		// Vector failures are non-fatal: lexical results still apply.
+		// Falha vetorial não é fatal: resultados lexicais seguem válidos.
 	}
 
 	candidates := make([]KnowledgeEvidence, 0, len(byKey))
@@ -176,8 +176,8 @@ func EvidenceTopK(complexity string) int {
 	return 3
 }
 
-// listLexicalCandidates prefers token-OR SQL (LocalDocumentCandidateSource).
-// Falls back to short-term SearchLocalDocuments when candidates are unavailable/empty.
+// listLexicalCandidates prefere SQL com OR de tokens (LocalDocumentCandidateSource).
+// Cai para SearchLocalDocuments se não houver candidatos.
 func (s *HybridKnowledgeEvidenceSearcher) listLexicalCandidates(ctx context.Context, query, modalidade string) ([]domain.KnowledgeDocument, error) {
 	if src, ok := s.Docs.(LocalDocumentCandidateSource); ok {
 		docs, err := src.SearchLocalDocumentCandidates(ctx, query, modalidade, hybridCandidateLimit)
@@ -288,7 +288,7 @@ func buildEvidenceQueries(req EvidenceSearchRequest) []string {
 		return []string{moderadoQuery}
 	}
 
-	// complexo: até 3 sub-queries (spec §6.4).
+	// complexo: até 3 subconsultas (spec §6.4).
 	clinical := strings.TrimSpace(strings.Join(filterNonEmpty(restricaoParts), " "))
 	progressao := strings.TrimSpace(strings.Join(filterNonEmpty([]string{objetivo, nivel, "progressão", "segurança"}), " "))
 	cruzada := strings.TrimSpace(strings.Join(filterNonEmpty([]string{modalidade, "reabilitação", "SVED"}), " "))
@@ -358,7 +358,7 @@ func lexicalEvidenceScore(query string, restrictionToks []string, modalidade str
 		score += 2
 	}
 
-	// Soft saturation so ranking stays in a stable 0–1 band for rerank boosts.
+	// Saturação suave: ranking fica numa faixa estável 0–1 para os bônus da reordenação.
 	return clamp01(score / (score + 5.0))
 }
 

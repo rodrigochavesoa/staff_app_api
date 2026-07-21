@@ -195,7 +195,7 @@ func (s *ChromaVectorStore) SearchSimilar(ctx context.Context, vector []float32,
 			}
 		}
 
-		// Convert Chroma distance to a simple relevance score (distance is L2, so smaller is better)
+		// Converte distância L2 do Chroma em relevância (menor distância = maior relevância).
 		relevance := 1.0
 		if distance > 0 {
 			relevance = 1.0 / (1.0 + distance)

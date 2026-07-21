@@ -5,13 +5,12 @@ import (
 	"strings"
 )
 
-// CaseComplexityClassifier scores how much structured context a training
-// generation case needs.
+// CaseComplexityClassifier estima quanto contexto estruturado o caso de treino
+// precisa.
 type CaseComplexityClassifier interface {
 	Classify(ctx context.Context, in ClassificationInput) ClassificationResult
 }
 
-// ClassificationInput carries request fields and already-loaded athlete context.
 type ClassificationInput struct {
 	Context     *AthleteTrainingContext
 	Frequencia  int
@@ -19,16 +18,15 @@ type ClassificationInput struct {
 	Observacoes string
 }
 
-// ClassificationResult is the classifier output.
-// Reasons is for unit tests / future telemetry; not exposed on HTTP in PR1.
+// Reasons serve a testes/telemetria; não exposto no HTTP nesta versão.
 type ClassificationResult struct {
 	Complexity string
 	Score      int
 	Reasons    []string
 }
 
-// LegacyCaseComplexityClassifier is a 1:1 port of the pre-pipeline
-// classifyTrainingComplexity scoring rules.
+// LegacyCaseComplexityClassifier é porta 1:1 das regras de
+// classifyTrainingComplexity anteriores ao pipeline.
 type LegacyCaseComplexityClassifier struct{}
 
 func (LegacyCaseComplexityClassifier) Classify(_ context.Context, in ClassificationInput) ClassificationResult {
@@ -72,7 +70,7 @@ func (LegacyCaseComplexityClassifier) Classify(_ context.Context, in Classificat
 	}
 }
 
-// DeterministicCaseComplexityClassifier applies spec §4.2 scoring rules.
+// DeterministicCaseComplexityClassifier aplica as regras de pontuação da spec §4.2.
 type DeterministicCaseComplexityClassifier struct{}
 
 func (DeterministicCaseComplexityClassifier) Classify(_ context.Context, in ClassificationInput) ClassificationResult {

@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// EvidencePipeline orchestrates structured SQL context, complexity classification,
-// and gated evidence search for training generation.
+// EvidencePipeline orquestra contexto SQL, classificação de complexidade
+// e busca de evidências condicionada na geração de treino.
 type EvidencePipeline struct {
 	Structured *SQLStructuredContextLoader
 	Classifier CaseComplexityClassifier

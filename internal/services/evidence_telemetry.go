@@ -5,12 +5,12 @@ import (
 	"strings"
 )
 
-// EvidencePipelineEvent is an aggregated, non-clinical telemetry record (spec §8.1).
+// EvidencePipelineEvent é telemetria agregada, sem texto clínico (spec §8.1).
 //
-// v1 notes:
-//   - Emitted only when TrainingProviderChain runs (trainingAI != nil) and Resolve succeeds.
-//   - Failures of Resolve and the AI-off path do not write rows (backlog: error events).
-//   - SafetyRejected is inferred from SafetyValidated / FallbackReason containing "safety".
+// Notas v1:
+//   - Emitido só quando TrainingProviderChain roda (trainingAI != nil) e Resolve ok.
+//   - Falhas de Resolve e caminho sem IA não gravam linhas (backlog: eventos de erro).
+//   - SafetyRejected infere-se de SafetyValidated / FallbackReason com "safety".
 type EvidencePipelineEvent struct {
 	AlunoID              int64
 	Endpoint             string
@@ -25,20 +25,20 @@ type EvidencePipelineEvent struct {
 	DurationMs           int64
 }
 
-// EvidencePipelineTelemetryRecorder persists pipeline events without clinical free text.
+// EvidencePipelineTelemetryRecorder persiste eventos sem texto clínico livre.
 type EvidencePipelineTelemetryRecorder interface {
 	Record(ctx context.Context, ev EvidencePipelineEvent) error
 }
 
-// NoopEvidencePipelineTelemetryRecorder discards events (tests / optional disable).
+// NoopEvidencePipelineTelemetryRecorder descarta eventos (testes / desligar opcional).
 type NoopEvidencePipelineTelemetryRecorder struct{}
 
 func (NoopEvidencePipelineTelemetryRecorder) Record(context.Context, EvidencePipelineEvent) error {
 	return nil
 }
 
-// NewEvidencePipelineEvent builds a telemetry event from generation outcomes.
-// Only IDs, enums, and counters — never pathology/restriction free text.
+// NewEvidencePipelineEvent monta o evento a partir do resultado da geração.
+// Só IDs, enums e contadores — nunca texto livre de patologia/restrição.
 func NewEvidencePipelineEvent(
 	alunoID int64,
 	endpoint string,

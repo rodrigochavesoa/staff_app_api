@@ -32,7 +32,7 @@ func (r *ExercicioRepository) connExec(ctx context.Context) interface {
 	return r.db
 }
 
-// WithTx runs fn inside one SQLite transaction bound onto ctx for catalog sync.
+// WithTx executa fn numa única transação SQLite ligada ao contexto (sync do catálogo).
 func (r *ExercicioRepository) WithTx(ctx context.Context, fn func(ctx context.Context) error) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -45,8 +45,8 @@ func (r *ExercicioRepository) WithTx(ctx context.Context, fn func(ctx context.Co
 	return tx.Commit()
 }
 
-// UpsertCatalogExercise inserts or updates a CSV-managed row (spec §5.2).
-// Prefer calling inside WithTx. Returns inserted=true on INSERT.
+// UpsertCatalogExercise insere ou atualiza linha gerida pelo CSV (spec §5.2).
+// Preferir chamar dentro de WithTx. Retorna inserted=true no INSERT.
 func (r *ExercicioRepository) UpsertCatalogExercise(ctx context.Context, ex *domain.ExercicioReabilitacao) (bool, error) {
 	if ex == nil {
 		return false, errors.New("nil exercise")

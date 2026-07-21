@@ -9,29 +9,29 @@ import (
 	"staff_app/internal/domain"
 )
 
-// ActiveAnamneseFinder loads the active anamnese for an athlete.
+// ActiveAnamneseFinder carrega a anamnese ativa do aluno.
 type ActiveAnamneseFinder interface {
 	FindActiveByAlunoID(ctx context.Context, alunoID int64) (*domain.Anamnese, error)
 }
 
-// LocalDocumentSearcher searches the local knowledge base documents table.
+// LocalDocumentSearcher busca na tabela local de documentos da base de conhecimento.
 type LocalDocumentSearcher interface {
 	SearchLocalDocuments(ctx context.Context, query string, modalidade string, k int) ([]domain.KnowledgeDocument, error)
 }
 
-// LocalDocumentCandidateSource returns a broad candidate set for hybrid ranking.
-// Optional: HybridKnowledgeEvidenceSearcher prefers this over substring SearchLocalDocuments.
+// LocalDocumentCandidateSource devolve candidatos amplos para ranking híbrido.
+// Opcional: HybridKnowledgeEvidenceSearcher prefere isto a SearchLocalDocuments por trecho.
 type LocalDocumentCandidateSource interface {
 	SearchLocalDocumentCandidates(ctx context.Context, query string, modalidade string, k int) ([]domain.KnowledgeDocument, error)
 }
 
-// ContextQueryDB is the SQL surface needed for history and SVED aggregates.
+// ContextQueryDB é a superfície SQL para histórico e agregados SVED.
 type ContextQueryDB interface {
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 }
 
-// SQLStructuredContextLoader loads relational athlete context only (no evidence, no classify).
+// SQLStructuredContextLoader carrega só contexto relacional do aluno (sem evidência nem classificação).
 type SQLStructuredContextLoader struct {
 	DB       ContextQueryDB
 	Anamnese ActiveAnamneseFinder
@@ -81,7 +81,7 @@ func (l *SQLStructuredContextLoader) Load(ctx context.Context, alunoID int64, re
 	return result, nil
 }
 
-// AnamneseToTrainingHint maps a domain anamnese to the training hint DTO.
+// AnamneseToTrainingHint mapeia anamnese de domínio para o DTO de dica de treino.
 func AnamneseToTrainingHint(a *domain.Anamnese) *AnamneseTrainingHint {
 	if a == nil {
 		return nil

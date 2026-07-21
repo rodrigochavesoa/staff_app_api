@@ -9,17 +9,14 @@ import (
 	"staff_app/internal/domain"
 )
 
-// Teste3kmRepository handles SQLite persistence for the teste_3km table.
 type Teste3kmRepository struct {
 	db *DB
 }
 
-// NewTeste3kmRepository creates a new instance of Teste3kmRepository.
 func NewTeste3kmRepository(db *DB) *Teste3kmRepository {
 	return &Teste3kmRepository{db: db}
 }
 
-// Create inserts a new Teste3km record into the database.
 func (r *Teste3kmRepository) Create(ctx context.Context, t *domain.Teste3km) error {
 	query := `
 		INSERT INTO teste_3km (
@@ -30,7 +27,7 @@ func (r *Teste3kmRepository) Create(ctx context.Context, t *domain.Teste3km) err
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	// Format time as TEXT (YYYY-MM-DD)
+	// Data do teste em TEXT (YYYY-MM-DD).
 	dataStr := t.DataTeste.Format("2006-01-02")
 
 	res, err := r.db.ExecContext(ctx, query,
@@ -62,7 +59,6 @@ func (r *Teste3kmRepository) Create(ctx context.Context, t *domain.Teste3km) err
 	return nil
 }
 
-// ListByAlunoID retrieves all 3k tests for a specific aluno sorted by date descending.
 func (r *Teste3kmRepository) ListByAlunoID(ctx context.Context, alunoID int64) ([]*domain.Teste3km, error) {
 	query := `
 		SELECT 
@@ -97,10 +93,8 @@ func (r *Teste3kmRepository) ListByAlunoID(ctx context.Context, alunoID int64) (
 			return nil, fmt.Errorf("failed to scan 3k test row: %w", err)
 		}
 
-		// Parse time
 		parsedTime, err := time.Parse("2006-01-02", dataStr)
 		if err != nil {
-			// Fallback parsing just in case
 			parsedTime, _ = time.Parse(time.RFC3339, dataStr)
 		}
 		t.DataTeste = parsedTime
@@ -124,7 +118,7 @@ func (r *Teste3kmRepository) ListByAlunoID(ctx context.Context, alunoID int64) (
 	return tests, nil
 }
 
-// Delete removes a Teste3km record by its ID and student ID to prevent cross-student deletion.
+// Delete exige id + aluno_id para impedir exclusão cruzada entre alunos.
 func (r *Teste3kmRepository) Delete(ctx context.Context, id int64, alunoID int64) error {
 	query := `DELETE FROM teste_3km WHERE id = ? AND aluno_id = ?`
 	res, err := r.db.ExecContext(ctx, query, id, alunoID)

@@ -18,13 +18,11 @@ func NewExercicioRepository(db *DB) *ExercicioRepository {
 	return &ExercicioRepository{db: db}
 }
 
-// GetByCodigo busca um exercício por seu código.
-// When ctx carries a Sync transaction (WithTx), the lookup uses that tx.
+// Com WithTx no contexto, a leitura usa a mesma transação do sync do catálogo.
 func (r *ExercicioRepository) GetByCodigo(ctx context.Context, codigo int) (*domain.ExercicioReabilitacao, error) {
 	return r.getByCodigoConn(ctx, codigo)
 }
 
-// GetByNome busca um exercício pelo nome (exato, case-insensitive)
 func (r *ExercicioRepository) GetByNome(ctx context.Context, nome string) (*domain.ExercicioReabilitacao, error) {
 	query := `
 		SELECT 
@@ -70,7 +68,6 @@ func (r *ExercicioRepository) GetByNome(ctx context.Context, nome string) (*doma
 	return &ex, nil
 }
 
-// GetMaxCodigoInRange busca o maior código dentro de um intervalo inclusivo
 func (r *ExercicioRepository) GetMaxCodigoInRange(ctx context.Context, min, max int) (int, error) {
 	query := `SELECT MAX(codigo) FROM exercicios_reabilitacao WHERE codigo >= ? AND codigo <= ?`
 	var maxVal sql.NullInt64
@@ -84,7 +81,6 @@ func (r *ExercicioRepository) GetMaxCodigoInRange(ctx context.Context, min, max 
 	return int(maxVal.Int64), nil
 }
 
-// Create insere um novo exercício personalizado no banco de dados
 func (r *ExercicioRepository) Create(ctx context.Context, ex *domain.ExercicioReabilitacao) error {
 	query := `
 		INSERT INTO exercicios_reabilitacao (
@@ -106,7 +102,6 @@ func (r *ExercicioRepository) Create(ctx context.Context, ex *domain.ExercicioRe
 	return err
 }
 
-// Update atualiza atributos de um exercício (codigo e categoria são imutáveis)
 func (r *ExercicioRepository) Update(ctx context.Context, ex *domain.ExercicioReabilitacao) error {
 	query := `
 		UPDATE exercicios_reabilitacao SET
@@ -147,14 +142,12 @@ func (r *ExercicioRepository) Update(ctx context.Context, ex *domain.ExercicioRe
 	return err
 }
 
-// Delete realiza a exclusão física do exercício do banco de dados
 func (r *ExercicioRepository) Delete(ctx context.Context, codigo int) error {
 	query := `DELETE FROM exercicios_reabilitacao WHERE codigo = ?`
 	_, err := r.db.ExecContext(ctx, query, codigo)
 	return err
 }
 
-// List lista todos os exercícios ativos no banco com filtros opcionais
 func (r *ExercicioRepository) List(ctx context.Context, filters map[string]string) ([]*domain.ExercicioReabilitacao, error) {
 	query := `
 		SELECT 
@@ -231,7 +224,6 @@ func (r *ExercicioRepository) List(ctx context.Context, filters map[string]strin
 	return result, nil
 }
 
-// GetUniqueGrupos retorna todos os grupos musculares únicos em uso
 func (r *ExercicioRepository) GetUniqueGrupos(ctx context.Context) ([]string, error) {
 	query := `
 		SELECT DISTINCT grupo_muscular 
@@ -255,7 +247,6 @@ func (r *ExercicioRepository) GetUniqueGrupos(ctx context.Context) ([]string, er
 	return grupos, nil
 }
 
-// GetUniqueTipos retorna todos os tipos de exercício únicos em uso
 func (r *ExercicioRepository) GetUniqueTipos(ctx context.Context) ([]string, error) {
 	query := `
 		SELECT DISTINCT tipo_exercicio 
@@ -279,9 +270,7 @@ func (r *ExercicioRepository) GetUniqueTipos(ctx context.Context) ([]string, err
 	return tipos, nil
 }
 
-// GetEstatisticas calcula as estatísticas gerais do repositório
 func (r *ExercicioRepository) GetEstatisticas(ctx context.Context) (map[string]interface{}, error) {
-	// Total por categoria
 	qTotal := `SELECT COUNT(*) FROM exercicios_reabilitacao WHERE status = 'ativo'`
 	qTerap := `SELECT COUNT(*) FROM exercicios_reabilitacao WHERE status = 'ativo' AND categoria = 'terapeutico'`
 	qNorm := `SELECT COUNT(*) FROM exercicios_reabilitacao WHERE status = 'ativo' AND categoria = 'normal'`
@@ -328,11 +317,6 @@ func (r *ExercicioRepository) GetEstatisticas(ctx context.Context) (map[string]i
 	}, nil
 }
 
-// ----------------------------------------------------------------------------
-// SUGESTÕES DE REABILITAÇÃO (JUDGE SYSTEM)
-// ----------------------------------------------------------------------------
-
-// GetSugestaoByID busca uma sugestão por ID
 func (r *ExercicioRepository) GetSugestaoByID(ctx context.Context, id int) (*domain.SugestaoExercicioRehab, error) {
 	query := `
 		SELECT 
@@ -374,7 +358,6 @@ func (r *ExercicioRepository) GetSugestaoByID(ctx context.Context, id int) (*dom
 	return &s, nil
 }
 
-// ListSugestoes lista as sugestões pendentes filtradas por prioridade
 func (r *ExercicioRepository) ListSugestoes(ctx context.Context, priorityFilter *int, order string) ([]*domain.SugestaoExercicioRehab, error) {
 	query := `
 		SELECT 
@@ -434,7 +417,7 @@ func (r *ExercicioRepository) ListSugestoes(ctx context.Context, priorityFilter 
 	return result, nil
 }
 
-// AprovarSugestao aprova uma sugestão e insere um novo exercício terapêutico de forma Transacional!
+// AprovarSugestao aprova a sugestão e cria o exercício terapêutico na mesma transação.
 func (r *ExercicioRepository) AprovarSugestao(ctx context.Context, sugestaoID int, ex *domain.ExercicioReabilitacao, approvedBy string) (int, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -442,7 +425,6 @@ func (r *ExercicioRepository) AprovarSugestao(ctx context.Context, sugestaoID in
 	}
 	defer tx.Rollback() // Se der erro antes do Commit, dá rollback automático
 
-	// 1. Verificar se a sugestão existe e está pendente
 	var status string
 	err = tx.QueryRowContext(ctx, "SELECT status FROM sugestoes_exercicios_rehab WHERE id = ?", sugestaoID).Scan(&status)
 	if err != nil {
@@ -452,7 +434,6 @@ func (r *ExercicioRepository) AprovarSugestao(ctx context.Context, sugestaoID in
 		return 0, errors.New("sugestão já foi aprovada ou rejeitada")
 	}
 
-	// 2. Descobrir o próximo código terapêutico livre no range 5000-5999
 	var maxTerap sql.NullInt64
 	err = tx.QueryRowContext(ctx, "SELECT MAX(codigo) FROM exercicios_reabilitacao WHERE codigo >= 5000 AND codigo <= 5999").Scan(&maxTerap)
 	if err != nil {
@@ -470,7 +451,6 @@ func (r *ExercicioRepository) AprovarSugestao(ctx context.Context, sugestaoID in
 	ex.Codigo = nextCode
 	ex.Url = fmt.Sprintf("https://rcstorestaff.com.br/exercicios_html/%d", nextCode)
 
-	// 3. Inserir o Exercício Reabilitação
 	insertExQuery := `
 		INSERT INTO exercicios_reabilitacao (
 			codigo, nome, categoria, descricao_terapeutica, descricao, indicacoes,
@@ -491,7 +471,6 @@ func (r *ExercicioRepository) AprovarSugestao(ctx context.Context, sugestaoID in
 		return 0, fmt.Errorf("erro ao inserir exercício: %w", err)
 	}
 
-	// 4. Atualizar a sugestão
 	apStr := time.Now().Format("2006-01-02 15:04:05")
 	updateSugQuery := `
 		UPDATE sugestoes_exercicios_rehab SET
@@ -506,7 +485,6 @@ func (r *ExercicioRepository) AprovarSugestao(ctx context.Context, sugestaoID in
 		return 0, fmt.Errorf("erro ao atualizar sugestão: %w", err)
 	}
 
-	// 5. Commit
 	if err := tx.Commit(); err != nil {
 		return 0, fmt.Errorf("erro ao commitar transação de aprovação: %w", err)
 	}
@@ -514,7 +492,6 @@ func (r *ExercicioRepository) AprovarSugestao(ctx context.Context, sugestaoID in
 	return ex.Codigo, nil
 }
 
-// RejeitarSugestao marca a sugestão como rejeitada
 func (r *ExercicioRepository) RejeitarSugestao(ctx context.Context, id int, motivo string, rejectedBy string) error {
 	query := `
 		UPDATE sugestoes_exercicios_rehab SET

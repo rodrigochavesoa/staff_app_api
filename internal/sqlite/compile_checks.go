@@ -2,7 +2,7 @@ package sqlite
 
 import "staff_app/internal/repositories"
 
-// Compile-time checks: sqlite types implement repositories interfaces used by HTTP/cmd.
+// Verificações em tempo de compilação: tipos sqlite implementam repositories.* usados por HTTP/cmd.
 var (
 	_ repositories.DatabaseHealth              = (*DB)(nil)
 	_ repositories.UserRepository              = (*UserRepository)(nil)

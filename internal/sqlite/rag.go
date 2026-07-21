@@ -107,7 +107,7 @@ func (r *RAGRepository) SaveCachedQuery(ctx context.Context, queryOrig, queryNor
 }
 
 func (r *RAGRepository) SearchLocalDocuments(ctx context.Context, query string, modalidade string, k int) ([]domain.KnowledgeDocument, error) {
-	// Admin /consulta-base contract: single substring LIKE on the full query.
+	// Contrato admin /consulta-base: um LIKE na query completa.
 	searchPattern := "%" + sanitizeLikeToken(strings.ToLower(strings.TrimSpace(query))) + "%"
 	modLower := strings.ToLower(strings.TrimSpace(modalidade))
 	if k <= 0 {
@@ -128,9 +128,9 @@ func (r *RAGRepository) SearchLocalDocuments(ctx context.Context, query string, 
 	return scanLocalKnowledgeDocuments(rows)
 }
 
-// SearchLocalDocumentCandidates broadens recall for the evidence pipeline:
-// tokenizes the query (≥3 chars) and matches any token via OR LIKE, LIMIT k.
-// Does not change SearchLocalDocuments (admin consulta-base).
+// SearchLocalDocumentCandidates amplia a recuperação de candidatos no pipeline de evidências:
+// tokeniza a query (≥3 chars) e faz OR LIKE por token, LIMIT k.
+// Não altera SearchLocalDocuments (consulta-base admin).
 func (r *RAGRepository) SearchLocalDocumentCandidates(ctx context.Context, query string, modalidade string, k int) ([]domain.KnowledgeDocument, error) {
 	tokens := lexicalSQLTokens(query)
 	if len(tokens) == 0 {
@@ -311,7 +311,6 @@ func (r *RAGRepository) GetEstatisticas(ctx context.Context) (map[string]any, er
 		taxaHitCache = math.Round((float64(economiaChamadasAPI)/float64(totalHits))*1000) / 10
 	}
 
-	// Top 5 consultas
 	topRows, err := r.db.QueryContext(ctx, `
 		SELECT query_original, COALESCE(modalidade, ''), COALESCE(objetivo, ''), hits
 		FROM consultas_base_conhecimento
@@ -341,7 +340,6 @@ func (r *RAGRepository) GetEstatisticas(ctx context.Context) (map[string]any, er
 		return nil, err
 	}
 
-	// Por modalidade
 	modRows, err := r.db.QueryContext(ctx, `
 		SELECT COALESCE(modalidade, 'Geral'), COUNT(*), SUM(hits)
 		FROM consultas_base_conhecimento

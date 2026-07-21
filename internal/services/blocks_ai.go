@@ -10,7 +10,6 @@ import (
 	"staff_app/internal/domain"
 )
 
-// BlocksEnrichRequest is the deterministic input for optional blocks enrichment.
 type BlocksEnrichRequest struct {
 	Days           []blocos.PreviewDay
 	VDOT           float64
@@ -21,15 +20,14 @@ type BlocksEnrichRequest struct {
 	HighCardioRisk bool
 }
 
-// BlocksEnrichResult is the provider output after enrichment (still subject to safety).
 type BlocksEnrichResult struct {
 	Days     []blocos.PreviewDay
 	Warnings []string
 }
 
-// BlocksAIProvider optionally enriches running-block previews.
-// Production default is LocalBlocksAIProvider (no API keys). External providers
-// may be injected in tests or future authorized staging.
+// BlocksAIProvider enriquece opcionalmente prévias de blocos de corrida.
+// Padrão de produção: LocalBlocksAIProvider (sem chaves de API). Provedores externos
+// podem ser injetados em testes ou homologação autorizada.
 type BlocksAIProvider interface {
 	Name() string
 	Model() string
@@ -37,7 +35,7 @@ type BlocksAIProvider interface {
 	Enrich(ctx context.Context, req *BlocksEnrichRequest) (*BlocksEnrichResult, error)
 }
 
-// LocalBlocksAIProvider adds deterministic coaching notes without calling remote APIs.
+// LocalBlocksAIProvider acrescenta notas determinísticas sem chamar APIs remotas.
 type LocalBlocksAIProvider struct{}
 
 func (LocalBlocksAIProvider) Name() string  { return "local" }
@@ -124,7 +122,7 @@ func intensityNote(intensity, objetivo string, highRisk bool) string {
 	}
 }
 
-// ValidateBlocksSafety rejects enrichment that reintroduces hard intervals under high cardio risk.
+// ValidateBlocksSafety rejeita enriquecimento que reintroduz intervalos duros com alto risco cardio.
 func ValidateBlocksSafety(days []blocos.PreviewDay, highCardioRisk bool) error {
 	if !highCardioRisk {
 		return nil
@@ -149,7 +147,7 @@ func hasHardIntensity(in []domain.BlocoCorrida) bool {
 	return false
 }
 
-// HighCardioRiskFromText reports whether free-text limitations imply high cardio risk.
+// HighCardioRiskFromText indica se o texto livre de limitações implica alto risco cardio.
 func HighCardioRiskFromText(limitacoes string) bool {
 	text := strings.ToLower(strings.TrimSpace(limitacoes))
 	if text == "" {

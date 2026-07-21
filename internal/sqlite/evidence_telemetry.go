@@ -7,7 +7,7 @@ import (
 	"staff_app/internal/services"
 )
 
-// EvidencePipelineTelemetryRecorder persists EvidencePipelineEvent rows locally.
+// EvidencePipelineTelemetryRecorder grava eventos do pipeline localmente (sem texto clínico).
 type EvidencePipelineTelemetryRecorder struct {
 	db *DB
 }

@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-// EnrichMetadata fills evidence-related AIMetadata fields from the pipeline result (spec §7).
-// Safe with nil meta or nil pipelineResult (only validations/confidence from meta flags).
+// EnrichMetadata preenche campos de evidência em AIMetadata a partir do pipeline (spec §7).
+// Seguro com meta ou pipelineResult nulos (só validações/confiança a partir dos indicadores).
 func EnrichMetadata(_ context.Context, meta *AIMetadata, pipelineResult *AthleteTrainingContext) {
 	if meta == nil {
 		return
@@ -45,7 +45,7 @@ func EnrichMetadata(_ context.Context, meta *AIMetadata, pipelineResult *Athlete
 	meta.ConfidenceScore = ComputeConfidenceScore(*meta, avgRel)
 }
 
-// ComputeConfidenceScore applies the deterministic v1 rules from spec §7.2.
+// ComputeConfidenceScore aplica as regras determinísticas v1 da spec §7.2.
 func ComputeConfidenceScore(meta AIMetadata, avgEvidenceRelevance float64) float64 {
 	score := 0.5
 	complexity := strings.ToLower(strings.TrimSpace(meta.Complexity))

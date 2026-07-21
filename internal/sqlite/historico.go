@@ -37,7 +37,6 @@ func (r *HistoricoRepository) GetAlunoIDByNome(ctx context.Context, nome string)
 	return id, nil
 }
 
-// SearchAlunos searches for active or inactive students by name, email, or group (turma) with a limit.
 func (r *HistoricoRepository) SearchAlunos(ctx context.Context, q string, limit int, ativo string) ([]*domain.AlunoSearchResponse, error) {
 	var queryBuilder strings.Builder
 	queryBuilder.WriteString(`
@@ -93,7 +92,6 @@ func (r *HistoricoRepository) SearchAlunos(ctx context.Context, q string, limit 
 	return list, nil
 }
 
-// GetTreinosRealizadosByAluno retrieves weight lifting sessions for a student, optionally filtered by month and year.
 func (r *HistoricoRepository) GetTreinosRealizadosByAluno(ctx context.Context, alunoID int64, mes, ano int) ([]*domain.TreinoRealizado, error) {
 	var query string
 	var args []any
@@ -177,7 +175,7 @@ func (r *HistoricoRepository) GetTreinosRealizadosByAluno(ctx context.Context, a
 	return list, nil
 }
 
-// MarkTreinoRealizado writes a record to the treinos_realizados table with SQLite UPSERT.
+// MarkTreinoRealizado grava treino realizado com UPSERT do SQLite.
 func (r *HistoricoRepository) MarkTreinoRealizado(ctx context.Context, tr *domain.TreinoRealizado) error {
 	query := `
 		INSERT INTO treinos_realizados (
@@ -230,7 +228,6 @@ func (r *HistoricoRepository) MarkTreinoRealizado(ctx context.Context, tr *domai
 	return nil
 }
 
-// UnmarkTreinoRealizado deletes a finished workout record.
 func (r *HistoricoRepository) UnmarkTreinoRealizado(ctx context.Context, fichaID int64, dataTreino string) error {
 	res, err := r.db.ExecContext(ctx, "DELETE FROM treinos_realizados WHERE ficha_id = ? AND data_treino = ?", fichaID, dataTreino)
 	if err != nil {
@@ -248,7 +245,6 @@ func (r *HistoricoRepository) UnmarkTreinoRealizado(ctx context.Context, fichaID
 	return nil
 }
 
-// GetHistoricoFichaByID loads archived training sheet/periodization snapshotted info.
 func (r *HistoricoRepository) GetHistoricoFichaByID(ctx context.Context, id int64) (*domain.HistoricoFicha, error) {
 	query := `
 		SELECT 
