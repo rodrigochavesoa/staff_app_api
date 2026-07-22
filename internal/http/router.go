@@ -135,6 +135,7 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 
 			r.Get("/auth/me", authHandler.Me)
 			r.Post("/auth/alterar-senha", authHandler.ChangePassword)
+			r.Get("/me/fichas", fichaWebHandler.MeFichas)
 
 			r.Post("/criar-ficha", fichaWebHandler.Create)
 			r.Get("/stats/{hash}", fichaWebHandler.GetStats)

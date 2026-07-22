@@ -11,6 +11,8 @@ tags:
       description: Health checks, readiness and liveness endpoints.
     - name: Auth
       description: Authentication, current user and password operations.
+    - name: Portal Aluno
+      description: Authenticated student portal endpoints scoped to the linked aluno profile.
     - name: Planos
       description: Public subscription plan listing.
     - name: Pré-Cadastro
@@ -263,6 +265,73 @@ paths:
                                                   ativo:
                                                       type: boolean
             description: Dados do usuário autenticado (`GET /api/v1/auth/me`).
+    /api/v1/me/fichas:
+        get:
+            operationId: getMeFichas
+            summary: Lista links de Ficha Web do aluno vinculado à conta
+            tags: [Portal Aluno]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: include_expired
+                  in: query
+                  required: false
+                  schema:
+                    type: boolean
+                    default: false
+                  description: Quando true, inclui links expirados ou inativos (mesmo comportamento da rota staff).
+            responses:
+                '200':
+                    description: Listagem de links de Ficha Web do aluno vinculado
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    aluno_id:
+                                        type: integer
+                                        format: int64
+                                    total:
+                                        type: integer
+                                    fichas:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                id:
+                                                    type: integer
+                                                    format: int64
+                                                hash:
+                                                    type: string
+                                                ficha_id:
+                                                    type: integer
+                                                    format: int64
+                                                aluno_id:
+                                                    type: integer
+                                                    format: int64
+                                                criado_em:
+                                                    type: string
+                                                    format: date-time
+                                                expira_em:
+                                                    type: string
+                                                    format: date-time
+                                                acessos:
+                                                    type: integer
+                                                ativo:
+                                                    type: boolean
+                '401':
+                    description: Sem token ou token inválido
+                '404':
+                    description: Usuário autenticado sem aluno vinculado
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
+                                        example: Aluno não vinculado a esta conta.
+            description: Lista links de Ficha Web do aluno vinculado (`GET /api/v1/me/fichas`). Equivalente a `GET /aluno/{aluno_id}/fichas` para o próprio aluno.
     /api/v1/auth/alterar-senha:
         post:
             operationId: postAuthAlterarSenha
@@ -1151,10 +1220,29 @@ paths:
                     type: integer
                     example: 1
                   description: Identificador numérico do aluno. Usado em `/api/v1/aluno/{aluno_id}/fichas`.
+                - name: include_expired
+                  in: query
+                  required: false
+                  schema:
+                    type: boolean
+                    default: false
+                  description: Quando true, inclui links expirados ou inativos.
             responses:
                 '200':
                     description: Listagem de links
-            description: Lista todos os links de Ficha Web vinculados a um aluno (`GET /api/v1/aluno/{aluno_id}/fichas`).
+                '403':
+                    description: Usuário não-admin tentando listar fichas de outro aluno
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
+                                        example: Acesso negado.
+            description: |
+                Lista todos os links de Ficha Web vinculados a um aluno (`GET /api/v1/aluno/{aluno_id}/fichas`).
+                Admin (`is_admin`) pode listar qualquer aluno. Usuário não-admin só pode listar o próprio aluno vinculado; caso contrário retorna 403.
     /api/v1/fichas/manual/criar:
         post:
             operationId: postFichasManualCriar
