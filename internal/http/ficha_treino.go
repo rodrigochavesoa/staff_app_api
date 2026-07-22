@@ -236,6 +236,82 @@ func (h *FichaTreinoHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user, ok := UserFromContext(r.Context()); ok && !user.IsAdmin {
+		linked, err := LinkedAluno(r.Context(), h.alunoRepo)
+		if err != nil {
+			if errors.Is(err, errUnauthorized) {
+				writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			writeJSONError(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		if !FichaTreinoOwnedByAluno(f.Aluno, linked) {
+			writeJSONError(w, "Acesso negado.", http.StatusForbidden)
+			return
+		}
+	}
+
+	writeFichaTreinoDetail(w, f)
+}
+
+// MeFichasTreino lists active training sheets for the linked aluno (no ficha_json).
+func (h *FichaTreinoHandler) MeFichasTreino(w http.ResponseWriter, r *http.Request) {
+	linked, ok := RequireLinkedAluno(w, r, h.alunoRepo)
+	if !ok {
+		return
+	}
+
+	list, err := h.repo.ListActiveByAlunoNome(r.Context(), linked.Nome)
+	if err != nil {
+		writeJSONError(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	if list == nil {
+		list = []*domain.FichaTreinoListItem{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"aluno_id":      linked.ID,
+		"total":         len(list),
+		"fichas_treino": list,
+	})
+}
+
+// MeFichaTreinoByID returns a training sheet detail when it belongs to the linked aluno.
+func (h *FichaTreinoHandler) MeFichaTreinoByID(w http.ResponseWriter, r *http.Request) {
+	linked, ok := RequireLinkedAluno(w, r, h.alunoRepo)
+	if !ok {
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id <= 0 {
+		writeJSONError(w, "Invalid ficha ID", http.StatusBadRequest)
+		return
+	}
+
+	f, err := h.repo.GetByID(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			writeJSONError(w, "Ficha não encontrada", http.StatusNotFound)
+			return
+		}
+		writeJSONError(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	if !FichaTreinoOwnedByAluno(f.Aluno, linked) {
+		writeJSONError(w, "Ficha não encontrada", http.StatusNotFound)
+		return
+	}
+
+	writeFichaTreinoDetail(w, f)
+}
+
+func writeFichaTreinoDetail(w http.ResponseWriter, f *domain.FichaTreinoWeb) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]any{

@@ -33,6 +33,17 @@ type FichaTreinoWeb struct {
 	RestSeconds       int        `json:"rest_seconds"`
 }
 
+// FichaTreinoListItem is a summary row for portal/staff list endpoints (no ficha_json).
+type FichaTreinoListItem struct {
+	ID          int64     `json:"id"`
+	TipoFicha   string    `json:"tipo_ficha"`
+	Versao      int       `json:"versao"`
+	NumTreinos  int       `json:"num_treinos"`
+	DataCriacao time.Time `json:"data_criacao"`
+	Modalidade  string    `json:"modalidade"`
+	Objetivo    string    `json:"objetivo"`
+}
+
 type FichaWeb struct {
 	ID           int64      `json:"id"`
 	Hash         string     `json:"hash"`

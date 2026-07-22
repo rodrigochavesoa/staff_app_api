@@ -71,6 +71,7 @@ type PeriodizacaoCorridaRepository interface {
 type FichaTreinoRepository interface {
 	Create(ctx context.Context, f *domain.FichaTreinoWeb) error
 	GetByID(ctx context.Context, id int64) (*domain.FichaTreinoWeb, error)
+	ListActiveByAlunoNome(ctx context.Context, alunoNome string) ([]*domain.FichaTreinoListItem, error)
 	Update(ctx context.Context, f *domain.FichaTreinoWeb) error
 	Delete(ctx context.Context, id int64) error
 	CreatePeriodizadaWithArchiveAndLink(ctx context.Context, f *domain.FichaTreinoWeb, hash string, validDays int, alunoID int64) (string, error)

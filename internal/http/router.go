@@ -153,6 +153,8 @@ func NewRouter(cfg *config.Config, deps Deps, opts ...RouterOption) http.Handler
 				deps.EvidenceTelemetry,
 				trainingChain,
 			)
+			r.Get("/me/fichas-treino", fichaTreinoHandler.MeFichasTreino)
+			r.Get("/me/fichas-treino/{id}", fichaTreinoHandler.MeFichaTreinoByID)
 			r.Route("/fichas", func(r chi.Router) {
 				r.Post("/manual/criar", fichaTreinoHandler.CreateManual)
 				r.Get("/{id}", fichaTreinoHandler.GetByID)

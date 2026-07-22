@@ -332,6 +332,82 @@ paths:
                                         type: string
                                         example: Aluno não vinculado a esta conta.
             description: Lista links de Ficha Web do aluno vinculado (`GET /api/v1/me/fichas`). Equivalente a `GET /aluno/{aluno_id}/fichas` para o próprio aluno.
+    /api/v1/me/fichas-treino:
+        get:
+            operationId: getMeFichasTreino
+            summary: Lista fichas de treino ativas do aluno vinculado
+            tags: [Portal Aluno]
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Listagem de fichas de treino ativas (sem ficha_json)
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    aluno_id:
+                                        type: integer
+                                        format: int64
+                                    total:
+                                        type: integer
+                                    fichas_treino:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                id:
+                                                    type: integer
+                                                    format: int64
+                                                tipo_ficha:
+                                                    type: string
+                                                versao:
+                                                    type: integer
+                                                num_treinos:
+                                                    type: integer
+                                                data_criacao:
+                                                    type: string
+                                                    format: date-time
+                                                modalidade:
+                                                    type: string
+                                                objetivo:
+                                                    type: string
+                '401':
+                    description: Sem token ou token inválido
+                '404':
+                    description: Usuário autenticado sem aluno vinculado
+            description: |
+                Lista fichas de musculação ativas do aluno vinculado (`GET /api/v1/me/fichas-treino`).
+                Filtra por `fichas_treino_web.aluno = aluno.nome` com **match exato** (use o `nome`
+                retornado em `GET /auth/me` sem alterar caixa/espaços). Detalhe em
+                `/me/fichas-treino/{id}` usa comparação case-insensitive — ver spec Portal Aluno §3.4.
+    /api/v1/me/fichas-treino/{id}:
+        get:
+            operationId: getMeFichasTreinoById
+            summary: Detalhe de ficha de treino do aluno vinculado
+            tags: [Portal Aluno]
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    example: 20
+                  description: ID da ficha em `fichas_treino_web`.
+            responses:
+                '200':
+                    description: Detalhe da ficha (mesmo shape de `GET /api/v1/fichas/{id}`)
+                '401':
+                    description: Sem token ou token inválido
+                '404':
+                    description: Sem aluno vinculado, ficha inexistente ou de outro aluno
+            description: |
+                Retorna detalhe de uma ficha de treino se pertencer ao aluno vinculado
+                (`GET /api/v1/me/fichas-treino/{id}`). Ownership MVP: `ficha.aluno` vs `linked.nome`
+                com trim + comparação case-insensitive.
     /api/v1/auth/alterar-senha:
         post:
             operationId: postAuthAlterarSenha
@@ -1280,7 +1356,20 @@ paths:
             responses:
                 '200':
                     description: Detalhes da ficha
-            description: Retorna a ficha de treino por ID (`GET /api/v1/fichas/{id}`).
+                '403':
+                    description: Usuário não-admin sem ownership da ficha
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
+                                        example: Acesso negado.
+            description: |
+                Retorna a ficha de treino por ID (`GET /api/v1/fichas/{id}`).
+                Admin (`is_admin`) acessa qualquer ficha. Não-admin precisa ownership
+                (nome da ficha = aluno vinculado); caso contrário 403.
         delete:
             operationId: deleteFichasById
             summary: Exclui fisicamente uma ficha de treino e seus links
