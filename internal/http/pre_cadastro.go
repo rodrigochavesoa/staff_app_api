@@ -10,10 +10,14 @@ import (
 	"time"
 
 	"staff_app/internal/domain"
+	"staff_app/internal/platform/logger"
 	"staff_app/internal/repositories"
 
 	"github.com/go-chi/chi/v5"
 )
+
+// randomRead is crypto/rand.Read by default; tests may stub it to simulate entropy failure.
+var randomRead = rand.Read
 
 type PreCadastroHandler struct {
 	preRepo    repositories.PreRegistroRepository
@@ -48,10 +52,12 @@ type preCadastroRequest struct {
 	PlanoID        int64  `json:"plano_id"`
 }
 
-func generateSecureToken() string {
+func generateSecureToken() (string, error) {
 	b := make([]byte, 16)
-	_, _ = rand.Read(b)
-	return hex.EncodeToString(b)
+	if _, err := randomRead(b); err != nil {
+		return "", fmt.Errorf("generate secure token: %w", err)
+	}
+	return hex.EncodeToString(b), nil
 }
 
 func (h *PreCadastroHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -337,7 +343,12 @@ func (h *PreCadastroHandler) Approve(w http.ResponseWriter, r *http.Request) {
 	var emailEnviado *bool
 	var emailErro string
 	if autoGenerate {
-		tokenStr := generateSecureToken()
+		tokenStr, err := generateSecureToken()
+		if err != nil {
+			logger.Error("failed to generate anamnese token entropy", err)
+			writeJSONError(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 		anamToken := &domain.AnamneseToken{
 			Token:         tokenStr,
 			PreRegistroID: &p.ID,

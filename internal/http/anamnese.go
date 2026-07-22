@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"staff_app/internal/domain"
+	"staff_app/internal/platform/logger"
 	"staff_app/internal/repositories"
-
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -80,7 +80,12 @@ func (h *AnamneseHandler) GenerateLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now()
-	tokenStr := generateSecureToken()
+	tokenStr, err := generateSecureToken()
+	if err != nil {
+		logger.Error("failed to generate anamnese token entropy", err)
+		writeJSONError(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 	expiraEm := now.Add(168 * time.Hour) // 7 dias
 
 	t := &domain.AnamneseToken{
@@ -629,7 +634,12 @@ func (h *AnamneseHandler) ReenviarEmail(w http.ResponseWriter, r *http.Request) 
 	}
 
 	now := time.Now()
-	tokenStr := generateSecureToken()
+	tokenStr, err := generateSecureToken()
+	if err != nil {
+		logger.Error("failed to generate anamnese token entropy", err)
+		writeJSONError(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 	expiraEm := now.Add(168 * time.Hour) // 7 dias
 
 	t := &domain.AnamneseToken{
