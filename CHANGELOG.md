@@ -7,6 +7,11 @@ Semantic Versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Upgrade Go toolchain to **1.26.5** (`go.mod` + Docker builder).
+- Bump staticcheck to **v0.8.0-rc.1** (Go 1.26 AST support; v0.7.0 incompatible).
+
 ## [0.1.1] - 2026-07-21
 
 ### Changed
