@@ -19,12 +19,12 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o staff-api ./cmd/api
 
 # Final stage
-FROM alpine:latest
+FROM alpine:3.21
 
 WORKDIR /app
 
-# Install ca-certificates and tzdata for timezone accuracy
-RUN apk add --no-cache ca-certificates tzdata
+# ca-certificates/tzdata for runtime; wget for docker-compose healthcheck
+RUN apk add --no-cache ca-certificates tzdata wget
 
 # Create application user and group
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

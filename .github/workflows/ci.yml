@@ -10,10 +10,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   go:
     name: Go test / vet / build / SAST
     runs-on: ubuntu-latest
+    env:
+      GOCACHE: /tmp/go-build-cache
+      GOWORK: off
     defaults:
       run:
         working-directory: .
