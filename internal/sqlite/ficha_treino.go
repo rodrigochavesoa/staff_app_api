@@ -95,6 +95,49 @@ func (r *FichaTreinoRepository) GetByID(ctx context.Context, id int64) (*domain.
 	return &f, nil
 }
 
+func (r *FichaTreinoRepository) ListActiveByAlunoNome(ctx context.Context, alunoNome string) ([]*domain.FichaTreinoListItem, error) {
+	query := `
+		SELECT
+			id,
+			COALESCE(tipo_ficha, ''),
+			COALESCE(versao, 0),
+			COALESCE(num_treinos, 0),
+			COALESCE(data_criacao, ''),
+			COALESCE(modalidade, ''),
+			COALESCE(objetivo, '')
+		FROM fichas_treino_web
+		WHERE aluno = ? AND data_arquivamento IS NULL
+		ORDER BY data_criacao DESC
+	`
+	rows, err := r.db.QueryContext(ctx, query, alunoNome)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list active fichas_treino_web by aluno: %w", err)
+	}
+	defer rows.Close()
+
+	list := make([]*domain.FichaTreinoListItem, 0)
+	for rows.Next() {
+		var item domain.FichaTreinoListItem
+		var dataCriacaoStr string
+		if err := rows.Scan(
+			&item.ID, &item.TipoFicha, &item.Versao, &item.NumTreinos,
+			&dataCriacaoStr, &item.Modalidade, &item.Objetivo,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan ficha treino list row: %w", err)
+		}
+		if t, err := time.Parse("2006-01-02 15:04:05", dataCriacaoStr); err == nil {
+			item.DataCriacao = t
+		} else if t, err := time.Parse(time.RFC3339, dataCriacaoStr); err == nil {
+			item.DataCriacao = t
+		}
+		list = append(list, &item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error during ficha treino list iteration: %w", err)
+	}
+	return list, nil
+}
+
 func (r *FichaTreinoRepository) Update(ctx context.Context, f *domain.FichaTreinoWeb) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
