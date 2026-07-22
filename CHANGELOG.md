@@ -7,6 +7,19 @@ Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-07-21
+
+### Changed
+
+- Bump `modernc.org/sqlite` to 1.54.0 (SQLite 3.53.3).
+- Bump GitHub Actions to v7 (`checkout`, `setup-go`, Docker actions, `upload-artifact`).
+- CI: set `GOCACHE`/`GOWORK` and enable workflow concurrency.
+- Docker: pin Alpine 3.21 and install `wget` for compose healthcheck.
+
+### Security
+
+- Dependabot PR #23 (Go 1.26 Docker image) held until `go.mod` toolchain is aligned (planned for v0.2.0).
+
 ### Planned
 
 - Public repository packaging for the dedicated `staff_app` repository.
