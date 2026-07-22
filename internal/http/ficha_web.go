@@ -372,6 +372,24 @@ func (h *FichaWebHandler) Deactivate(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+// MeFichas lists Ficha Web links for the aluno linked to the authenticated user.
+func (h *FichaWebHandler) MeFichas(w http.ResponseWriter, r *http.Request) {
+	linked, err := LinkedAluno(r.Context(), h.alunoRepo)
+	if err != nil {
+		if errors.Is(err, errUnauthorized) {
+			writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		writeJSONError(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	if linked == nil {
+		writeJSONError(w, "Aluno não vinculado a esta conta.", http.StatusNotFound)
+		return
+	}
+	h.listFichasForAlunoID(w, r, linked.ID)
+}
+
 func (h *FichaWebHandler) ListByAluno(w http.ResponseWriter, r *http.Request) {
 	alunoIDStr := chi.URLParam(r, "aluno_id")
 	alunoID, err := strconv.ParseInt(alunoIDStr, 10, 64)
@@ -380,7 +398,15 @@ func (h *FichaWebHandler) ListByAluno(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.alunoRepo.GetByID(r.Context(), alunoID)
+	if !RequireAlunoOwnerOrAdmin(w, r, h.alunoRepo, alunoID) {
+		return
+	}
+
+	h.listFichasForAlunoID(w, r, alunoID)
+}
+
+func (h *FichaWebHandler) listFichasForAlunoID(w http.ResponseWriter, r *http.Request, alunoID int64) {
+	_, err := h.alunoRepo.GetByID(r.Context(), alunoID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			writeJSONError(w, "Student not found", http.StatusNotFound)
@@ -400,6 +426,11 @@ func (h *FichaWebHandler) ListByAluno(w http.ResponseWriter, r *http.Request) {
 
 	if list == nil {
 		list = []*domain.FichaWeb{}
+	}
+
+	// Listagens não devem expor o JSON completo da ficha.
+	for _, fw := range list {
+		fw.ConteudoJSON = ""
 	}
 
 	resp := AlunoFichasResponse{
